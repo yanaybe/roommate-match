@@ -115,6 +115,13 @@ export default function Roommates() {
 
       setSwiped((prev) => [...prev, current.user.id]);
 
+      // Persist swipe timestamp for 7-day cooldown
+      if (user) {
+        const map = getSwipedMap(user.id);
+        map[current.user.id] = Date.now();
+        setSwipedMap(user.id, map);
+      }
+
       if (direction === "right" && user) {
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(current.user.id);
 
