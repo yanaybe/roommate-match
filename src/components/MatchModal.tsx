@@ -35,30 +35,17 @@ export default function MatchModal({ user, matchPercent, onClose }: MatchModalPr
     setSending(true);
 
     try {
-      // Create conversation
-      const { data: conv, error: convErr } = await supabase
-        .from("conversations")
-        .insert({})
-        .select("id")
-        .single();
+      // Create conversation with both participants via security definer function
+      const { data: convId, error: convErr } = await supabase
+        .rpc("create_conversation_with_participant", { other_user_id: user.id });
 
-      if (convErr || !conv) throw convErr;
-
-      // Add both participants
-      const { error: partErr } = await supabase
-        .from("conversation_participants")
-        .insert([
-          { conversation_id: conv.id, user_id: authUser.id },
-          { conversation_id: conv.id, user_id: user.id },
-        ]);
-
-      if (partErr) throw partErr;
+      if (convErr || !convId) throw convErr;
 
       // Send first message
       const { error: msgErr } = await supabase
         .from("messages")
         .insert({
-          conversation_id: conv.id,
+          conversation_id: convId,
           sender_id: authUser.id,
           content: message.trim(),
         });
