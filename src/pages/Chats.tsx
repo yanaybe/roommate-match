@@ -9,6 +9,7 @@ interface Conversation {
   id: string;
   other_user_id: string;
   other_name: string;
+  other_avatar: string | null;
   last_message: string | null;
   last_message_at: string | null;
   unread_count: number;
@@ -67,13 +68,15 @@ export default function Chats() {
       const otherUserId = others?.[0]?.user_id ?? "";
 
       let otherName = otherUserId.slice(0, 8) + "...";
+      let otherAvatar: string | null = null;
       if (otherUserId) {
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("name")
+          .select("name, avatar_url")
           .eq("user_id", otherUserId)
           .maybeSingle();
         if (profileData?.name) otherName = profileData.name;
+        otherAvatar = profileData?.avatar_url ?? null;
       }
 
       const { data: lastMsg } = await supabase
@@ -101,6 +104,7 @@ export default function Chats() {
         id: convId,
         other_user_id: otherUserId,
         other_name: otherName,
+        other_avatar: otherAvatar,
         last_message: lastMsg?.[0]?.content ?? null,
         last_message_at: lastMsg?.[0]?.created_at ?? null,
         unread_count: unreadCount,
@@ -268,11 +272,15 @@ export default function Chats() {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-bold text-sm">
-                {conv?.other_name?.charAt(0).toUpperCase()}
-              </span>
-            </div>
+            {conv?.other_avatar ? (
+              <img src={conv.other_avatar} alt={conv.other_name} className="w-9 h-9 rounded-full object-cover" />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-primary font-bold text-sm">
+                  {conv?.other_name?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
             <div>
               <h2 className="font-bold text-foreground text-sm">
                 {conv?.other_name}
@@ -381,11 +389,15 @@ export default function Chats() {
                 onClick={() => setActiveConv(conv.id)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors border-b border-border/50 text-left"
               >
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <span className="text-primary font-bold">
-                    {conv.other_name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                {conv.other_avatar ? (
+                  <img src={conv.other_avatar} alt={conv.other_name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                    <span className="text-primary font-bold">
+                      {conv.other_name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-card-foreground text-sm">
