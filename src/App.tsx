@@ -32,6 +32,7 @@ const App = () => (
             <Route path="/chats" element={<Chats />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />
