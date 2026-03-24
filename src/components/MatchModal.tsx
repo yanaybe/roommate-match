@@ -23,6 +23,15 @@ export default function MatchModal({ user, matchPercent, onClose }: MatchModalPr
 
   const handleSend = async () => {
     if (!message.trim() || !authUser) return;
+
+    // Can't create real conversations with mock (non-UUID) users
+    const isRealUser = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+    if (!isRealUser) {
+      toast.info("This is a demo match — chat will be available with real users!");
+      onClose();
+      return;
+    }
+
     setSending(true);
 
     try {
@@ -35,10 +44,13 @@ export default function MatchModal({ user, matchPercent, onClose }: MatchModalPr
 
       if (convErr || !conv) throw convErr;
 
-      // Add both participants (current user)
+      // Add both participants
       const { error: partErr } = await supabase
         .from("conversation_participants")
-        .insert({ conversation_id: conv.id, user_id: authUser.id });
+        .insert([
+          { conversation_id: conv.id, user_id: authUser.id },
+          { conversation_id: conv.id, user_id: user.id },
+        ]);
 
       if (partErr) throw partErr;
 
