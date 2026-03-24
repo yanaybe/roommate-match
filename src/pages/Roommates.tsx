@@ -64,6 +64,13 @@ export default function Roommates() {
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
 
+  // Load recently swiped IDs (within 7 days) into swiped state on mount
+  useEffect(() => {
+    if (user?.id) {
+      setSwiped(getRecentlySwipedIds(user.id));
+    }
+  }, [user?.id]);
+
   // Other profiles (not current user), with match percentages
   const otherProfiles = useMemo(() => {
     if (!myProfile) return [];
