@@ -1,16 +1,19 @@
 import { useState, useCallback } from "react";
 import { X, Heart, RotateCcw } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
 import MatchModal from "@/components/MatchModal";
 import { mockUsers, type UserProfile } from "@/data/mockData";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const matchPercents = [92, 87, 78, 85, 71, 64];
-
-// Simulate users who have already liked "you"
 const usersWhoLikedYou = new Set(["1", "3", "5"]);
 
 export default function Roommates() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
@@ -18,20 +21,30 @@ export default function Roommates() {
 
   const remaining = mockUsers.filter((u) => !swiped.includes(u.id));
 
+  const requireAuth = useCallback(() => {
+    if (!user) {
+      toast.info("Sign in to swipe on roommates");
+      navigate("/auth");
+      return false;
+    }
+    return true;
+  }, [user, navigate]);
+
   const handleSwipe = useCallback(
     (direction: "left" | "right") => {
-      const user = remaining[0];
-      if (!user) return;
+      if (!requireAuth()) return;
+      const u = remaining[0];
+      if (!u) return;
 
-      setSwiped((prev) => [...prev, user.id]);
+      setSwiped((prev) => [...prev, u.id]);
 
-      if (direction === "right" && usersWhoLikedYou.has(user.id)) {
-        const idx = mockUsers.findIndex((u) => u.id === user.id);
-        setMatchedUser(user);
+      if (direction === "right" && usersWhoLikedYou.has(u.id)) {
+        const idx = mockUsers.findIndex((m) => m.id === u.id);
+        setMatchedUser(u);
         setMatchedPercent(matchPercents[idx] ?? 75);
       }
     },
-    [remaining]
+    [remaining, requireAuth]
   );
 
   const handleUndo = () => {
@@ -42,7 +55,6 @@ export default function Roommates() {
 
   return (
     <div className="min-h-screen bg-background pb-20 flex flex-col">
-      {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 pb-3">
           <h1 className="text-xl font-extrabold text-foreground">Find Roommates</h1>
@@ -52,7 +64,6 @@ export default function Roommates() {
         </div>
       </div>
 
-      {/* Card stack */}
       <div className="flex-1 max-w-lg mx-auto w-full px-4 pt-4">
         {remaining.length > 0 ? (
           <div className="relative w-full aspect-[3/4] max-h-[520px]">
@@ -60,12 +71,12 @@ export default function Roommates() {
               {visibleCards
                 .slice()
                 .reverse()
-                .map((user, i) => {
-                  const realIndex = mockUsers.findIndex((u) => u.id === user.id);
+                .map((u, i) => {
+                  const realIndex = mockUsers.findIndex((m) => m.id === u.id);
                   return (
                     <SwipeCard
-                      key={user.id}
-                      user={user}
+                      key={u.id}
+                      user={u}
                       matchPercent={matchPercents[realIndex] ?? 75}
                       onSwipe={handleSwipe}
                       isTop={i === visibleCards.length - 1}
@@ -90,7 +101,6 @@ export default function Roommates() {
           </div>
         )}
 
-        {/* Action buttons */}
         {remaining.length > 0 && (
           <div className="flex items-center justify-center gap-5 mt-6">
             <button
@@ -116,7 +126,6 @@ export default function Roommates() {
         )}
       </div>
 
-      {/* Match modal */}
       {matchedUser && (
         <MatchModal
           user={matchedUser}

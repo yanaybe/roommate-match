@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import MatchBadge from "./MatchBadge";
 import type { Apartment } from "@/data/mockData";
 import { useState } from "react";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 interface ApartmentCardProps {
   apartment: Apartment;
@@ -13,6 +14,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [imgIndex, setImgIndex] = useState(0);
+  const { requireAuth } = useRequireAuth();
 
   return (
     <motion.div
@@ -28,7 +30,6 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
           alt={apartment.title}
           className="w-full h-full object-cover"
         />
-        {/* Image dots */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
           {apartment.images.map((_, i) => (
             <button
@@ -38,26 +39,22 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             />
           ))}
         </div>
-        {/* Match badge */}
         <div className="absolute top-3 left-3">
           <MatchBadge percent={apartment.matchPercent} size="md" />
         </div>
-        {/* Boosted badge */}
         {apartment.isBoosted && (
           <div className="absolute top-3 right-14 gradient-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full">
             🔥 Hot
           </div>
         )}
-        {/* Actions */}
         <div className="absolute top-3 right-3 flex flex-col gap-2">
           <button
-            onClick={() => setSaved(!saved)}
+            onClick={() => requireAuth(() => setSaved(!saved))}
             className="bg-card/80 backdrop-blur-sm p-2 rounded-full"
           >
             <Bookmark className={`w-4 h-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} />
           </button>
         </div>
-        {/* Roommate avatars */}
         <div className="absolute bottom-3 right-3 flex -space-x-2">
           {apartment.roommates.map((rm) => (
             <img
@@ -98,10 +95,9 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
           ))}
         </div>
 
-        {/* Actions */}
         <div className="flex gap-2 pt-2">
           <button
-            onClick={() => setLiked(!liked)}
+            onClick={() => requireAuth(() => setLiked(!liked))}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-all ${liked ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
           >
             <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
