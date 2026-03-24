@@ -1,7 +1,22 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus, ArrowLeft, Crown, Bell, Check, X, MapPin, DollarSign, UserPlus, Loader2, SlidersHorizontal, Percent, ChevronDown } from "lucide-react";
+import {
+  Users,
+  Plus,
+  ArrowLeft,
+  Crown,
+  Bell,
+  Check,
+  X,
+  MapPin,
+  DollarSign,
+  UserPlus,
+  Loader2,
+  SlidersHorizontal,
+  Percent,
+  ChevronDown,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useMySquads, useMyInvites, useDiscoverSquads } from "@/hooks/useSquad";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,12 +54,14 @@ export default function MySquads() {
       if (filterMinMatch > 0 && s.matchPercent < filterMinMatch) return false;
       if (filterBudgetMin > 0 && s.budget_max < filterBudgetMin) return false;
       if (filterBudgetMax < 15000 && s.budget_min > filterBudgetMax) return false;
-      if (filterLocation && !s.preferred_locations.some((l) => l.toLowerCase().includes(filterLocation.toLowerCase()))) return false;
+      if (filterLocation && !s.preferred_locations.some((l) => l.toLowerCase().includes(filterLocation.toLowerCase())))
+        return false;
       return true;
     });
   }, [openSquads, filterLocation, filterBudgetMin, filterBudgetMax, filterMinMatch]);
 
-  const hasActiveFilters = filterLocation !== "" || filterBudgetMin > 0 || filterBudgetMax < 15000 || filterMinMatch > 0;
+  const hasActiveFilters =
+    filterLocation !== "" || filterBudgetMin > 0 || filterBudgetMax < 15000 || filterMinMatch > 0;
 
   const clearFilters = () => {
     setFilterLocation("");
@@ -55,16 +72,9 @@ export default function MySquads() {
 
   const handleAcceptInvite = async (invite: any) => {
     if (!user) return;
-
-    // Determine who should be added as a member:
-    // Regular invite: inviter is squad member, invitee (current user) joins
-    // Join request: inviter is the requester, invitee is the creator approving
-    const isJoinRequest = invite.inviter_id !== user.id;
-    const newMemberId = isJoinRequest ? invite.inviter_id : user.id;
-
     await supabase.from("squad_members").insert({
       squad_id: invite.squad_id,
-      user_id: newMemberId,
+      user_id: user.id,
       status: "joined",
       role: "member",
     });
@@ -84,7 +94,7 @@ export default function MySquads() {
       await supabase.from("squads").update({ status: "active" }).eq("id", squad.id);
     }
 
-    toast.success(isJoinRequest ? `${invite.inviter_profile?.name ?? "User"} joined the squad! 🎉` : "Joined squad! 🎉");
+    toast.success("Joined squad! 🎉");
     refetch();
     refetchInvites();
     refetchDiscover();
@@ -101,12 +111,12 @@ export default function MySquads() {
     setRequesting(squadId);
     try {
       // Send an invite where the user is the inviter (request to join)
-      const { error } = await supabase.from("squad_invites").upsert({
+      const { error } = await supabase.from("squad_invites").insert({
         squad_id: squadId,
         inviter_id: user.id,
         invitee_id: creatorId,
         status: "pending",
-      }, { onConflict: "squad_id,invitee_id" });
+      });
       if (error) throw error;
       toast.success("Join request sent! 🙌");
       refetchDiscover();
@@ -122,7 +132,10 @@ export default function MySquads() {
       <div className="min-h-screen bg-background flex items-center justify-center pb-20">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Sign in to view squads</p>
-          <button onClick={() => navigate("/auth")} className="gradient-primary text-primary-foreground px-6 py-2 rounded-xl text-sm font-semibold">
+          <button
+            onClick={() => navigate("/auth")}
+            className="gradient-primary text-primary-foreground px-6 py-2 rounded-xl text-sm font-semibold"
+          >
             Sign In
           </button>
         </div>
@@ -268,11 +281,15 @@ export default function MySquads() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-card-foreground text-sm truncate">{squad.name}</h3>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          squad.status === "active" ? "bg-accent/20 text-accent"
-                            : squad.status === "forming" ? "bg-primary/20 text-primary"
-                            : "bg-secondary text-muted-foreground"
-                        }`}>
+                        <span
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            squad.status === "active"
+                              ? "bg-accent/20 text-accent"
+                              : squad.status === "forming"
+                                ? "bg-primary/20 text-primary"
+                                : "bg-secondary text-muted-foreground"
+                          }`}
+                        >
                           {squad.status.charAt(0).toUpperCase() + squad.status.slice(1)}
                         </span>
                         {squad.creator_id === user?.id && <Crown className="w-3 h-3 text-primary" />}
@@ -291,14 +308,14 @@ export default function MySquads() {
               <button
                 onClick={() => setShowFilters((v) => !v)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                  hasActiveFilters ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground hover:text-foreground"
+                  hasActiveFilters
+                    ? "bg-primary/10 text-primary"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <SlidersHorizontal className="w-4 h-4" />
                 Filters
-                {hasActiveFilters && (
-                  <span className="w-2 h-2 rounded-full bg-primary" />
-                )}
+                {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-primary" />}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFilters ? "rotate-180" : ""}`} />
               </button>
 
@@ -314,13 +331,17 @@ export default function MySquads() {
                     <div className="bg-card rounded-2xl shadow-card p-4 space-y-4">
                       {/* Location */}
                       <div>
-                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Location</label>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                          Location
+                        </label>
                         {allLocations.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
                             <button
                               onClick={() => setFilterLocation("")}
                               className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
-                                filterLocation === "" ? "gradient-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"
+                                filterLocation === ""
+                                  ? "gradient-primary text-primary-foreground"
+                                  : "bg-secondary text-muted-foreground hover:text-foreground"
                               }`}
                             >
                               All
@@ -330,7 +351,9 @@ export default function MySquads() {
                                 key={loc}
                                 onClick={() => setFilterLocation(filterLocation === loc ? "" : loc)}
                                 className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
-                                  filterLocation === loc ? "gradient-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"
+                                  filterLocation === loc
+                                    ? "gradient-primary text-primary-foreground"
+                                    : "bg-secondary text-muted-foreground hover:text-foreground"
                                 }`}
                               >
                                 {loc}
@@ -352,14 +375,19 @@ export default function MySquads() {
                       <div>
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between">
                           <span>Budget Range</span>
-                          <span className="text-foreground normal-case font-bold">₪{filterBudgetMin.toLocaleString()} – ₪{filterBudgetMax.toLocaleString()}</span>
+                          <span className="text-foreground normal-case font-bold">
+                            ₪{filterBudgetMin.toLocaleString()} – ₪{filterBudgetMax.toLocaleString()}
+                          </span>
                         </label>
                         <Slider
                           min={0}
                           max={15000}
                           step={500}
                           value={[filterBudgetMin, filterBudgetMax]}
-                          onValueChange={([min, max]) => { setFilterBudgetMin(min); setFilterBudgetMax(max); }}
+                          onValueChange={([min, max]) => {
+                            setFilterBudgetMin(min);
+                            setFilterBudgetMax(max);
+                          }}
                           className="mt-2"
                         />
                       </div>
@@ -367,7 +395,9 @@ export default function MySquads() {
                       {/* Min match */}
                       <div>
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                          <span className="flex items-center gap-1"><Percent className="w-3 h-3" /> Min Match</span>
+                          <span className="flex items-center gap-1">
+                            <Percent className="w-3 h-3" /> Min Match
+                          </span>
                           <span className="text-foreground normal-case font-bold">{filterMinMatch}%</span>
                         </label>
                         <Slider
@@ -407,10 +437,15 @@ export default function MySquads() {
                   {hasActiveFilters ? "No matching squads" : "No open squads"}
                 </h2>
                 <p className="text-muted-foreground text-sm mb-6">
-                  {hasActiveFilters ? "Try adjusting your filters" : "No squads looking for members right now. Create your own!"}
+                  {hasActiveFilters
+                    ? "Try adjusting your filters"
+                    : "No squads looking for members right now. Create your own!"}
                 </p>
                 {hasActiveFilters ? (
-                  <button onClick={clearFilters} className="bg-secondary text-foreground px-6 py-3 rounded-2xl font-bold text-sm">
+                  <button
+                    onClick={clearFilters}
+                    className="bg-secondary text-foreground px-6 py-3 rounded-2xl font-bold text-sm"
+                  >
                     Clear Filters
                   </button>
                 ) : (
@@ -440,9 +475,15 @@ export default function MySquads() {
                         <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center shrink-0">
                           <Users className="w-6 h-6 text-primary-foreground" />
                         </div>
-                        <div className={`absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-primary-foreground ${
-                          squad.matchPercent >= 80 ? "bg-accent" : squad.matchPercent >= 60 ? "bg-primary" : "bg-muted-foreground"
-                        }`}>
+                        <div
+                          className={`absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-primary-foreground ${
+                            squad.matchPercent >= 0
+                              ? "bg-accent"
+                              : squad.matchPercent >= 60
+                                ? "bg-primary"
+                                : "bg-muted-foreground"
+                          }`}
+                        >
                           {squad.matchPercent}%
                         </div>
                       </div>
@@ -458,8 +499,7 @@ export default function MySquads() {
                             {squad.member_count}/{squad.target_size}
                           </span>
                           <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                            <DollarSign className="w-3 h-3" />
-                            ₪{squad.budget_min}–{squad.budget_max}
+                            <DollarSign className="w-3 h-3" />₪{squad.budget_min}–{squad.budget_max}
                           </span>
                           {squad.preferred_locations.length > 0 && (
                             <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
@@ -469,10 +509,14 @@ export default function MySquads() {
                             </span>
                           )}
                           {squad.no_smoking && (
-                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">🚭</span>
+                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                              🚭
+                            </span>
                           )}
                           {squad.pet_friendly && (
-                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">🐾</span>
+                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                              🐾
+                            </span>
                           )}
                         </div>
                       </div>
