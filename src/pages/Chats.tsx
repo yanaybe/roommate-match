@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
 
@@ -23,6 +24,7 @@ interface Message {
 
 export default function Chats() {
   const { user } = useAuth();
+  const { refresh: refreshUnread } = useUnreadCount();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -36,85 +38,90 @@ export default function Chats() {
   }, []);
 
   // Load conversations
-  useEffect(() => {
+  const loadConversations = useCallback(async () => {
     if (!user) return;
 
-    const loadConversations = async () => {
-      const { data: participations } = await supabase
+    const { data: participations } = await supabase
+      .from("conversation_participants")
+      .select("conversation_id")
+      .eq("user_id", user.id);
+
+    if (!participations?.length) {
+      setConversations([]);
+      setLoading(false);
+      return;
+    }
+
+    const convIds = participations.map((p) => p.conversation_id);
+
+    // Deduplicate: group by other_user_id and keep most recent
+    const convMap = new Map<string, Conversation>();
+
+    for (const convId of convIds) {
+      const { data: others } = await supabase
         .from("conversation_participants")
-        .select("conversation_id")
+        .select("user_id")
+        .eq("conversation_id", convId)
+        .neq("user_id", user.id);
+
+      const otherUserId = others?.[0]?.user_id ?? "";
+
+      let otherName = otherUserId.slice(0, 8) + "...";
+      if (otherUserId) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("name")
+          .eq("user_id", otherUserId)
+          .maybeSingle();
+        if (profileData?.name) otherName = profileData.name;
+      }
+
+      const { data: lastMsg } = await supabase
+        .from("messages")
+        .select("content, created_at")
+        .eq("conversation_id", convId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const { data: allMsgs } = await supabase
+        .from("messages")
+        .select("id")
+        .eq("conversation_id", convId)
+        .neq("sender_id", user.id);
+
+      const { data: readReceipts } = await supabase
+        .from("message_read_receipts")
+        .select("message_id")
         .eq("user_id", user.id);
 
-      if (!participations?.length) {
-        setLoading(false);
-        return;
+      const readIds = new Set(readReceipts?.map((r) => r.message_id) ?? []);
+      const unreadCount = allMsgs?.filter((m) => !readIds.has(m.id)).length ?? 0;
+
+      const conv: Conversation = {
+        id: convId,
+        other_user_id: otherUserId,
+        other_name: otherName,
+        last_message: lastMsg?.[0]?.content ?? null,
+        last_message_at: lastMsg?.[0]?.created_at ?? null,
+        unread_count: unreadCount,
+      };
+
+      // Only keep the most recent conversation per user
+      const existing = convMap.get(otherUserId);
+      if (!existing || (conv.last_message_at && (!existing.last_message_at || conv.last_message_at > existing.last_message_at))) {
+        convMap.set(otherUserId, conv);
       }
+    }
 
-      const convIds = participations.map((p) => p.conversation_id);
-
-      const convs: Conversation[] = [];
-      for (const convId of convIds) {
-        // Get other participant
-        const { data: others } = await supabase
-          .from("conversation_participants")
-          .select("user_id")
-          .eq("conversation_id", convId)
-          .neq("user_id", user.id);
-
-        const otherUserId = others?.[0]?.user_id ?? "";
-
-        // Get other user's profile name
-        let otherName = otherUserId.slice(0, 8) + "...";
-        if (otherUserId) {
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("name")
-            .eq("user_id", otherUserId)
-            .maybeSingle();
-          if (profileData?.name) otherName = profileData.name;
-        }
-
-        // Get last message
-        const { data: lastMsg } = await supabase
-          .from("messages")
-          .select("content, created_at")
-          .eq("conversation_id", convId)
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        // Count unread messages
-        const { data: allMsgs } = await supabase
-          .from("messages")
-          .select("id")
-          .eq("conversation_id", convId)
-          .neq("sender_id", user.id);
-
-        const { data: readReceipts } = await supabase
-          .from("message_read_receipts")
-          .select("message_id")
-          .eq("user_id", user.id);
-
-        const readIds = new Set(readReceipts?.map((r) => r.message_id) ?? []);
-        const unreadCount = allMsgs?.filter((m) => !readIds.has(m.id)).length ?? 0;
-
-        convs.push({
-          id: convId,
-          other_user_id: otherUserId,
-          other_name: otherName,
-          last_message: lastMsg?.[0]?.content ?? null,
-          last_message_at: lastMsg?.[0]?.created_at ?? null,
-          unread_count: unreadCount,
-        });
-      }
-
-      setConversations(convs);
-      setLoading(false);
-    };
-
-    loadConversations();
+    setConversations(Array.from(convMap.values()));
+    setLoading(false);
   }, [user]);
 
-  // Load messages for active conversation
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  // Load messages for active conversation & mark as read
   useEffect(() => {
     if (!activeConv || !user) return;
 
@@ -125,7 +132,6 @@ export default function Chats() {
         .eq("conversation_id", activeConv)
         .order("created_at", { ascending: true });
 
-      // Get read receipts for this conversation
       const msgIds = msgs?.map((m) => m.id) ?? [];
       const { data: receipts } = await supabase
         .from("message_read_receipts")
@@ -141,7 +147,7 @@ export default function Chats() {
         })) ?? []
       );
 
-      // Mark unread messages as read
+      // Mark unread incoming messages as read
       const unreadIncoming = msgs?.filter(
         (m) => m.sender_id !== user.id && !readSet.has(m.id)
       );
@@ -151,6 +157,12 @@ export default function Chats() {
           user_id: user.id,
         }));
         await supabase.from("message_read_receipts").insert(inserts);
+
+        // Update local conversation unread count to 0
+        setConversations((prev) =>
+          prev.map((c) => c.id === activeConv ? { ...c, unread_count: 0 } : c)
+        );
+        refreshUnread();
       }
     };
 
@@ -180,6 +192,7 @@ export default function Chats() {
               message_id: newMsg.id,
               user_id: user.id,
             });
+            refreshUnread();
           }
         }
       )
@@ -191,7 +204,6 @@ export default function Chats() {
           table: "message_read_receipts",
         },
         () => {
-          // Update read status of messages
           setMessages((prev) =>
             prev.map((m) => ({ ...m, is_read: true }))
           );
@@ -202,9 +214,8 @@ export default function Chats() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeConv, user]);
+  }, [activeConv, user, refreshUnread]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
@@ -245,16 +256,14 @@ export default function Chats() {
     );
   }
 
-  // Message thread view
   if (activeConv) {
     const conv = conversations.find((c) => c.id === activeConv);
     return (
       <div className="min-h-screen bg-background flex flex-col pb-20">
-        {/* Chat header */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
           <div className="max-w-lg mx-auto px-4 pt-12 pb-3 flex items-center gap-3">
             <button
-              onClick={() => setActiveConv(null)}
+              onClick={() => { setActiveConv(null); loadConversations(); }}
               className="p-1 -ml-1 text-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -273,7 +282,6 @@ export default function Chats() {
           </div>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 max-w-lg mx-auto w-full">
           <div className="space-y-2">
             {messages.map((msg) => {
@@ -301,9 +309,9 @@ export default function Chats() {
                       <span className="text-[10px]">{formatTime(msg.created_at)}</span>
                       {isMine && (
                         msg.is_read ? (
-                          <CheckCheck className="w-3.5 h-3.5 text-accent" />
+                          <CheckCheck className="w-3.5 h-3.5 text-blue-400" />
                         ) : (
-                          <Check className="w-3.5 h-3.5" />
+                          <CheckCheck className="w-3.5 h-3.5" />
                         )
                       )}
                     </div>
@@ -315,7 +323,6 @@ export default function Chats() {
           </div>
         </div>
 
-        {/* Input */}
         <div className="sticky bottom-20 bg-background border-t border-border">
           <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-2">
             <input
@@ -340,7 +347,6 @@ export default function Chats() {
     );
   }
 
-  // Conversation list view
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">

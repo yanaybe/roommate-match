@@ -24,7 +24,6 @@ export default function MatchModal({ user, matchPercent, onClose }: MatchModalPr
   const handleSend = async () => {
     if (!message.trim() || !authUser) return;
 
-    // Can't create real conversations with mock (non-UUID) users
     const isRealUser = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
     if (!isRealUser) {
       toast.info("This is a demo match — chat will be available with real users!");
@@ -35,13 +34,37 @@ export default function MatchModal({ user, matchPercent, onClose }: MatchModalPr
     setSending(true);
 
     try {
-      // Create conversation with both participants via security definer function
-      const { data: convId, error: convErr } = await supabase
-        .rpc("create_conversation_with_participant", { other_user_id: user.id });
+      // Check if a conversation already exists with this user
+      const { data: myConvs } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("user_id", authUser.id);
 
-      if (convErr || !convId) throw convErr;
+      let existingConvId: string | null = null;
 
-      // Send first message
+      if (myConvs?.length) {
+        for (const p of myConvs) {
+          const { data: otherParticipant } = await supabase
+            .from("conversation_participants")
+            .select("user_id")
+            .eq("conversation_id", p.conversation_id)
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (otherParticipant) {
+            existingConvId = p.conversation_id;
+            break;
+          }
+        }
+      }
+
+      const convId = existingConvId ?? await (async () => {
+        const { data, error } = await supabase
+          .rpc("create_conversation_with_participant", { other_user_id: user.id });
+        if (error || !data) throw error;
+        return data as string;
+      })();
+
       const { error: msgErr } = await supabase
         .from("messages")
         .insert({

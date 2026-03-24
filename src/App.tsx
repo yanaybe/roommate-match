@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { UnreadCountProvider } from "@/hooks/useUnreadCount";
 import BottomNav from "@/components/BottomNav";
 import Index from "./pages/Index";
 import Roommates from "./pages/Roommates";
@@ -25,26 +26,28 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/apartment/:id" element={<ApartmentDetail />} />
-            <Route path="/roommates" element={<Roommates />} />
-            <Route path="/create" element={<CreateApartment />} />
-            <Route path="/post-apartment" element={<PostApartment />} />
-            <Route path="/create-squad" element={<CreateSquad />} />
-            <Route path="/squad/:id" element={<SquadHub />} />
-            <Route path="/my-squads" element={<MySquads />} />
-            <Route path="/chats" element={<Chats />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <BottomNav />
-        </BrowserRouter>
+        <UnreadCountProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/apartment/:id" element={<ApartmentDetail />} />
+              <Route path="/roommates" element={<Roommates />} />
+              <Route path="/create" element={<CreateApartment />} />
+              <Route path="/post-apartment" element={<PostApartment />} />
+              <Route path="/create-squad" element={<CreateSquad />} />
+              <Route path="/squad/:id" element={<SquadHub />} />
+              <Route path="/my-squads" element={<MySquads />} />
+              <Route path="/chats" element={<Chats />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <BottomNav />
+          </BrowserRouter>
+        </UnreadCountProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

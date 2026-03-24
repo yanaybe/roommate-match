@@ -1,18 +1,20 @@
 import { Home, Users, Plus, MessageCircle, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useUnreadCount } from "@/hooks/useUnreadCount";
 
 const tabs = [
   { path: "/", icon: Home, label: "Rooms" },
   { path: "/roommates", icon: Users, label: "Roommates" },
   { path: "/create", icon: Plus, label: "Create" },
-  { path: "/chats", icon: MessageCircle, label: "Chats", badge: 3 },
+  { path: "/chats", icon: MessageCircle, label: "Chats" },
   { path: "/profile", icon: User, label: "Profile" },
 ];
 
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { totalUnread } = useUnreadCount();
 
   if (location.pathname === "/auth") return null;
 
@@ -23,6 +25,7 @@ export default function BottomNav() {
           const isActive = location.pathname === tab.path;
           const Icon = tab.icon;
           const isCreate = tab.path === "/create";
+          const badge = tab.path === "/chats" ? totalUnread : 0;
 
           return (
             <button
@@ -40,9 +43,9 @@ export default function BottomNav() {
                     <Icon
                       className={`w-5 h-5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}
                     />
-                    {tab.badge && tab.badge > 0 && (
+                    {badge > 0 && (
                       <span className="absolute -top-1.5 -right-2 gradient-primary text-primary-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                        {tab.badge}
+                        {badge}
                       </span>
                     )}
                   </div>
