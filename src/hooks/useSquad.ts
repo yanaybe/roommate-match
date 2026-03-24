@@ -197,6 +197,7 @@ export interface DiscoverableSquad extends Squad {
   members: SquadMember[];
   member_count: number;
   creator_profile?: FullProfile;
+  matchPercent: number;
 }
 
 export function useDiscoverSquads() {
