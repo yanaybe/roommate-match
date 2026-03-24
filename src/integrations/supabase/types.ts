@@ -163,6 +163,27 @@ export type Database = {
         }
         Relationships: []
       }
+      liked_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          liked_user_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          liked_user_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          liked_user_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       message_read_receipts: {
         Row: {
           id: string
@@ -334,6 +355,35 @@ export type Database = {
           wfh?: boolean
         }
         Relationships: []
+      }
+      saved_apartments: {
+        Row: {
+          apartment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          apartment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          apartment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_apartments_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       squad_invites: {
         Row: {
