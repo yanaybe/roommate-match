@@ -56,16 +56,15 @@ export default function Index() {
             ))}
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-secondary rounded-2xl h-[60vh] flex items-center justify-center"
+          <Suspense
+            fallback={
+              <div className="bg-secondary rounded-2xl h-[60vh] flex items-center justify-center">
+                <p className="text-muted-foreground text-sm">Loading map…</p>
+              </div>
+            }
           >
-            <div className="text-center text-muted-foreground">
-              <Map className="w-12 h-12 mx-auto mb-2 opacity-40" />
-              <p className="text-sm">Map view coming soon</p>
-            </div>
-          </motion.div>
+            <ApartmentMap apartments={mockApartments} />
+          </Suspense>
         )}
       </div>
     </div>
