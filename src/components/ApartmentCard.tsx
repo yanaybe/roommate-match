@@ -3,8 +3,10 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
 import type { Apartment } from "@/data/mockData";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ApartmentCardProps {
   apartment: Apartment;
@@ -16,7 +18,25 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const [saved, setSaved] = useState(false);
   const [imgIndex, setImgIndex] = useState(0);
   const { requireAuth } = useRequireAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  const toggleSave = async () => {
+    if (!user) return;
+    const newSaved = !saved;
+    setSaved(newSaved);
+    if (newSaved) {
+      await supabase.from("saved_apartments").upsert({
+        user_id: user.id,
+        apartment_id: apartment.id,
+      }, { onConflict: "user_id,apartment_id" });
+    } else {
+      await supabase.from("saved_apartments")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("apartment_id", apartment.id);
+    }
+  };
 
   return (
     <motion.div
