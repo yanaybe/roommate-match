@@ -53,6 +53,32 @@ export default function Profile() {
     setActivityLoading(true);
 
     const fetchActivity = async () => {
+      // Fetch saved apartments
+      const { data: saves } = await supabase
+        .from("saved_apartments")
+        .select("*, apartments(*)")
+        .eq("user_id", user.id);
+
+      setSavedApartments(saves || []);
+
+      // Fetch liked profiles
+      const { data: likes } = await supabase
+        .from("liked_profiles")
+        .select("*, profiles!liked_profiles_liked_user_id_fkey(name, age, city, occupation, avatar_url, bio)")
+        .eq("user_id", user.id);
+
+      // liked_profiles has no FK so we fetch profiles separately
+      const likedUserIds = (likes || []).map((l: any) => l.liked_user_id);
+      if (likedUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("user_id", likedUserIds);
+        setLikedProfiles(profilesData || []);
+      } else {
+        setLikedProfiles([]);
+      }
+
       // Fetch squad join requests (pending invites where I'm the inviter asking to join)
       const { data: invites } = await supabase
         .from("squad_invites")
@@ -61,15 +87,6 @@ export default function Profile() {
         .eq("status", "pending");
 
       setPendingSquads(invites || []);
-
-      // Fetch squad likes (apartments I liked in squads)
-      const { data: likes } = await supabase
-        .from("squad_likes")
-        .select("*, apartments(*)")
-        .eq("user_id", user.id)
-        .eq("liked", true);
-
-      setSavedApartments(likes || []);
       setActivityLoading(false);
     };
 
@@ -281,7 +298,7 @@ export default function Profile() {
                 <div className="text-center py-10">
                   <Home className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
                   <p className="text-muted-foreground text-sm">No saved rooms yet</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">Rooms you like in squads will appear here</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">Tap the bookmark icon on apartments to save them</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -307,11 +324,38 @@ export default function Profile() {
                 </div>
               )
             ) : activityTab === "liked" ? (
-              <div className="text-center py-10">
-                <Heart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                <p className="text-muted-foreground text-sm">No liked people yet</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">People you swipe right on will appear here</p>
-              </div>
+              likedProfiles.length === 0 ? (
+                <div className="text-center py-10">
+                  <Heart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No liked people yet</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">Swipe right on roommates to see them here</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {likedProfiles.map((p: any) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card"
+                    >
+                      <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+                        {p.avatar_url ? (
+                          <img src={p.avatar_url} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-primary text-lg font-bold">{p.name?.charAt(0)?.toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-card-foreground truncate">{p.name}{p.age ? `, ${p.age}` : ""}</p>
+                        <p className="text-xs text-muted-foreground">{p.occupation} · {p.city}</p>
+                        {p.bio && <p className="text-xs text-muted-foreground/70 truncate mt-0.5">{p.bio}</p>}
+                      </div>
+                      <Heart className="w-4 h-4 text-destructive fill-destructive" />
+                    </motion.div>
+                  ))}
+                </div>
+              )
             ) : (
               pendingSquads.length === 0 ? (
                 <div className="text-center py-10">

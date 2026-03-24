@@ -8,6 +8,7 @@ import { mockUsers, type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
 import { calculateUserMatch } from "@/lib/matching";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Convert DB profile to mock format for SwipeCard compatibility
@@ -78,23 +79,28 @@ export default function Roommates() {
   }, [user, myProfile, navigate]);
 
   const handleSwipe = useCallback(
-    (direction: "left" | "right") => {
+    async (direction: "left" | "right") => {
       if (!requireAuth()) return;
       const current = remaining[0];
       if (!current) return;
 
       setSwiped((prev) => [...prev, current.user.id]);
 
-      if (direction === "right") {
-        // For now simulate match on every right swipe for demo
-        // In production, check mutual likes in DB
+      if (direction === "right" && user) {
+        // Persist like to DB
+        await supabase.from("liked_profiles").upsert({
+          user_id: user.id,
+          liked_user_id: current.user.id,
+        }, { onConflict: "user_id,liked_user_id" });
+
+        // Simulate match for demo
         if (Math.random() > 0.5) {
           setMatchedUser(current.user);
           setMatchedPercent(current.matchPercent);
         }
       }
     },
-    [remaining, requireAuth]
+    [remaining, requireAuth, user]
   );
 
   const handleUndo = () => {
