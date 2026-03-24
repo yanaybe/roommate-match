@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import ApartmentDetail from "./pages/ApartmentDetail";
+import PostApartment from "./pages/PostApartment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
