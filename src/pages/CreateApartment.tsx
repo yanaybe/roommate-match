@@ -27,6 +27,7 @@ export default function CreateApartment() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
+                onClick={() => mode.path && navigate(mode.path)}
                 className="w-full flex items-center gap-4 p-5 bg-card rounded-2xl shadow-card hover:shadow-elevated transition-shadow text-left"
               >
                 <div className={`${mode.color} p-3 rounded-xl`}>
