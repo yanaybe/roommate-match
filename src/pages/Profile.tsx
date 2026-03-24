@@ -53,6 +53,32 @@ export default function Profile() {
     setActivityLoading(true);
 
     const fetchActivity = async () => {
+      // Fetch saved apartments
+      const { data: saves } = await supabase
+        .from("saved_apartments")
+        .select("*, apartments(*)")
+        .eq("user_id", user.id);
+
+      setSavedApartments(saves || []);
+
+      // Fetch liked profiles
+      const { data: likes } = await supabase
+        .from("liked_profiles")
+        .select("*, profiles!liked_profiles_liked_user_id_fkey(name, age, city, occupation, avatar_url, bio)")
+        .eq("user_id", user.id);
+
+      // liked_profiles has no FK so we fetch profiles separately
+      const likedUserIds = (likes || []).map((l: any) => l.liked_user_id);
+      if (likedUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("user_id", likedUserIds);
+        setLikedProfiles(profilesData || []);
+      } else {
+        setLikedProfiles([]);
+      }
+
       // Fetch squad join requests (pending invites where I'm the inviter asking to join)
       const { data: invites } = await supabase
         .from("squad_invites")
@@ -61,15 +87,6 @@ export default function Profile() {
         .eq("status", "pending");
 
       setPendingSquads(invites || []);
-
-      // Fetch squad likes (apartments I liked in squads)
-      const { data: likes } = await supabase
-        .from("squad_likes")
-        .select("*, apartments(*)")
-        .eq("user_id", user.id)
-        .eq("liked", true);
-
-      setSavedApartments(likes || []);
       setActivityLoading(false);
     };
 
