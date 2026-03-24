@@ -261,12 +261,12 @@ export default function Chats() {
             </button>
             <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
               <span className="text-primary font-bold text-sm">
-                {conv?.other_email?.charAt(0).toUpperCase()}
+                {conv?.other_name?.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
               <h2 className="font-bold text-foreground text-sm">
-                {conv?.other_email}
+                {conv?.other_name}
               </h2>
               <p className="text-muted-foreground text-xs">Online</p>
             </div>
@@ -377,13 +377,13 @@ export default function Chats() {
               >
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                   <span className="text-primary font-bold">
-                    {conv.other_email.charAt(0).toUpperCase()}
+                    {conv.other_name.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-card-foreground text-sm">
-                      {conv.other_email}
+                      {conv.other_name}
                     </span>
                     <span className="text-muted-foreground text-xs">
                       {formatDate(conv.last_message_at)}
