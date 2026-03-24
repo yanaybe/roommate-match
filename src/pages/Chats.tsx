@@ -104,6 +104,7 @@ export default function Chats() {
         id: convId,
         other_user_id: otherUserId,
         other_name: otherName,
+        other_avatar: otherAvatar,
         last_message: lastMsg?.[0]?.content ?? null,
         last_message_at: lastMsg?.[0]?.created_at ?? null,
         unread_count: unreadCount,
