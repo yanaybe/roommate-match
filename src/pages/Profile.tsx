@@ -8,6 +8,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import MatchBadge from "@/components/MatchBadge";
+import { mockApartments, mockUsers } from "@/data/mockData";
+
+const getMockSavedApartmentKey = (userId: string, apartmentId: string) => `saved_apartment:${userId}:${apartmentId}`;
+const getMockLikedProfileKey = (userId: string, likedUserId: string) => `liked_profile:${userId}:${likedUserId}`;
 
 const menuItems = [
   { icon: Crown, label: "Go Premium", desc: "Unlock all features", accent: true, action: null },
@@ -59,7 +63,28 @@ export default function Profile() {
         .select("*, apartments(*)")
         .eq("user_id", user.id);
 
-      setSavedApartments(saves || []);
+      const mockSavedApartments = mockApartments
+        .filter((apartment) => {
+          try {
+            return localStorage.getItem(getMockSavedApartmentKey(user.id, apartment.id)) === "true";
+          } catch {
+            return false;
+          }
+        })
+        .map((apartment) => ({
+          id: `mock-save-${apartment.id}`,
+          apartment_id: apartment.id,
+          apartments: {
+            id: apartment.id,
+            title: apartment.title,
+            neighborhood: apartment.location.split(",")[0] ?? apartment.location,
+            city: apartment.location.split(",")[1]?.trim() ?? apartment.location,
+            price: apartment.price,
+            images: apartment.images,
+          },
+        }));
+
+      setSavedApartments([...(saves || []), ...mockSavedApartments]);
 
       // Fetch liked profiles
       const { data: likes } = await supabase
@@ -73,9 +98,48 @@ export default function Profile() {
           .from("profiles")
           .select("*")
           .in("user_id", likedUserIds);
-        setLikedProfiles(profilesData || []);
+
+        const mockLikedProfiles = mockUsers
+          .filter((likedUser) => {
+            try {
+              return localStorage.getItem(getMockLikedProfileKey(user.id, likedUser.id)) === "true";
+            } catch {
+              return false;
+            }
+          })
+          .map((likedUser) => ({
+            id: `mock-liked-${likedUser.id}`,
+            user_id: likedUser.id,
+            name: likedUser.name,
+            age: likedUser.age,
+            occupation: likedUser.occupation,
+            city: likedUser.city,
+            bio: likedUser.bio,
+            avatar_url: likedUser.avatar,
+          }));
+
+        setLikedProfiles([...(profilesData || []), ...mockLikedProfiles]);
       } else {
-        setLikedProfiles([]);
+        const mockLikedProfiles = mockUsers
+          .filter((likedUser) => {
+            try {
+              return localStorage.getItem(getMockLikedProfileKey(user.id, likedUser.id)) === "true";
+            } catch {
+              return false;
+            }
+          })
+          .map((likedUser) => ({
+            id: `mock-liked-${likedUser.id}`,
+            user_id: likedUser.id,
+            name: likedUser.name,
+            age: likedUser.age,
+            occupation: likedUser.occupation,
+            city: likedUser.city,
+            bio: likedUser.bio,
+            avatar_url: likedUser.avatar,
+          }));
+
+        setLikedProfiles(mockLikedProfiles);
       }
 
       // Fetch squad join requests (pending invites where I'm the inviter asking to join)
