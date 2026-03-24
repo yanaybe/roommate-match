@@ -34,6 +34,9 @@ const App = () => (
             <Route path="/roommates" element={<Roommates />} />
             <Route path="/create" element={<CreateApartment />} />
             <Route path="/post-apartment" element={<PostApartment />} />
+            <Route path="/create-squad" element={<CreateSquad />} />
+            <Route path="/squad/:id" element={<SquadHub />} />
+            <Route path="/my-squads" element={<MySquads />} />
             <Route path="/chats" element={<Chats />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/auth" element={<Auth />} />
