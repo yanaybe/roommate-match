@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { X, Heart, RotateCcw } from "lucide-react";
+import { X, Heart, RotateCcw, Users, Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
@@ -106,11 +106,28 @@ export default function Roommates() {
   return (
     <div className="min-h-screen bg-background pb-20 flex flex-col">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-lg mx-auto px-4 pt-12 pb-3">
-          <h1 className="text-xl font-extrabold text-foreground">Find Roommates</h1>
-          <p className="text-muted-foreground text-sm">
-            {remaining.length} {remaining.length === 1 ? "person" : "people"} left
-          </p>
+        <div className="max-w-lg mx-auto px-4 pt-12 pb-3 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-extrabold text-foreground">Find Roommates</h1>
+            <p className="text-muted-foreground text-sm">
+              {remaining.length} {remaining.length === 1 ? "person" : "people"} left
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate("/my-squads")}
+              className="flex items-center gap-1.5 px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-xl text-sm font-semibold text-foreground transition-colors"
+            >
+              <Users className="w-4 h-4" />
+              Squads
+            </button>
+            <button
+              onClick={() => navigate("/create-squad")}
+              className="gradient-primary p-2 rounded-xl"
+            >
+              <Plus className="w-4 h-4 text-primary-foreground" />
+            </button>
+          </div>
         </div>
       </div>
 
