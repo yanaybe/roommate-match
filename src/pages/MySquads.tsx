@@ -272,8 +272,15 @@ export default function MySquads() {
                   className="bg-card rounded-2xl shadow-card p-4"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center shrink-0">
-                      <Users className="w-6 h-6 text-primary-foreground" />
+                    <div className="relative">
+                      <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center shrink-0">
+                        <Users className="w-6 h-6 text-primary-foreground" />
+                      </div>
+                      <div className={`absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-primary-foreground ${
+                        squad.matchPercent >= 80 ? "bg-accent" : squad.matchPercent >= 60 ? "bg-primary" : "bg-muted-foreground"
+                      }`}>
+                        {squad.matchPercent}%
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-card-foreground text-sm truncate">{squad.name}</h3>
