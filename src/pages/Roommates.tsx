@@ -34,14 +34,15 @@ function getRecentlySwipedIds(userId: string): string[] {
 }
 
 // Convert DB profile to mock format for SwipeCard compatibility
-function profileToUser(p: FullProfile): UserProfile {
+function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
+  const photos = (p as any).photos as string[] | undefined;
   return {
     id: p.user_id,
     name: p.name,
     age: p.age ?? 0,
     city: p.city,
     occupation: p.occupation,
-    avatar: p.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&size=200`,
+    avatar: p.avatar_url || photos?.[0] || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&size=200`,
     budget: p.budget,
     roomType: p.desired_room_type,
     sleepSchedule: p.sleep_schedule,
@@ -52,6 +53,7 @@ function profileToUser(p: FullProfile): UserProfile {
     noise: p.noise_level,
     wfh: p.wfh,
     bio: p.bio,
+    photos: photos?.length ? photos : undefined,
   };
 }
 
