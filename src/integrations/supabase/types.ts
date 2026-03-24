@@ -122,6 +122,117 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          activity_hours: string
+          age: number | null
+          alcohol: string
+          avatar_url: string | null
+          bio: string
+          budget: number
+          city: string
+          cleanliness: number
+          cleanliness_expectations: number
+          cooking_habits: string
+          created_at: string
+          desired_room_type: string
+          fitness: string
+          gender_preference: string
+          guests: string
+          id: string
+          lifestyle_similarity: string
+          lifestyle_vibe: string
+          name: string
+          noise_level: number
+          occupation: string
+          onboarding_complete: boolean
+          partying: string
+          pets: boolean
+          preferred_age_max: number
+          preferred_age_min: number
+          religious_level: string
+          shared_space_org: string
+          sleep_schedule: string
+          smoking: boolean
+          social_level: number
+          updated_at: string
+          user_id: string
+          wfh: boolean
+        }
+        Insert: {
+          activity_hours?: string
+          age?: number | null
+          alcohol?: string
+          avatar_url?: string | null
+          bio?: string
+          budget?: number
+          city?: string
+          cleanliness?: number
+          cleanliness_expectations?: number
+          cooking_habits?: string
+          created_at?: string
+          desired_room_type?: string
+          fitness?: string
+          gender_preference?: string
+          guests?: string
+          id?: string
+          lifestyle_similarity?: string
+          lifestyle_vibe?: string
+          name?: string
+          noise_level?: number
+          occupation?: string
+          onboarding_complete?: boolean
+          partying?: string
+          pets?: boolean
+          preferred_age_max?: number
+          preferred_age_min?: number
+          religious_level?: string
+          shared_space_org?: string
+          sleep_schedule?: string
+          smoking?: boolean
+          social_level?: number
+          updated_at?: string
+          user_id: string
+          wfh?: boolean
+        }
+        Update: {
+          activity_hours?: string
+          age?: number | null
+          alcohol?: string
+          avatar_url?: string | null
+          bio?: string
+          budget?: number
+          city?: string
+          cleanliness?: number
+          cleanliness_expectations?: number
+          cooking_habits?: string
+          created_at?: string
+          desired_room_type?: string
+          fitness?: string
+          gender_preference?: string
+          guests?: string
+          id?: string
+          lifestyle_similarity?: string
+          lifestyle_vibe?: string
+          name?: string
+          noise_level?: number
+          occupation?: string
+          onboarding_complete?: boolean
+          partying?: string
+          pets?: boolean
+          preferred_age_max?: number
+          preferred_age_min?: number
+          religious_level?: string
+          shared_space_org?: string
+          sleep_schedule?: string
+          smoking?: boolean
+          social_level?: number
+          updated_at?: string
+          user_id?: string
+          wfh?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
