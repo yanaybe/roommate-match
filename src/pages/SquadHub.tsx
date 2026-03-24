@@ -400,13 +400,25 @@ export default function SquadHub() {
                 <h2 className="font-bold text-foreground mb-1">Squad not ready yet</h2>
                 <p className="text-muted-foreground text-sm">Fill your squad to unlock apartment search</p>
               </div>
+            ) : apartmentsLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <p className="text-muted-foreground text-sm">Loading apartments...</p>
+              </div>
+            ) : apartments.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
+                  <Home className="w-7 h-7 text-muted-foreground" />
+                </div>
+                <h2 className="font-bold text-foreground mb-1">No apartments yet</h2>
+                <p className="text-muted-foreground text-sm">Apartments will appear here once listed</p>
+              </div>
             ) : (
               <div className="space-y-4">
                 <p className="text-muted-foreground text-sm text-center mb-4">
-                  Swipe through apartments as a group. When everyone likes a listing → Super Match! 🔥
+                  Like apartments as a group. When everyone likes a listing → Super Match! 🔥
                 </p>
 
-                {mockApartments.map((apt) => {
+                {apartments.map((apt: any) => {
                   const aptLikes = likes.filter((l) => l.apartment_id === apt.id && l.liked);
                   const myLike = likes.find((l) => l.apartment_id === apt.id && l.user_id === user?.id);
                   const allLiked = aptLikes.length >= members.length && members.length > 1;
@@ -417,30 +429,38 @@ export default function SquadHub() {
                       className={`bg-card rounded-2xl shadow-card overflow-hidden ${allLiked ? "ring-2 ring-accent" : ""}`}
                     >
                       <div className="relative">
-                        <img src={apt.images[0]} alt={apt.title} className="w-full h-40 object-cover" />
+                        {apt.images?.[0] ? (
+                          <img src={apt.images[0]} alt={apt.title} className="w-full h-40 object-cover" />
+                        ) : (
+                          <div className="w-full h-40 bg-secondary flex items-center justify-center">
+                            <Home className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                        )}
                         {allLiked && (
                           <div className="absolute top-3 left-3 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                             <Sparkles className="w-3 h-3" /> Super Match!
                           </div>
                         )}
-                        <div className="absolute top-3 right-3">
-                          <MatchBadge percent={apt.matchPercent} />
-                        </div>
                       </div>
 
                       <div className="p-4">
-                        <h3 className="font-bold text-card-foreground text-sm">{apt.title}</h3>
+                        <h3 className="font-bold text-card-foreground text-sm">{apt.title || "Untitled Apartment"}</h3>
                         <p className="text-muted-foreground text-xs flex items-center gap-1 mt-0.5">
-                          <MapPin className="w-3 h-3" /> {apt.location}
+                          <MapPin className="w-3 h-3" /> {apt.neighborhood}{apt.city ? `, ${apt.city}` : ""}
                         </p>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><BedDouble className="w-3 h-3" /> {apt.rooms}</span>
+                          <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {apt.bathrooms}</span>
+                          <span className="flex items-center gap-1"><Maximize className="w-3 h-3" /> {apt.size}m²</span>
+                        </div>
                         <div className="flex items-center justify-between mt-3">
-                          <span className="font-bold text-foreground">₪{apt.price.toLocaleString()}/mo</span>
+                          <span className="font-bold text-foreground">₪{apt.price?.toLocaleString()}/mo</span>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-muted-foreground">
                               {likeCount}/{members.length} liked
                             </span>
                             <button
-                              onClick={() => handleApartmentLike(apt.id, !myLike?.liked)}
+                              onClick={() => handleApartmentLikeWithCheck(apt.id, !myLike?.liked)}
                               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                                 myLike?.liked ? "gradient-primary" : "bg-secondary"
                               }`}
