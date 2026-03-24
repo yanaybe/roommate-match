@@ -44,6 +44,10 @@ export default function SquadHub() {
   const { profiles: allProfiles } = useAllProfiles();
   const [tab, setTab] = useState<Tab>("members");
 
+  // Real apartments state
+  const [apartments, setApartments] = useState<any[]>([]);
+  const [apartmentsLoading, setApartmentsLoading] = useState(false);
+
   // Chat state
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [newMsg, setNewMsg] = useState("");
