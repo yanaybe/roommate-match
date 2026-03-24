@@ -139,12 +139,13 @@ export default function SquadHub() {
       apartment_id: apartmentId,
       user_id: user.id,
       liked,
-    }, { onConflict: "squad_id,apartment_id,user_id" });
-    if (!error) refetch();
+  const handleApartmentLikeWithCheck = async (apartmentId: string, liked: boolean) => {
+    await handleApartmentLike(apartmentId, liked);
+    if (liked) {
+      // Wait a moment for refetch to update likes, then check
+      setTimeout(() => checkSuperMatch(apartmentId), 1000);
+    }
   };
-
-  // Check for Super Match and auto-create chat
-  const checkSuperMatch = useCallback(async (apartmentId: string) => {
     if (!id || !squad) return;
     const aptLikes = likes.filter((l) => l.apartment_id === apartmentId && l.liked);
     if (aptLikes.length >= members.length && members.length > 1) {
