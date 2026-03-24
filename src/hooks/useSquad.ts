@@ -192,3 +192,88 @@ export function useMyInvites() {
 
   return { invites, loading, refetch: load };
 }
+
+export interface DiscoverableSquad extends Squad {
+  members: SquadMember[];
+  member_count: number;
+  creator_profile?: FullProfile;
+}
+
+export function useDiscoverSquads() {
+  const { user } = useAuth();
+  const [squads, setSquads] = useState<DiscoverableSquad[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    if (!user) { setLoading(false); return; }
+
+    // Get all non-full squads the user is NOT already a member of
+    const { data: allSquads } = await supabase
+      .from("squads")
+      .select("*")
+      .in("status", ["draft", "forming"]);
+
+    if (!allSquads?.length) {
+      setSquads([]);
+      setLoading(false);
+      return;
+    }
+
+    const squadIds = allSquads.map((s: any) => s.id);
+
+    // Get all members for these squads
+    const { data: allMembers } = await supabase
+      .from("squad_members")
+      .select("*")
+      .in("squad_id", squadIds)
+      .eq("status", "joined");
+
+    const membersBySquad = new Map<string, SquadMember[]>();
+    (allMembers ?? []).forEach((m: any) => {
+      const list = membersBySquad.get(m.squad_id) ?? [];
+      list.push(m as SquadMember);
+      membersBySquad.set(m.squad_id, list);
+    });
+
+    // Check pending invites for this user
+    const { data: pendingInvites } = await supabase
+      .from("squad_invites")
+      .select("squad_id")
+      .eq("invitee_id", user.id)
+      .eq("status", "pending");
+    const pendingSquadIds = new Set((pendingInvites ?? []).map((i: any) => i.squad_id));
+
+    // Filter: user is not a member, squad not full, no pending invite
+    const discoverable = (allSquads as Squad[]).filter((s) => {
+      const members = membersBySquad.get(s.id) ?? [];
+      const isMember = members.some((m) => m.user_id === user.id);
+      const isFull = members.length >= s.target_size;
+      const hasPending = pendingSquadIds.has(s.id);
+      return !isMember && !isFull && !hasPending;
+    });
+
+    // Get creator profiles
+    const creatorIds = [...new Set(discoverable.map((s) => s.creator_id))];
+    const { data: creatorProfiles } = creatorIds.length > 0
+      ? await supabase.from("profiles").select("*").in("user_id", creatorIds)
+      : { data: [] };
+    const profileMap = new Map((creatorProfiles ?? []).map((p: any) => [p.user_id, p]));
+
+    const result: DiscoverableSquad[] = discoverable.map((s) => {
+      const members = membersBySquad.get(s.id) ?? [];
+      return {
+        ...s,
+        members,
+        member_count: members.length,
+        creator_profile: profileMap.get(s.creator_id) as FullProfile | undefined,
+      };
+    });
+
+    setSquads(result);
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => { load(); }, [load]);
+
+  return { squads, loading, refetch: load };
+}
