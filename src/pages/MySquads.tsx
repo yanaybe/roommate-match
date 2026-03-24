@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus, ArrowLeft, Crown, Bell, Check, X, MapPin, DollarSign, UserPlus, Loader2 } from "lucide-react";
+import { Users, Plus, ArrowLeft, Crown, Bell, Check, X, MapPin, DollarSign, UserPlus, Loader2, SlidersHorizontal, Percent, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useMySquads, useMyInvites, useDiscoverSquads } from "@/hooks/useSquad";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Slider } from "@/components/ui/slider";
 
 type Tab = "my" | "discover";
 
@@ -17,6 +18,40 @@ export default function MySquads() {
   const { squads: openSquads, loading: discoverLoading, refetch: refetchDiscover } = useDiscoverSquads();
   const [tab, setTab] = useState<Tab>("my");
   const [requesting, setRequesting] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filter state
+  const [filterLocation, setFilterLocation] = useState("");
+  const [filterBudgetMin, setFilterBudgetMin] = useState(0);
+  const [filterBudgetMax, setFilterBudgetMax] = useState(15000);
+  const [filterMinMatch, setFilterMinMatch] = useState(0);
+
+  // All unique locations from open squads
+  const allLocations = useMemo(() => {
+    const locs = new Set<string>();
+    openSquads.forEach((s) => s.preferred_locations.forEach((l) => locs.add(l)));
+    return [...locs].sort();
+  }, [openSquads]);
+
+  // Filtered squads
+  const filteredSquads = useMemo(() => {
+    return openSquads.filter((s) => {
+      if (filterMinMatch > 0 && s.matchPercent < filterMinMatch) return false;
+      if (filterBudgetMin > 0 && s.budget_max < filterBudgetMin) return false;
+      if (filterBudgetMax < 15000 && s.budget_min > filterBudgetMax) return false;
+      if (filterLocation && !s.preferred_locations.some((l) => l.toLowerCase().includes(filterLocation.toLowerCase()))) return false;
+      return true;
+    });
+  }, [openSquads, filterLocation, filterBudgetMin, filterBudgetMax, filterMinMatch]);
+
+  const hasActiveFilters = filterLocation !== "" || filterBudgetMin > 0 || filterBudgetMax < 15000 || filterMinMatch > 0;
+
+  const clearFilters = () => {
+    setFilterLocation("");
+    setFilterBudgetMin(0);
+    setFilterBudgetMax(15000);
+    setFilterMinMatch(0);
+  };
 
   const handleAcceptInvite = async (invite: any) => {
     if (!user) return;
