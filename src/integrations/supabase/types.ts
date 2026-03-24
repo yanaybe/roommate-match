@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      apartments: {
+        Row: {
+          address: string
+          available_date: string
+          bathrooms: number
+          city: string
+          coordinates: number[] | null
+          created_at: string
+          description: string
+          floor: number | null
+          has_ac: boolean
+          has_balcony: boolean
+          has_elevator: boolean
+          has_garden: boolean
+          has_gym: boolean
+          has_laundry: boolean
+          has_parking: boolean
+          has_rooftop: boolean
+          has_security: boolean
+          has_wifi: boolean
+          id: string
+          images: string[]
+          is_furnished: boolean
+          neighborhood: string
+          pet_friendly: boolean
+          price: number
+          room_description: string
+          room_type: string
+          rooms: number
+          size: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string
+          available_date?: string
+          bathrooms?: number
+          city?: string
+          coordinates?: number[] | null
+          created_at?: string
+          description?: string
+          floor?: number | null
+          has_ac?: boolean
+          has_balcony?: boolean
+          has_elevator?: boolean
+          has_garden?: boolean
+          has_gym?: boolean
+          has_laundry?: boolean
+          has_parking?: boolean
+          has_rooftop?: boolean
+          has_security?: boolean
+          has_wifi?: boolean
+          id?: string
+          images?: string[]
+          is_furnished?: boolean
+          neighborhood?: string
+          pet_friendly?: boolean
+          price?: number
+          room_description?: string
+          room_type?: string
+          rooms?: number
+          size?: number
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          available_date?: string
+          bathrooms?: number
+          city?: string
+          coordinates?: number[] | null
+          created_at?: string
+          description?: string
+          floor?: number | null
+          has_ac?: boolean
+          has_balcony?: boolean
+          has_elevator?: boolean
+          has_garden?: boolean
+          has_gym?: boolean
+          has_laundry?: boolean
+          has_parking?: boolean
+          has_rooftop?: boolean
+          has_security?: boolean
+          has_wifi?: boolean
+          id?: string
+          images?: string[]
+          is_furnished?: boolean
+          neighborhood?: string
+          pet_friendly?: boolean
+          price?: number
+          room_description?: string
+          room_type?: string
+          rooms?: number
+          size?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_participants: {
         Row: {
           conversation_id: string
