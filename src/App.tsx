@@ -11,6 +11,7 @@ import CreateApartment from "./pages/CreateApartment";
 import Chats from "./pages/Chats";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import ApartmentDetail from "./pages/ApartmentDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/apartment/:id" element={<ApartmentDetail />} />
             <Route path="/roommates" element={<Roommates />} />
             <Route path="/create" element={<CreateApartment />} />
             <Route path="/chats" element={<Chats />} />

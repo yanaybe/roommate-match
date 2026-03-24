@@ -1,5 +1,6 @@
 import { Heart, Bookmark, MapPin, Bed, Bath, Maximize } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
 import type { Apartment } from "@/data/mockData";
 import { useState } from "react";
@@ -15,6 +16,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const [saved, setSaved] = useState(false);
   const [imgIndex, setImgIndex] = useState(0);
   const { requireAuth } = useRequireAuth();
+  const navigate = useNavigate();
 
   return (
     <motion.div
@@ -103,7 +105,10 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
             {liked ? "Liked!" : "Like"}
           </button>
-          <button className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all">
+          <button
+            onClick={() => navigate(`/apartment/${apartment.id}`)}
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
+          >
             Details
           </button>
         </div>
