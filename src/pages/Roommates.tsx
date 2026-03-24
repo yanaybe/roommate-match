@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { X, Heart, RotateCcw } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -6,20 +6,62 @@ import SwipeCard from "@/components/SwipeCard";
 import MatchModal from "@/components/MatchModal";
 import { mockUsers, type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
+import { calculateUserMatch } from "@/lib/matching";
 import { toast } from "sonner";
 
-const matchPercents = [92, 87, 78, 85, 71, 64];
-const usersWhoLikedYou = new Set(["1", "3", "5"]);
+// Convert DB profile to mock format for SwipeCard compatibility
+function profileToUser(p: FullProfile): UserProfile {
+  return {
+    id: p.user_id,
+    name: p.name,
+    age: p.age ?? 0,
+    city: p.city,
+    occupation: p.occupation,
+    avatar: p.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&size=200`,
+    budget: p.budget,
+    roomType: p.desired_room_type,
+    sleepSchedule: p.sleep_schedule,
+    cleanliness: p.cleanliness,
+    smoking: p.smoking,
+    pets: p.pets,
+    social: p.social_level,
+    noise: p.noise_level,
+    wfh: p.wfh,
+    bio: p.bio,
+  };
+}
 
 export default function Roommates() {
   const { user } = useAuth();
+  const { profile: myProfile } = useProfile();
+  const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles();
   const navigate = useNavigate();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [swiped, setSwiped] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
-  const [swiped, setSwiped] = useState<string[]>([]);
 
-  const remaining = mockUsers.filter((u) => !swiped.includes(u.id));
+  // Other profiles (not current user), with match percentages
+  const otherProfiles = useMemo(() => {
+    if (!myProfile) return [];
+    return allProfiles
+      .filter((p) => p.user_id !== user?.id)
+      .map((p) => ({
+        profile: p,
+        user: profileToUser(p),
+        matchPercent: calculateUserMatch(myProfile, p),
+      }));
+  }, [allProfiles, myProfile, user?.id]);
+
+  // Fall back to mock data when no real profiles exist
+  const useMockData = otherProfiles.length === 0 && !profilesLoading;
+  const mockMatchPercents = [92, 87, 78, 85, 71, 64];
+
+  const items = useMockData
+    ? mockUsers.map((u, i) => ({ user: u, matchPercent: mockMatchPercents[i] ?? 75 }))
+    : otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent }));
+
+  const remaining = items.filter((item) => !swiped.includes(item.user.id));
 
   const requireAuth = useCallback(() => {
     if (!user) {
@@ -27,21 +69,29 @@ export default function Roommates() {
       navigate("/auth");
       return false;
     }
+    if (!myProfile?.onboarding_complete) {
+      toast.info("Complete your profile first");
+      navigate("/onboarding");
+      return false;
+    }
     return true;
-  }, [user, navigate]);
+  }, [user, myProfile, navigate]);
 
   const handleSwipe = useCallback(
     (direction: "left" | "right") => {
       if (!requireAuth()) return;
-      const u = remaining[0];
-      if (!u) return;
+      const current = remaining[0];
+      if (!current) return;
 
-      setSwiped((prev) => [...prev, u.id]);
+      setSwiped((prev) => [...prev, current.user.id]);
 
-      if (direction === "right" && usersWhoLikedYou.has(u.id)) {
-        const idx = mockUsers.findIndex((m) => m.id === u.id);
-        setMatchedUser(u);
-        setMatchedPercent(matchPercents[idx] ?? 75);
+      if (direction === "right") {
+        // For now simulate match on every right swipe for demo
+        // In production, check mutual likes in DB
+        if (Math.random() > 0.5) {
+          setMatchedUser(current.user);
+          setMatchedPercent(current.matchPercent);
+        }
       }
     },
     [remaining, requireAuth]
@@ -65,24 +115,25 @@ export default function Roommates() {
       </div>
 
       <div className="flex-1 max-w-lg mx-auto w-full px-4 pt-4">
-        {remaining.length > 0 ? (
+        {profilesLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <p className="text-muted-foreground text-sm">Loading profiles...</p>
+          </div>
+        ) : remaining.length > 0 ? (
           <div className="relative w-full aspect-[3/4] max-h-[520px]">
             <AnimatePresence>
               {visibleCards
                 .slice()
                 .reverse()
-                .map((u, i) => {
-                  const realIndex = mockUsers.findIndex((m) => m.id === u.id);
-                  return (
-                    <SwipeCard
-                      key={u.id}
-                      user={u}
-                      matchPercent={matchPercents[realIndex] ?? 75}
-                      onSwipe={handleSwipe}
-                      isTop={i === visibleCards.length - 1}
-                    />
-                  );
-                })}
+                .map((item, i) => (
+                  <SwipeCard
+                    key={item.user.id}
+                    user={item.user}
+                    matchPercent={item.matchPercent}
+                    onSwipe={handleSwipe}
+                    isTop={i === visibleCards.length - 1}
+                  />
+                ))}
             </AnimatePresence>
           </div>
         ) : (
@@ -101,7 +152,7 @@ export default function Roommates() {
           </div>
         )}
 
-        {remaining.length > 0 && (
+        {remaining.length > 0 && !profilesLoading && (
           <div className="flex items-center justify-center gap-5 mt-6">
             <button
               onClick={handleUndo}
