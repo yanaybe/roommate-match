@@ -67,7 +67,6 @@ function RoommateProfileModal({
               <p className="text-muted-foreground text-sm mt-1">{user.bio}</p>
             </div>
 
-            {/* Living habits */}
             <div>
               <h3 className="text-sm font-bold text-foreground mb-2">Living Habits</h3>
               <div className="grid grid-cols-2 gap-2">
@@ -78,7 +77,6 @@ function RoommateProfileModal({
               </div>
             </div>
 
-            {/* Lifestyle */}
             <div>
               <h3 className="text-sm font-bold text-foreground mb-2">Lifestyle</h3>
               <div className="flex flex-wrap gap-2">

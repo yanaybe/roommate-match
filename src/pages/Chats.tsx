@@ -7,7 +7,7 @@ import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
 interface Conversation {
   id: string;
   other_user_id: string;
-  other_email: string;
+  other_name: string;
   last_message: string | null;
   last_message_at: string | null;
   unread_count: number;
