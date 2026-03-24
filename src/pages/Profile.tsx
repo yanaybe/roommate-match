@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
@@ -192,6 +192,14 @@ export default function Profile() {
               <InfoRow label="Cleanliness expected" value={`${profile.cleanliness_expectations}/5`} />
               <InfoRow label="Activity hours" value={profile.activity_hours} />
             </ProfileSection>
+            <div className="pb-4">
+              <button
+                onClick={() => { setPrefsOpen(false); navigate("/onboarding?edit=true"); }}
+                className="w-full gradient-primary text-primary-foreground py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
+              >
+                <Edit className="w-4 h-4" /> Edit Preferences
+              </button>
+            </div>
           </ScrollArea>
         </SheetContent>
       </Sheet>
