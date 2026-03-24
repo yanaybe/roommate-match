@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { X, Heart, RotateCcw, Users, Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +11,27 @@ import { calculateUserMatch } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const getMockLikedProfileKey = (userId: string, likedUserId: string) => `liked_profile:${userId}:${likedUserId}`;
+const getSwipeKey = (userId: string) => `swiped_profiles:${userId}`;
+
+function getSwipedMap(userId: string): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(getSwipeKey(userId)) || "{}");
+  } catch { return {}; }
+}
+
+function setSwipedMap(userId: string, map: Record<string, number>) {
+  localStorage.setItem(getSwipeKey(userId), JSON.stringify(map));
+}
+
+function getRecentlySwipedIds(userId: string): string[] {
+  const map = getSwipedMap(userId);
+  const now = Date.now();
+  return Object.entries(map)
+    .filter(([, ts]) => now - ts < SEVEN_DAYS_MS)
+    .map(([id]) => id);
+}
 
 // Convert DB profile to mock format for SwipeCard compatibility
 function profileToUser(p: FullProfile): UserProfile {
@@ -43,6 +63,13 @@ export default function Roommates() {
   const [swiped, setSwiped] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
+
+  // Load recently swiped IDs (within 7 days) into swiped state on mount
+  useEffect(() => {
+    if (user?.id) {
+      setSwiped(getRecentlySwipedIds(user.id));
+    }
+  }, [user?.id]);
 
   // Other profiles (not current user), with match percentages
   const otherProfiles = useMemo(() => {
@@ -87,6 +114,13 @@ export default function Roommates() {
       if (!current) return;
 
       setSwiped((prev) => [...prev, current.user.id]);
+
+      // Persist swipe timestamp for 7-day cooldown
+      if (user) {
+        const map = getSwipedMap(user.id);
+        map[current.user.id] = Date.now();
+        setSwipedMap(user.id, map);
+      }
 
       if (direction === "right" && user) {
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(current.user.id);
@@ -174,7 +208,7 @@ export default function Roommates() {
             <h2 className="text-lg font-bold text-foreground mb-1">No more profiles</h2>
             <p className="text-muted-foreground text-sm mb-4">Check back later for new roommates!</p>
             <button
-              onClick={() => setSwiped([])}
+              onClick={() => { setSwiped([]); if (user) setSwipedMap(user.id, {}); }}
               className="gradient-primary text-primary-foreground px-6 py-2.5 rounded-xl font-semibold text-sm"
             >
               Start Over
