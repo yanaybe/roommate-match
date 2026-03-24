@@ -145,7 +145,7 @@ export default function ApartmentDetail() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Image gallery */}
-      <div className="relative aspect-[4/3] max-h-[400px] overflow-hidden">
+      <div className="relative aspect-[4/3] max-h-[400px] overflow-hidden max-w-2xl mx-auto">
         <img
           src={apartment.images[imgIndex]}
           alt={apartment.title}
@@ -284,42 +284,49 @@ export default function ApartmentDetail() {
             Current Roommates ({apartment.roommates.length})
           </h2>
           <div className="space-y-2">
-            {apartment.roommates.map((rm) => (
-              <motion.button
-                key={rm.id}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedRoommate(rm)}
-                className="w-full bg-card rounded-2xl p-3 shadow-card flex items-center gap-3 text-left"
-              >
-                <img
-                  src={rm.avatar}
-                  alt={rm.name}
-                  className="w-14 h-14 rounded-full object-cover ring-2 ring-primary/20"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-foreground text-sm">
-                      {rm.name}, {rm.age}
-                    </span>
+            {apartment.roommates.map((rm) => {
+              // Calculate a simple mock match percent based on roommate traits
+              const matchPercent = Math.round(60 + Math.random() * 35);
+              return (
+                <motion.button
+                  key={rm.id}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedRoommate(rm)}
+                  className="w-full bg-card rounded-2xl p-3 shadow-card flex items-center gap-3 text-left"
+                >
+                  <div className="relative">
+                    <img
+                      src={rm.avatar}
+                      alt={rm.name}
+                      className="w-14 h-14 rounded-full object-cover ring-2 ring-primary/20"
+                    />
                   </div>
-                  <p className="text-muted-foreground text-xs">{rm.occupation}</p>
-                  <div className="flex gap-1.5 mt-1">
-                    <span className="bg-secondary text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full">
-                      {rm.sleepSchedule}
-                    </span>
-                    <span className="bg-secondary text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full">
-                      Clean: {rm.cleanliness}/5
-                    </span>
-                    {rm.pets && (
-                      <span className="bg-secondary text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full">
-                        🐾 Pets
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-foreground text-sm">
+                        {rm.name}, {rm.age}
                       </span>
-                    )}
+                      <MatchBadge percent={matchPercent} size="sm" />
+                    </div>
+                    <p className="text-muted-foreground text-xs">{rm.occupation}</p>
+                    <div className="flex gap-1.5 mt-1">
+                      <span className="bg-secondary text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full">
+                        {rm.sleepSchedule}
+                      </span>
+                      <span className="bg-secondary text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full">
+                        Clean: {rm.cleanliness}/5
+                      </span>
+                      {rm.pets && (
+                        <span className="bg-secondary text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full">
+                          🐾 Pets
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-              </motion.button>
-            ))}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                </motion.button>
+              );
+            })}
           </div>
         </div>
       </div>
