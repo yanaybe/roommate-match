@@ -273,18 +273,18 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
             </div>
 
             {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-5 py-4 flex gap-3">
+            <div className="sticky bottom-0 bg-card border-t border-border px-5 py-4 flex gap-3 z-20">
               <button
                 onClick={handleReset}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-secondary text-secondary-foreground"
+                className="flex-1 py-3.5 rounded-xl text-sm font-bold bg-secondary text-secondary-foreground active:scale-95 transition-transform"
               >
-                Reset
+                Reset All
               </button>
               <button
                 onClick={handleApply}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold gradient-primary text-primary-foreground"
+                className="flex-1 py-3.5 rounded-xl text-sm font-bold gradient-primary text-primary-foreground shadow-elevated active:scale-95 transition-transform"
               >
-                Apply{activeCount > 0 ? ` (${activeCount})` : ""}
+                Show Results{activeCount > 0 ? ` (${activeCount})` : ""}
               </button>
             </div>
           </motion.div>
