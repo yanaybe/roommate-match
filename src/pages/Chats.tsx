@@ -68,13 +68,15 @@ export default function Chats() {
       const otherUserId = others?.[0]?.user_id ?? "";
 
       let otherName = otherUserId.slice(0, 8) + "...";
+      let otherAvatar: string | null = null;
       if (otherUserId) {
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("name")
+          .select("name, avatar_url")
           .eq("user_id", otherUserId)
           .maybeSingle();
         if (profileData?.name) otherName = profileData.name;
+        otherAvatar = profileData?.avatar_url ?? null;
       }
 
       const { data: lastMsg } = await supabase
