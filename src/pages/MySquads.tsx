@@ -278,94 +278,216 @@ export default function MySquads() {
           </>
         ) : (
           /* Discover tab */
-          discoverLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <p className="text-muted-foreground text-sm">Finding open squads...</p>
-            </div>
-          ) : openSquads.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
-                <Users className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h2 className="text-lg font-bold text-foreground mb-1">No open squads</h2>
-              <p className="text-muted-foreground text-sm mb-6">No squads looking for members right now. Create your own!</p>
+          <>
+            {/* Filter bar */}
+            <div className="space-y-2">
               <button
-                onClick={() => navigate("/create-squad")}
-                className="gradient-primary text-primary-foreground px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2"
+                onClick={() => setShowFilters((v) => !v)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  hasActiveFilters ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <Plus className="w-4 h-4" /> Create Squad
+                <SlidersHorizontal className="w-4 h-4" />
+                Filters
+                {hasActiveFilters && (
+                  <span className="w-2 h-2 rounded-full bg-primary" />
+                )}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFilters ? "rotate-180" : ""}`} />
               </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {openSquads.map((squad, i) => (
-                <motion.div
-                  key={squad.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="bg-card rounded-2xl shadow-card p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="relative">
-                      <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center shrink-0">
-                        <Users className="w-6 h-6 text-primary-foreground" />
-                      </div>
-                      <div className={`absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-primary-foreground ${
-                        squad.matchPercent >= 80 ? "bg-accent" : squad.matchPercent >= 60 ? "bg-primary" : "bg-muted-foreground"
-                      }`}>
-                        {squad.matchPercent}%
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-card-foreground text-sm truncate">{squad.name}</h3>
-                      <p className="text-muted-foreground text-xs mt-0.5">
-                        Created by {squad.creator_profile?.name ?? "Unknown"}
-                      </p>
 
-                      {/* Squad details */}
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                          <Users className="w-3 h-3" />
-                          {squad.member_count}/{squad.target_size}
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                          <DollarSign className="w-3 h-3" />
-                          ₪{squad.budget_min}–{squad.budget_max}
-                        </span>
-                        {squad.preferred_locations.length > 0 && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                            <MapPin className="w-3 h-3" />
-                            {squad.preferred_locations.slice(0, 2).join(", ")}
-                            {squad.preferred_locations.length > 2 && ` +${squad.preferred_locations.length - 2}`}
-                          </span>
-                        )}
-                        {squad.no_smoking && (
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">🚭</span>
-                        )}
-                        {squad.pet_friendly && (
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">🐾</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleRequestJoin(squad.id, squad.creator_id)}
-                    disabled={requesting === squad.id}
-                    className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm transition-colors disabled:opacity-50"
+              <AnimatePresence>
+                {showFilters && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
                   >
-                    {requesting === squad.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <UserPlus className="w-4 h-4" />
-                    )}
-                    {requesting === squad.id ? "Sending..." : "Ask to Join"}
-                  </button>
-                </motion.div>
-              ))}
+                    <div className="bg-card rounded-2xl shadow-card p-4 space-y-4">
+                      {/* Location */}
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Location</label>
+                        {allLocations.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            <button
+                              onClick={() => setFilterLocation("")}
+                              className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
+                                filterLocation === "" ? "gradient-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              All
+                            </button>
+                            {allLocations.map((loc) => (
+                              <button
+                                key={loc}
+                                onClick={() => setFilterLocation(filterLocation === loc ? "" : loc)}
+                                className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
+                                  filterLocation === loc ? "gradient-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"
+                                }`}
+                              >
+                                {loc}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <input
+                            type="text"
+                            value={filterLocation}
+                            onChange={(e) => setFilterLocation(e.target.value)}
+                            placeholder="Type a location..."
+                            className="w-full bg-secondary rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                          />
+                        )}
+                      </div>
+
+                      {/* Budget range */}
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                          <span>Budget Range</span>
+                          <span className="text-foreground normal-case font-bold">₪{filterBudgetMin.toLocaleString()} – ₪{filterBudgetMax.toLocaleString()}</span>
+                        </label>
+                        <Slider
+                          min={0}
+                          max={15000}
+                          step={500}
+                          value={[filterBudgetMin, filterBudgetMax]}
+                          onValueChange={([min, max]) => { setFilterBudgetMin(min); setFilterBudgetMax(max); }}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      {/* Min match */}
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                          <span className="flex items-center gap-1"><Percent className="w-3 h-3" /> Min Match</span>
+                          <span className="text-foreground normal-case font-bold">{filterMinMatch}%</span>
+                        </label>
+                        <Slider
+                          min={0}
+                          max={100}
+                          step={5}
+                          value={[filterMinMatch]}
+                          onValueChange={([v]) => setFilterMinMatch(v)}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      {hasActiveFilters && (
+                        <button
+                          onClick={clearFilters}
+                          className="text-xs font-semibold text-destructive hover:underline"
+                        >
+                          Clear all filters
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          )
+
+            {discoverLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <p className="text-muted-foreground text-sm">Finding open squads...</p>
+              </div>
+            ) : filteredSquads.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
+                  <Users className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h2 className="text-lg font-bold text-foreground mb-1">
+                  {hasActiveFilters ? "No matching squads" : "No open squads"}
+                </h2>
+                <p className="text-muted-foreground text-sm mb-6">
+                  {hasActiveFilters ? "Try adjusting your filters" : "No squads looking for members right now. Create your own!"}
+                </p>
+                {hasActiveFilters ? (
+                  <button onClick={clearFilters} className="bg-secondary text-foreground px-6 py-3 rounded-2xl font-bold text-sm">
+                    Clear Filters
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate("/create-squad")}
+                    className="gradient-primary text-primary-foreground px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Create Squad
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  {filteredSquads.length} squad{filteredSquads.length !== 1 ? "s" : ""} found
+                </p>
+                {filteredSquads.map((squad, i) => (
+                  <motion.div
+                    key={squad.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-card rounded-2xl shadow-card p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="relative">
+                        <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center shrink-0">
+                          <Users className="w-6 h-6 text-primary-foreground" />
+                        </div>
+                        <div className={`absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-primary-foreground ${
+                          squad.matchPercent >= 80 ? "bg-accent" : squad.matchPercent >= 60 ? "bg-primary" : "bg-muted-foreground"
+                        }`}>
+                          {squad.matchPercent}%
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-card-foreground text-sm truncate">{squad.name}</h3>
+                        <p className="text-muted-foreground text-xs mt-0.5">
+                          Created by {squad.creator_profile?.name ?? "Unknown"}
+                        </p>
+
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                            <Users className="w-3 h-3" />
+                            {squad.member_count}/{squad.target_size}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                            <DollarSign className="w-3 h-3" />
+                            ₪{squad.budget_min}–{squad.budget_max}
+                          </span>
+                          {squad.preferred_locations.length > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                              <MapPin className="w-3 h-3" />
+                              {squad.preferred_locations.slice(0, 2).join(", ")}
+                              {squad.preferred_locations.length > 2 && ` +${squad.preferred_locations.length - 2}`}
+                            </span>
+                          )}
+                          {squad.no_smoking && (
+                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">🚭</span>
+                          )}
+                          {squad.pet_friendly && (
+                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">🐾</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleRequestJoin(squad.id, squad.creator_id)}
+                      disabled={requesting === squad.id}
+                      className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm transition-colors disabled:opacity-50"
+                    >
+                      {requesting === squad.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <UserPlus className="w-4 h-4" />
+                      )}
+                      {requesting === squad.id ? "Sending..." : "Ask to Join"}
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
