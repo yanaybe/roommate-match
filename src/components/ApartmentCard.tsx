@@ -21,6 +21,20 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Load saved state from DB on mount
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("saved_apartments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("apartment_id", apartment.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setSaved(true);
+      });
+  }, [user, apartment.id]);
+
   const toggleSave = async () => {
     if (!user) return;
     const newSaved = !saved;
