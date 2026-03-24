@@ -88,6 +88,11 @@ const apartmentImages = [
   "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&h=400&fit=crop",
   "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=600&h=400&fit=crop",
   "https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=600&h=400&fit=crop",
+  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop",
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop",
+  "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=600&h=400&fit=crop",
+  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop",
+  "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=600&h=400&fit=crop",
 ];
 
 export const mockApartments: Apartment[] = [
@@ -95,6 +100,16 @@ export const mockApartments: Apartment[] = [
   { id: "a2", title: "Cozy Room near Carmel Market", price: 2800, location: "Kerem, Tel Aviv", coordinates: [32.0650, 34.7680], images: [apartmentImages[2], apartmentImages[3]], rooms: 4, bathrooms: 2, size: 110, roommates: [mockUsers[2]], matchPercent: 78, amenities: ["Rooftop", "AC", "Parking"], available: "March 1" },
   { id: "a3", title: "Modern Flat in Rothschild", price: 4500, location: "Rothschild, Tel Aviv", coordinates: [32.0635, 34.7745], images: [apartmentImages[4], apartmentImages[0]], rooms: 2, bathrooms: 1, size: 65, roommates: [mockUsers[3]], matchPercent: 85, amenities: ["Gym", "AC", "Elevator", "Security"], available: "April 1" },
   { id: "a4", title: "Artsy Apartment in Neve Tzedek", price: 3800, location: "Neve Tzedek, Tel Aviv", coordinates: [32.0580, 34.7660], images: [apartmentImages[1], apartmentImages[4]], rooms: 3, bathrooms: 1, size: 90, roommates: [mockUsers[4], mockUsers[5]], matchPercent: 64, amenities: ["Garden", "AC", "Laundry"], available: "Immediately" },
+  { id: "a5", title: "Student Flat in Nachlaot", price: 2200, location: "Nachlaot, Jerusalem", coordinates: [31.7800, 35.2150], images: [apartmentImages[5], apartmentImages[6]], rooms: 3, bathrooms: 1, size: 70, roommates: [mockUsers[12]], matchPercent: 73, amenities: ["WiFi", "Laundry"], available: "May 1" },
+  { id: "a6", title: "Sea View in Bat Galim", price: 2600, location: "Bat Galim, Haifa", coordinates: [32.8230, 34.9700], images: [apartmentImages[7], apartmentImages[8]], rooms: 3, bathrooms: 1, size: 80, roommates: [mockUsers[11]], matchPercent: 81, amenities: ["Balcony", "AC", "Sea View"], available: "Immediately" },
+  { id: "a7", title: "Penthouse in Herzliya Pituach", price: 6000, location: "Herzliya Pituach, Herzliya", coordinates: [32.1620, 34.7870], images: [apartmentImages[9], apartmentImages[5]], rooms: 4, bathrooms: 2, size: 140, roommates: [mockUsers[7]], matchPercent: 88, amenities: ["Pool", "Gym", "Parking", "Security", "AC"], available: "June 1", isBoosted: true },
+  { id: "a8", title: "Cozy Studio in German Colony", price: 3500, location: "German Colony, Jerusalem", coordinates: [31.7600, 35.2210], images: [apartmentImages[6], apartmentImages[7]], rooms: 2, bathrooms: 1, size: 55, roommates: [], matchPercent: 70, amenities: ["Garden", "AC", "Laundry"], available: "April 15" },
+  { id: "a9", title: "Bright Room in Ramat Gan", price: 2400, location: "City Center, Ramat Gan", coordinates: [32.0830, 34.8120], images: [apartmentImages[8], apartmentImages[9]], rooms: 3, bathrooms: 1, size: 75, roommates: [mockUsers[8]], matchPercent: 76, amenities: ["Balcony", "AC", "Elevator"], available: "Immediately" },
+  { id: "a10", title: "Spacious Flat near the Beach", price: 3100, location: "City Center, Netanya", coordinates: [32.3290, 34.8560], images: [apartmentImages[0], apartmentImages[8]], rooms: 3, bathrooms: 1, size: 90, roommates: [mockUsers[9]], matchPercent: 67, amenities: ["Parking", "AC", "WiFi", "Laundry"], available: "March 15" },
+  { id: "a11", title: "Modern Loft in Carmel Center", price: 3300, location: "Carmel Center, Haifa", coordinates: [32.7950, 34.9860], images: [apartmentImages[7], apartmentImages[3]], rooms: 2, bathrooms: 1, size: 60, roommates: [mockUsers[4]], matchPercent: 83, amenities: ["Balcony", "AC", "Elevator", "WiFi"], available: "May 1" },
+  { id: "a12", title: "Garden Apartment in Givatayim", price: 2900, location: "Borochov, Givatayim", coordinates: [32.0710, 34.8100], images: [apartmentImages[5], apartmentImages[2]], rooms: 3, bathrooms: 1, size: 85, roommates: [mockUsers[14]], matchPercent: 79, amenities: ["Garden", "Parking", "Laundry", "AC"], available: "Immediately" },
+  { id: "a13", title: "Renovated Flat in Beer Sheva", price: 1800, location: "Old City, Beer Sheva", coordinates: [31.2520, 34.7910], images: [apartmentImages[9], apartmentImages[1]], rooms: 4, bathrooms: 2, size: 100, roommates: [mockUsers[6]], matchPercent: 71, amenities: ["AC", "Parking", "Laundry", "WiFi"], available: "April 1" },
+  { id: "a14", title: "Luxury Suite in Rishon LeZion", price: 4200, location: "West Rishon, Rishon LeZion", coordinates: [31.9640, 34.7750], images: [apartmentImages[6], apartmentImages[4]], rooms: 3, bathrooms: 2, size: 95, roommates: [mockUsers[13]], matchPercent: 86, amenities: ["Gym", "Pool", "AC", "Security", "Elevator"], available: "June 1" },
 ];
 
 export const mockChats: ChatPreview[] = [
