@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { X, Heart, RotateCcw, Users, Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +11,27 @@ import { calculateUserMatch } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const getMockLikedProfileKey = (userId: string, likedUserId: string) => `liked_profile:${userId}:${likedUserId}`;
+const getSwipeKey = (userId: string) => `swiped_profiles:${userId}`;
+
+function getSwipedMap(userId: string): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(getSwipeKey(userId)) || "{}");
+  } catch { return {}; }
+}
+
+function setSwipedMap(userId: string, map: Record<string, number>) {
+  localStorage.setItem(getSwipeKey(userId), JSON.stringify(map));
+}
+
+function getRecentlySwipedIds(userId: string): string[] {
+  const map = getSwipedMap(userId);
+  const now = Date.now();
+  return Object.entries(map)
+    .filter(([, ts]) => now - ts < SEVEN_DAYS_MS)
+    .map(([id]) => id);
+}
 
 // Convert DB profile to mock format for SwipeCard compatibility
 function profileToUser(p: FullProfile): UserProfile {
