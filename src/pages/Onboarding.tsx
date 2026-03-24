@@ -114,10 +114,48 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
 
 export default function Onboarding() {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isEdit = searchParams.get("edit") === "true";
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(initial);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isEdit && profile) {
+      setForm({
+        name: profile.name || "",
+        age: profile.age?.toString() || "",
+        city: profile.city || "",
+        occupation: profile.occupation || "",
+        budget: profile.budget?.toString() || "",
+        desired_room_type: profile.desired_room_type || "Private",
+        sleep_schedule: profile.sleep_schedule || "Flexible",
+        cleanliness: profile.cleanliness ?? 3,
+        cooking_habits: profile.cooking_habits || "Sometimes",
+        shared_space_org: profile.shared_space_org || "Moderate",
+        smoking: profile.smoking ?? false,
+        religious_level: profile.religious_level || "Not religious",
+        alcohol: profile.alcohol || "Socially",
+        pets: profile.pets ?? false,
+        fitness: profile.fitness || "Sometimes",
+        wfh: profile.wfh ?? false,
+        guests: profile.guests || "Occasionally",
+        social_level: profile.social_level ?? 3,
+        noise_level: profile.noise_level ?? 3,
+        partying: profile.partying || "Occasionally",
+        lifestyle_vibe: profile.lifestyle_vibe || "Balanced",
+        preferred_age_min: profile.preferred_age_min?.toString() || "18",
+        preferred_age_max: profile.preferred_age_max?.toString() || "40",
+        gender_preference: profile.gender_preference || "No preference",
+        lifestyle_similarity: profile.lifestyle_similarity || "Somewhat similar",
+        cleanliness_expectations: profile.cleanliness_expectations ?? 3,
+        activity_hours: profile.activity_hours || "Flexible",
+        bio: profile.bio || "",
+      });
+    }
+  }, [isEdit, profile]);
 
   const update = <K extends keyof FormData>(key: K, val: FormData[K]) =>
     setForm((p) => ({ ...p, [key]: val }));
