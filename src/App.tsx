@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import ApartmentDetail from "./pages/ApartmentDetail";
+import PostApartment from "./pages/PostApartment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/apartment/:id" element={<ApartmentDetail />} />
             <Route path="/roommates" element={<Roommates />} />
             <Route path="/create" element={<CreateApartment />} />
+            <Route path="/post-apartment" element={<PostApartment />} />
             <Route path="/chats" element={<Chats />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/auth" element={<Auth />} />
