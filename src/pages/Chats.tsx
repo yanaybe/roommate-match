@@ -389,11 +389,15 @@ export default function Chats() {
                 onClick={() => setActiveConv(conv.id)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors border-b border-border/50 text-left"
               >
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <span className="text-primary font-bold">
-                    {conv.other_name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                {conv.other_avatar ? (
+                  <img src={conv.other_avatar} alt={conv.other_name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                    <span className="text-primary font-bold">
+                      {conv.other_name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-card-foreground text-sm">
