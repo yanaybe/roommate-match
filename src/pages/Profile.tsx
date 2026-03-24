@@ -1,15 +1,18 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const menuItems = [
-  { icon: Crown, label: "Go Premium", desc: "Unlock all features", accent: true },
-  { icon: Sparkles, label: "Edit Preferences", desc: "Update matching criteria" },
-  { icon: Shield, label: "Verification", desc: "Verify your identity" },
-  { icon: Bell, label: "Notifications", desc: "Manage alerts" },
-  { icon: Settings, label: "Settings", desc: "Account & privacy" },
+  { icon: Crown, label: "Go Premium", desc: "Unlock all features", accent: true, action: null },
+  { icon: Sparkles, label: "Preferences", desc: "View your matching criteria", accent: false, action: "preferences" },
+  { icon: Shield, label: "Verification", desc: "Verify your identity", action: null },
+  { icon: Bell, label: "Notifications", desc: "Manage alerts", action: null },
+  { icon: Settings, label: "Settings", desc: "Account & privacy", action: null },
 ];
 
 function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -34,6 +37,7 @@ export default function Profile() {
   const { user, signOut } = useAuth();
   const { profile, loading } = useProfile();
   const navigate = useNavigate();
+  const [prefsOpen, setPrefsOpen] = useState(false);
 
   if (!user) {
     return (
@@ -80,6 +84,10 @@ export default function Profile() {
     );
   }
 
+  const handleMenuClick = (action: string | null) => {
+    if (action === "preferences") setPrefsOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="max-w-lg mx-auto px-4 pt-12">
@@ -104,43 +112,6 @@ export default function Profile() {
           )}
         </motion.div>
 
-        <ProfileSection title="Basic Info">
-          <InfoRow label="Budget" value={`₪${profile.budget.toLocaleString()}/mo`} />
-          <InfoRow label="Room type" value={profile.desired_room_type} />
-        </ProfileSection>
-
-        <ProfileSection title="Living Habits">
-          <InfoRow label="Sleep schedule" value={profile.sleep_schedule} />
-          <InfoRow label="Cleanliness" value={`${profile.cleanliness}/5`} />
-          <InfoRow label="Cooking" value={profile.cooking_habits} />
-          <InfoRow label="Shared space" value={profile.shared_space_org} />
-        </ProfileSection>
-
-        <ProfileSection title="Lifestyle">
-          <InfoRow label="Smoking" value={profile.smoking ? "Yes" : "No"} />
-          <InfoRow label="Religious level" value={profile.religious_level} />
-          <InfoRow label="Alcohol" value={profile.alcohol} />
-          <InfoRow label="Pets" value={profile.pets ? "Yes" : "No"} />
-          <InfoRow label="Fitness" value={profile.fitness} />
-          <InfoRow label="Work from home" value={profile.wfh ? "Yes" : "No"} />
-          <InfoRow label="Guests" value={profile.guests} />
-        </ProfileSection>
-
-        <ProfileSection title="Personality">
-          <InfoRow label="Social level" value={`${profile.social_level}/5`} />
-          <InfoRow label="Noise level" value={`${profile.noise_level}/5`} />
-          <InfoRow label="Partying" value={profile.partying} />
-          <InfoRow label="Vibe" value={profile.lifestyle_vibe} />
-        </ProfileSection>
-
-        <ProfileSection title="Roommate Preferences">
-          <InfoRow label="Age range" value={`${profile.preferred_age_min} - ${profile.preferred_age_max}`} />
-          <InfoRow label="Gender" value={profile.gender_preference} />
-          <InfoRow label="Lifestyle similarity" value={profile.lifestyle_similarity} />
-          <InfoRow label="Cleanliness expected" value={`${profile.cleanliness_expectations}/5`} />
-          <InfoRow label="Activity hours" value={profile.activity_hours} />
-        </ProfileSection>
-
         <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-4">
           {menuItems.map((item, i) => {
             const Icon = item.icon;
@@ -150,6 +121,7 @@ export default function Profile() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 + i * 0.04 }}
+                onClick={() => handleMenuClick(item.action)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors border-b border-border/50 last:border-0 text-left"
               >
                 <div className={`p-2 rounded-lg ${item.accent ? "gradient-primary" : "bg-secondary"}`}>
@@ -176,6 +148,53 @@ export default function Profile() {
           Log Out
         </button>
       </div>
+
+      {/* Preferences Sheet */}
+      <Sheet open={prefsOpen} onOpenChange={setPrefsOpen}>
+        <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0">
+          <SheetHeader className="px-5 pt-5 pb-3 border-b border-border">
+            <SheetTitle className="text-lg font-extrabold text-foreground">Preferences</SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(85vh-70px)] px-5 py-4">
+            <ProfileSection title="Basic Info">
+              <InfoRow label="Budget" value={`₪${profile.budget.toLocaleString()}/mo`} />
+              <InfoRow label="Room type" value={profile.desired_room_type} />
+            </ProfileSection>
+
+            <ProfileSection title="Living Habits">
+              <InfoRow label="Sleep schedule" value={profile.sleep_schedule} />
+              <InfoRow label="Cleanliness" value={`${profile.cleanliness}/5`} />
+              <InfoRow label="Cooking" value={profile.cooking_habits} />
+              <InfoRow label="Shared space" value={profile.shared_space_org} />
+            </ProfileSection>
+
+            <ProfileSection title="Lifestyle">
+              <InfoRow label="Smoking" value={profile.smoking ? "Yes" : "No"} />
+              <InfoRow label="Religious level" value={profile.religious_level} />
+              <InfoRow label="Alcohol" value={profile.alcohol} />
+              <InfoRow label="Pets" value={profile.pets ? "Yes" : "No"} />
+              <InfoRow label="Fitness" value={profile.fitness} />
+              <InfoRow label="Work from home" value={profile.wfh ? "Yes" : "No"} />
+              <InfoRow label="Guests" value={profile.guests} />
+            </ProfileSection>
+
+            <ProfileSection title="Personality">
+              <InfoRow label="Social level" value={`${profile.social_level}/5`} />
+              <InfoRow label="Noise level" value={`${profile.noise_level}/5`} />
+              <InfoRow label="Partying" value={profile.partying} />
+              <InfoRow label="Vibe" value={profile.lifestyle_vibe} />
+            </ProfileSection>
+
+            <ProfileSection title="Roommate Preferences">
+              <InfoRow label="Age range" value={`${profile.preferred_age_min} - ${profile.preferred_age_max}`} />
+              <InfoRow label="Gender" value={profile.gender_preference} />
+              <InfoRow label="Lifestyle similarity" value={profile.lifestyle_similarity} />
+              <InfoRow label="Cleanliness expected" value={`${profile.cleanliness_expectations}/5`} />
+              <InfoRow label="Activity hours" value={profile.activity_hours} />
+            </ProfileSection>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
