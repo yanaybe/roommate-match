@@ -1,5 +1,6 @@
 import { Search, SlidersHorizontal, Map, List } from "lucide-react";
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
+import { motion } from "framer-motion";
 import { motion } from "framer-motion";
 import ApartmentCard from "@/components/ApartmentCard";
 import { mockApartments } from "@/data/mockData";
