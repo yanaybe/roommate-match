@@ -1,13 +1,15 @@
 import { motion } from "framer-motion";
 import { Users, Home, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const modes = [
-  { icon: Search, title: "Find a Room", desc: "Browse available rooms in shared apartments", color: "gradient-primary" },
-  { icon: Users, title: "Find Roommates", desc: "Post your apartment and find matching roommates", color: "bg-accent" },
-  { icon: Home, title: "Start Fresh", desc: "Create a new apartment group from scratch", color: "bg-foreground" },
+  { icon: Search, title: "Find a Room", desc: "Browse available rooms in shared apartments", color: "gradient-primary", path: "/" },
+  { icon: Users, title: "Find Roommates", desc: "Post your apartment and find matching roommates", color: "bg-accent", path: "/post-apartment" },
+  { icon: Home, title: "Start Fresh", desc: "Create a new apartment group from scratch", color: "bg-foreground", path: null },
 ];
 
 export default function CreateApartment() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="max-w-lg mx-auto px-4 pt-16">
