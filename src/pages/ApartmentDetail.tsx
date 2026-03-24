@@ -145,7 +145,7 @@ export default function ApartmentDetail() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Image gallery */}
-      <div className="relative aspect-[4/3] max-h-[400px] overflow-hidden">
+      <div className="relative aspect-[4/3] max-h-[400px] overflow-hidden max-w-2xl mx-auto">
         <img
           src={apartment.images[imgIndex]}
           alt={apartment.title}
