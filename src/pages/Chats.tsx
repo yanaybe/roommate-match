@@ -63,6 +63,17 @@ export default function Chats() {
 
         const otherUserId = others?.[0]?.user_id ?? "";
 
+        // Get other user's profile name
+        let otherName = otherUserId.slice(0, 8) + "...";
+        if (otherUserId) {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("user_id", otherUserId)
+            .maybeSingle();
+          if (profileData?.name) otherName = profileData.name;
+        }
+
         // Get last message
         const { data: lastMsg } = await supabase
           .from("messages")
@@ -89,7 +100,7 @@ export default function Chats() {
         convs.push({
           id: convId,
           other_user_id: otherUserId,
-          other_email: otherUserId.slice(0, 8) + "...",
+          other_name: otherName,
           last_message: lastMsg?.[0]?.content ?? null,
           last_message_at: lastMsg?.[0]?.created_at ?? null,
           unread_count: unreadCount,
