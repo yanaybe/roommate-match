@@ -6,8 +6,9 @@ import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import PhotoUpload from "@/components/PhotoUpload";
 
-const STEPS = ["Basic Info", "Living Habits", "Lifestyle", "Personality", "Roommate Preferences"];
+const STEPS = ["Photos", "Basic Info", "Living Habits", "Lifestyle", "Personality", "Roommate Preferences"];
 
 const sleepOptions = ["Early bird", "Night owl", "Flexible"];
 const roomTypeOptions = ["Private", "Shared OK", "Either"];
@@ -52,6 +53,7 @@ interface FormData {
   cleanliness_expectations: number;
   activity_hours: string;
   bio: string;
+  photos: string[];
 }
 
 const initial: FormData = {
@@ -62,7 +64,7 @@ const initial: FormData = {
   social_level: 3, noise_level: 3, partying: "Occasionally", lifestyle_vibe: "Balanced",
   preferred_age_min: "18", preferred_age_max: "40", gender_preference: "No preference",
   lifestyle_similarity: "Somewhat similar", cleanliness_expectations: 3, activity_hours: "Flexible",
-  bio: "",
+  bio: "", photos: [],
 };
 
 function OptionButton({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
@@ -153,6 +155,7 @@ export default function Onboarding() {
         cleanliness_expectations: profile.cleanliness_expectations ?? 3,
         activity_hours: profile.activity_hours || "Flexible",
         bio: profile.bio || "",
+        photos: (profile as any).photos || [],
       });
     }
   }, [isEdit, profile]);
@@ -161,7 +164,8 @@ export default function Onboarding() {
     setForm((p) => ({ ...p, [key]: val }));
 
   const canProceed = () => {
-    if (step === 0) return form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget;
+    if (step === 0) return form.photos.length >= 1;
+    if (step === 1) return form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget;
     return true;
   };
 
@@ -199,6 +203,8 @@ export default function Onboarding() {
       activity_hours: form.activity_hours,
       bio: form.bio.trim(),
       onboarding_complete: true,
+      avatar_url: form.photos[0] || null,
+      photos: form.photos,
     };
 
     let error;
@@ -221,6 +227,20 @@ export default function Onboarding() {
   const renderStep = () => {
     switch (step) {
       case 0:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-2">
+              <h2 className="text-lg font-bold text-foreground">Add your photos</h2>
+              <p className="text-muted-foreground text-sm">Show your future roommates who you are!</p>
+            </div>
+            <PhotoUpload
+              photos={form.photos}
+              onChange={(photos) => update("photos", photos)}
+              maxPhotos={6}
+            />
+          </div>
+        );
+      case 1:
         return (
           <div className="space-y-4">
             <div>
@@ -259,7 +279,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 1:
+      case 2:
         return (
           <div className="space-y-5">
             <div>
@@ -289,7 +309,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 2:
+      case 3:
         return (
           <div className="space-y-5">
             <div className="flex flex-wrap gap-2">
@@ -331,7 +351,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 3:
+      case 4:
         return (
           <div className="space-y-5">
             <SliderField label="Social vs Private" value={form.social_level} onChange={(v) => update("social_level", v)} labels={["Very private", "", "Balanced", "", "Very social"]} />
@@ -354,7 +374,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 4:
+      case 5:
         return (
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-3">
@@ -402,7 +422,6 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-lg mx-auto px-4 pt-12 pb-8">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold text-foreground">
             Set up your <span className="text-primary">profile</span>
@@ -410,14 +429,12 @@ export default function Onboarding() {
           <p className="text-muted-foreground text-sm mt-1">Step {step + 1} of {STEPS.length} — {STEPS[step]}</p>
         </div>
 
-        {/* Progress bar */}
         <div className="flex gap-1.5 mb-6">
           {STEPS.map((_, i) => (
             <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= step ? "gradient-primary" : "bg-secondary"}`} />
           ))}
         </div>
 
-        {/* Step content */}
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -430,7 +447,6 @@ export default function Onboarding() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation */}
         <div className="flex gap-3 mt-8">
           {step > 0 && (
             <button onClick={() => setStep(step - 1)} className="flex items-center gap-1 px-5 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm">

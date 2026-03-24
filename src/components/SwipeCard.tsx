@@ -1,10 +1,11 @@
-import { Briefcase, Moon, Sun, Sparkles, MapPin } from "lucide-react";
+import { useState } from "react";
+import { Briefcase, Moon, Sun, Sparkles, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import MatchBadge from "./MatchBadge";
 import type { UserProfile } from "@/data/mockData";
 
 interface SwipeCardProps {
-  user: UserProfile;
+  user: UserProfile & { photos?: string[] };
   matchPercent: number;
   onSwipe: (direction: "left" | "right") => void;
   isTop: boolean;
@@ -15,6 +16,9 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
+  const [photoIndex, setPhotoIndex] = useState(0);
+
+  const photos = user.photos?.length ? user.photos : [user.avatar];
 
   const handleDragEnd = (_: any, info: PanInfo) => {
     if (info.offset.x > 100) {
@@ -22,6 +26,16 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
     } else if (info.offset.x < -100) {
       onSwipe("left");
     }
+  };
+
+  const prevPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPhotoIndex((i) => Math.max(0, i - 1));
+  };
+
+  const nextPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPhotoIndex((i) => Math.min(photos.length - 1, i + 1));
   };
 
   return (
@@ -36,12 +50,38 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
     >
       <div className="w-full h-full bg-card rounded-3xl shadow-elevated overflow-hidden relative select-none">
         <img
-          src={user.avatar}
+          src={photos[photoIndex]}
           alt={user.name}
           className="w-full h-full object-cover"
           draggable={false}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
+
+        {/* Photo indicator dots */}
+        {photos.length > 1 && (
+          <div className="absolute top-3 left-0 right-0 flex justify-center gap-1 z-20">
+            {photos.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full transition-all ${
+                  i === photoIndex ? "w-6 bg-primary-foreground" : "w-1.5 bg-primary-foreground/40"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Photo navigation areas */}
+        {photos.length > 1 && isTop && (
+          <>
+            {photoIndex > 0 && (
+              <button onClick={prevPhoto} className="absolute left-0 top-0 bottom-20 w-1/3 z-15" />
+            )}
+            {photoIndex < photos.length - 1 && (
+              <button onClick={nextPhoto} className="absolute right-0 top-0 bottom-20 w-1/3 z-15" />
+            )}
+          </>
+        )}
 
         {/* LIKE / NOPE overlays */}
         {isTop && (
