@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import type { FullProfile } from "@/hooks/useProfile";
+import { useProfile, type FullProfile } from "@/hooks/useProfile";
+import { calculateSquadMatch } from "@/lib/matching";
 
 export interface Squad {
   id: string;
@@ -197,17 +198,18 @@ export interface DiscoverableSquad extends Squad {
   members: SquadMember[];
   member_count: number;
   creator_profile?: FullProfile;
+  matchPercent: number;
 }
 
 export function useDiscoverSquads() {
   const { user } = useAuth();
+  const { profile: myProfile } = useProfile();
   const [squads, setSquads] = useState<DiscoverableSquad[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!user) { setLoading(false); return; }
 
-    // Get all non-full squads the user is NOT already a member of
     const { data: allSquads } = await supabase
       .from("squads")
       .select("*")
@@ -221,7 +223,6 @@ export function useDiscoverSquads() {
 
     const squadIds = allSquads.map((s: any) => s.id);
 
-    // Get all members for these squads
     const { data: allMembers } = await supabase
       .from("squad_members")
       .select("*")
@@ -235,7 +236,6 @@ export function useDiscoverSquads() {
       membersBySquad.set(m.squad_id, list);
     });
 
-    // Check pending invites for this user
     const { data: pendingInvites } = await supabase
       .from("squad_invites")
       .select("squad_id")
@@ -243,7 +243,6 @@ export function useDiscoverSquads() {
       .eq("status", "pending");
     const pendingSquadIds = new Set((pendingInvites ?? []).map((i: any) => i.squad_id));
 
-    // Filter: user is not a member, squad not full, no pending invite
     const discoverable = (allSquads as Squad[]).filter((s) => {
       const members = membersBySquad.get(s.id) ?? [];
       const isMember = members.some((m) => m.user_id === user.id);
@@ -252,26 +251,43 @@ export function useDiscoverSquads() {
       return !isMember && !isFull && !hasPending;
     });
 
-    // Get creator profiles
-    const creatorIds = [...new Set(discoverable.map((s) => s.creator_id))];
-    const { data: creatorProfiles } = creatorIds.length > 0
-      ? await supabase.from("profiles").select("*").in("user_id", creatorIds)
+    // Fetch ALL member + creator profiles for matching
+    const allUserIds = new Set<string>();
+    discoverable.forEach((s) => {
+      allUserIds.add(s.creator_id);
+      (membersBySquad.get(s.id) ?? []).forEach((m) => allUserIds.add(m.user_id));
+    });
+
+    const { data: allProfilesData } = allUserIds.size > 0
+      ? await supabase.from("profiles").select("*").in("user_id", [...allUserIds])
       : { data: [] };
-    const profileMap = new Map((creatorProfiles ?? []).map((p: any) => [p.user_id, p]));
+    const profileMap = new Map((allProfilesData ?? []).map((p: any) => [p.user_id, p as FullProfile]));
 
     const result: DiscoverableSquad[] = discoverable.map((s) => {
       const members = membersBySquad.get(s.id) ?? [];
+      const memberProfiles = members
+        .map((m) => profileMap.get(m.user_id))
+        .filter(Boolean) as FullProfile[];
+
+      const matchPercent = myProfile
+        ? calculateSquadMatch(myProfile, s, memberProfiles)
+        : 0;
+
       return {
         ...s,
         members,
         member_count: members.length,
-        creator_profile: profileMap.get(s.creator_id) as FullProfile | undefined,
+        creator_profile: profileMap.get(s.creator_id),
+        matchPercent,
       };
     });
 
+    // Sort by match descending
+    result.sort((a, b) => b.matchPercent - a.matchPercent);
+
     setSquads(result);
     setLoading(false);
-  }, [user]);
+  }, [user, myProfile]);
 
   useEffect(() => { load(); }, [load]);
 

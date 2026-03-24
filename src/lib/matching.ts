@@ -140,3 +140,45 @@ export function calculateRoomMatch(
 
   return Math.round(finalScore);
 }
+
+/**
+ * Calculate compatibility between a user and a squad.
+ * Considers: lifestyle match with existing members (60%), budget fit (20%), preference alignment (20%).
+ */
+export function calculateSquadMatch(
+  userProfile: ProfileData,
+  squad: { budget_min: number; budget_max: number; no_smoking: boolean; pet_friendly: boolean; min_cleanliness: number; preferred_locations: string[] },
+  memberProfiles: ProfileData[]
+): number {
+  // 1. Budget fit (20%)
+  const inBudget = userProfile.budget >= squad.budget_min && userProfile.budget <= squad.budget_max;
+  const budgetScore = inBudget ? 1 : Math.max(0, 1 - Math.min(
+    Math.abs(userProfile.budget - squad.budget_min),
+    Math.abs(userProfile.budget - squad.budget_max)
+  ) / 2000);
+
+  // 2. Preference alignment (20%) — deal-breakers
+  let prefScore = 1;
+  if (squad.no_smoking && userProfile.smoking) prefScore -= 0.4;
+  if (!squad.pet_friendly && userProfile.pets) prefScore -= 0.2;
+  if (userProfile.cleanliness < squad.min_cleanliness) {
+    prefScore -= 0.3 * (squad.min_cleanliness - userProfile.cleanliness) / 4;
+  }
+  if (squad.preferred_locations.length > 0) {
+    const cityMatch = squad.preferred_locations.some(
+      (loc) => loc.toLowerCase() === userProfile.city.toLowerCase()
+    );
+    if (cityMatch) prefScore = Math.min(1, prefScore + 0.1);
+  }
+  prefScore = Math.max(0, prefScore);
+
+  // 3. Member compatibility (60%)
+  let memberScore = 0.75; // default when no members to compare
+  if (memberProfiles.length > 0) {
+    const scores = memberProfiles.map((m) => calculateUserMatch(userProfile, m));
+    memberScore = scores.reduce((a, b) => a + b, 0) / scores.length / 100;
+  }
+
+  const finalScore = budgetScore * 20 + prefScore * 20 + memberScore * 60;
+  return Math.round(finalScore);
+}
