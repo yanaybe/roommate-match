@@ -21,9 +21,11 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Load saved state from DB on mount
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(apartment.id);
+
+  // Load saved state from DB on mount (only for real DB apartments)
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isUuid) return;
     supabase
       .from("saved_apartments")
       .select("id")
@@ -33,12 +35,13 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
       .then(({ data }) => {
         if (data) setSaved(true);
       });
-  }, [user, apartment.id]);
+  }, [user, apartment.id, isUuid]);
 
   const toggleSave = async () => {
     if (!user) return;
     const newSaved = !saved;
     setSaved(newSaved);
+    if (!isUuid) return; // Skip DB for mock data, just toggle UI
     if (newSaved) {
       await supabase.from("saved_apartments").upsert({
         user_id: user.id,
