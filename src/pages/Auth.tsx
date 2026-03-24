@@ -14,7 +14,21 @@ export default function Auth() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) navigate("/", { replace: true });
+    if (!user) return;
+    // Check if user has completed onboarding
+    const checkProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarding_complete")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data?.onboarding_complete) {
+        navigate("/", { replace: true });
+      } else {
+        navigate("/onboarding", { replace: true });
+      }
+    };
+    checkProfile();
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {

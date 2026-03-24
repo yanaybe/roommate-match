@@ -1,10 +1,8 @@
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn } from "lucide-react";
-import { mockUsers } from "@/data/mockData";
+import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
-
-const mockUser = mockUsers[0];
 
 const menuItems = [
   { icon: Crown, label: "Go Premium", desc: "Unlock all features", accent: true },
@@ -14,8 +12,27 @@ const menuItems = [
   { icon: Settings, label: "Settings", desc: "Account & privacy" },
 ];
 
+function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-4">
+      <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{title}</h3>
+      <div className="bg-card rounded-2xl shadow-card p-4">{children}</div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between py-1.5 border-b border-border/30 last:border-0">
+      <span className="text-muted-foreground text-sm">{label}</span>
+      <span className="text-foreground text-sm font-medium">{value}</span>
+    </div>
+  );
+}
+
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const { profile, loading } = useProfile();
   const navigate = useNavigate();
 
   if (!user) {
@@ -38,48 +55,93 @@ export default function Profile() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center pb-20">
+        <p className="text-muted-foreground text-sm">Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (!profile || !profile.onboarding_complete) {
+    return (
+      <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center px-4">
+        <h2 className="text-xl font-extrabold text-foreground mb-2">Complete your profile</h2>
+        <p className="text-muted-foreground text-sm text-center mb-6">
+          Fill out your profile to start matching with roommates
+        </p>
+        <button
+          onClick={() => navigate("/onboarding")}
+          className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-semibold text-sm"
+        >
+          Set Up Profile
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="max-w-lg mx-auto px-4 pt-12">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center text-center mb-8"
+          className="flex flex-col items-center text-center mb-6"
         >
           <div className="relative mb-4">
             <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center ring-4 ring-primary/20">
               <span className="text-primary text-3xl font-extrabold">
-                {user.email?.charAt(0).toUpperCase()}
+                {profile.name.charAt(0).toUpperCase()}
               </span>
             </div>
           </div>
-          <h1 className="text-xl font-extrabold text-foreground">{user.email}</h1>
-          <p className="text-muted-foreground text-sm">Member since {new Date(user.created_at).toLocaleDateString()}</p>
-          <button className="mt-3 px-6 py-2 bg-secondary text-secondary-foreground rounded-xl text-sm font-semibold">
-            Edit Profile
-          </button>
+          <h1 className="text-xl font-extrabold text-foreground">
+            {profile.name}, {profile.age}
+          </h1>
+          <p className="text-muted-foreground text-sm">{profile.occupation} · {profile.city}</p>
+          {profile.bio && (
+            <p className="text-muted-foreground text-sm mt-1 italic">"{profile.bio}"</p>
+          )}
         </motion.div>
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            { val: "0", label: "Likes" },
-            { val: "0", label: "Matches" },
-            { val: "0", label: "Chats" },
-          ].map((s, i) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
-              className="bg-card rounded-xl p-3 text-center shadow-card"
-            >
-              <span className="text-lg font-extrabold text-foreground">{s.val}</span>
-              <span className="text-muted-foreground text-xs block">{s.label}</span>
-            </motion.div>
-          ))}
-        </div>
+        <ProfileSection title="Basic Info">
+          <InfoRow label="Budget" value={`₪${profile.budget.toLocaleString()}/mo`} />
+          <InfoRow label="Room type" value={profile.desired_room_type} />
+        </ProfileSection>
 
-        <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+        <ProfileSection title="Living Habits">
+          <InfoRow label="Sleep schedule" value={profile.sleep_schedule} />
+          <InfoRow label="Cleanliness" value={`${profile.cleanliness}/5`} />
+          <InfoRow label="Cooking" value={profile.cooking_habits} />
+          <InfoRow label="Shared space" value={profile.shared_space_org} />
+        </ProfileSection>
+
+        <ProfileSection title="Lifestyle">
+          <InfoRow label="Smoking" value={profile.smoking ? "Yes" : "No"} />
+          <InfoRow label="Religious level" value={profile.religious_level} />
+          <InfoRow label="Alcohol" value={profile.alcohol} />
+          <InfoRow label="Pets" value={profile.pets ? "Yes" : "No"} />
+          <InfoRow label="Fitness" value={profile.fitness} />
+          <InfoRow label="Work from home" value={profile.wfh ? "Yes" : "No"} />
+          <InfoRow label="Guests" value={profile.guests} />
+        </ProfileSection>
+
+        <ProfileSection title="Personality">
+          <InfoRow label="Social level" value={`${profile.social_level}/5`} />
+          <InfoRow label="Noise level" value={`${profile.noise_level}/5`} />
+          <InfoRow label="Partying" value={profile.partying} />
+          <InfoRow label="Vibe" value={profile.lifestyle_vibe} />
+        </ProfileSection>
+
+        <ProfileSection title="Roommate Preferences">
+          <InfoRow label="Age range" value={`${profile.preferred_age_min} - ${profile.preferred_age_max}`} />
+          <InfoRow label="Gender" value={profile.gender_preference} />
+          <InfoRow label="Lifestyle similarity" value={profile.lifestyle_similarity} />
+          <InfoRow label="Cleanliness expected" value={`${profile.cleanliness_expectations}/5`} />
+          <InfoRow label="Activity hours" value={profile.activity_hours} />
+        </ProfileSection>
+
+        <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-4">
           {menuItems.map((item, i) => {
             const Icon = item.icon;
             return (
@@ -108,7 +170,7 @@ export default function Profile() {
             await signOut();
             navigate("/");
           }}
-          className="w-full mt-4 flex items-center justify-center gap-2 py-3 text-destructive text-sm font-semibold"
+          className="w-full mt-2 flex items-center justify-center gap-2 py-3 text-destructive text-sm font-semibold"
         >
           <LogOut className="w-4 h-4" />
           Log Out

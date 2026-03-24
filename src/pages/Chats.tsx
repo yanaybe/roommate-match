@@ -7,7 +7,7 @@ import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
 interface Conversation {
   id: string;
   other_user_id: string;
-  other_email: string;
+  other_name: string;
   last_message: string | null;
   last_message_at: string | null;
   unread_count: number;
@@ -63,6 +63,17 @@ export default function Chats() {
 
         const otherUserId = others?.[0]?.user_id ?? "";
 
+        // Get other user's profile name
+        let otherName = otherUserId.slice(0, 8) + "...";
+        if (otherUserId) {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("user_id", otherUserId)
+            .maybeSingle();
+          if (profileData?.name) otherName = profileData.name;
+        }
+
         // Get last message
         const { data: lastMsg } = await supabase
           .from("messages")
@@ -89,7 +100,7 @@ export default function Chats() {
         convs.push({
           id: convId,
           other_user_id: otherUserId,
-          other_email: otherUserId.slice(0, 8) + "...",
+          other_name: otherName,
           last_message: lastMsg?.[0]?.content ?? null,
           last_message_at: lastMsg?.[0]?.created_at ?? null,
           unread_count: unreadCount,
@@ -250,12 +261,12 @@ export default function Chats() {
             </button>
             <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
               <span className="text-primary font-bold text-sm">
-                {conv?.other_email?.charAt(0).toUpperCase()}
+                {conv?.other_name?.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
               <h2 className="font-bold text-foreground text-sm">
-                {conv?.other_email}
+                {conv?.other_name}
               </h2>
               <p className="text-muted-foreground text-xs">Online</p>
             </div>
@@ -366,13 +377,13 @@ export default function Chats() {
               >
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                   <span className="text-primary font-bold">
-                    {conv.other_email.charAt(0).toUpperCase()}
+                    {conv.other_name.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-card-foreground text-sm">
-                      {conv.other_email}
+                      {conv.other_name}
                     </span>
                     <span className="text-muted-foreground text-xs">
                       {formatDate(conv.last_message_at)}
