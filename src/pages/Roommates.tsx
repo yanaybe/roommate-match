@@ -8,6 +8,7 @@ import { mockUsers, type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
 import { calculateUserMatch } from "@/lib/matching";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Convert DB profile to mock format for SwipeCard compatibility
