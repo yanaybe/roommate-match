@@ -215,10 +215,14 @@ export default function Profile() {
           className="flex flex-col items-center text-center mb-6"
         >
           <div className="relative mb-4">
-            <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center ring-4 ring-primary/20">
-              <span className="text-primary text-3xl font-extrabold">
-                {profile.name.charAt(0).toUpperCase()}
-              </span>
+            <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center ring-4 ring-primary/20 overflow-hidden">
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt={profile.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-primary text-3xl font-extrabold">
+                  {profile.name.charAt(0).toUpperCase()}
+                </span>
+              )}
             </div>
           </div>
           <h1 className="text-xl font-extrabold text-foreground">

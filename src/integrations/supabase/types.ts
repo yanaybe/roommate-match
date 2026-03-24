@@ -271,6 +271,7 @@ export type Database = {
           onboarding_complete: boolean
           partying: string
           pets: boolean
+          photos: string[]
           preferred_age_max: number
           preferred_age_min: number
           religious_level: string
@@ -307,6 +308,7 @@ export type Database = {
           onboarding_complete?: boolean
           partying?: string
           pets?: boolean
+          photos?: string[]
           preferred_age_max?: number
           preferred_age_min?: number
           religious_level?: string
@@ -343,6 +345,7 @@ export type Database = {
           onboarding_complete?: boolean
           partying?: string
           pets?: boolean
+          photos?: string[]
           preferred_age_max?: number
           preferred_age_min?: number
           religious_level?: string
