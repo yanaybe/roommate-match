@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { X, Heart, RotateCcw } from "lucide-react";
+import { X, Heart, RotateCcw, Users, Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
