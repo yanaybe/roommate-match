@@ -71,7 +71,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
         )}
         <div className="absolute top-3 right-3 flex flex-col gap-2">
           <button
-            onClick={() => requireAuth(() => setSaved(!saved))}
+            onClick={() => requireAuth(() => toggleSave())}
             className="bg-card/80 backdrop-blur-sm p-2 rounded-full"
           >
             <Bookmark className={`w-4 h-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} />
