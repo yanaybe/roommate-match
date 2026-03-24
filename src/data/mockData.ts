@@ -22,6 +22,7 @@ export interface Apartment {
   title: string;
   price: number;
   location: string;
+  coordinates: [number, number];
   images: string[];
   rooms: number;
   bathrooms: number;
