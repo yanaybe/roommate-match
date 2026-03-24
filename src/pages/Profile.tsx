@@ -41,6 +41,40 @@ export default function Profile() {
   const { profile, loading } = useProfile();
   const navigate = useNavigate();
   const [prefsOpen, setPrefsOpen] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
+  const [activityTab, setActivityTab] = useState<"saved" | "liked" | "squads">("saved");
+  const [savedApartments, setSavedApartments] = useState<any[]>([]);
+  const [likedProfiles, setLikedProfiles] = useState<any[]>([]);
+  const [pendingSquads, setPendingSquads] = useState<any[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+
+  useEffect(() => {
+    if (!activityOpen || !user) return;
+    setActivityLoading(true);
+
+    const fetchActivity = async () => {
+      // Fetch squad join requests (pending invites where I'm the inviter asking to join)
+      const { data: invites } = await supabase
+        .from("squad_invites")
+        .select("*, squads(*)")
+        .eq("inviter_id", user.id)
+        .eq("status", "pending");
+
+      setPendingSquads(invites || []);
+
+      // Fetch squad likes (apartments I liked in squads)
+      const { data: likes } = await supabase
+        .from("squad_likes")
+        .select("*, apartments(*)")
+        .eq("user_id", user.id)
+        .eq("liked", true);
+
+      setSavedApartments(likes || []);
+      setActivityLoading(false);
+    };
+
+    fetchActivity();
+  }, [activityOpen, user]);
 
   if (!user) {
     return (
