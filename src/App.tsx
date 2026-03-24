@@ -11,6 +11,7 @@ import CreateApartment from "./pages/CreateApartment";
 import Chats from "./pages/Chats";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import ApartmentDetail from "./pages/ApartmentDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
