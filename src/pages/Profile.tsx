@@ -324,11 +324,38 @@ export default function Profile() {
                 </div>
               )
             ) : activityTab === "liked" ? (
-              <div className="text-center py-10">
-                <Heart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                <p className="text-muted-foreground text-sm">No liked people yet</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">People you swipe right on will appear here</p>
-              </div>
+              likedProfiles.length === 0 ? (
+                <div className="text-center py-10">
+                  <Heart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No liked people yet</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">Swipe right on roommates to see them here</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {likedProfiles.map((p: any) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card"
+                    >
+                      <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+                        {p.avatar_url ? (
+                          <img src={p.avatar_url} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-primary text-lg font-bold">{p.name?.charAt(0)?.toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-card-foreground truncate">{p.name}{p.age ? `, ${p.age}` : ""}</p>
+                        <p className="text-xs text-muted-foreground">{p.occupation} · {p.city}</p>
+                        {p.bio && <p className="text-xs text-muted-foreground/70 truncate mt-0.5">{p.bio}</p>}
+                      </div>
+                      <Heart className="w-4 h-4 text-destructive fill-destructive" />
+                    </motion.div>
+                  ))}
+                </div>
+              )
             ) : (
               pendingSquads.length === 0 ? (
                 <div className="text-center py-10">
