@@ -298,7 +298,7 @@ export default function Profile() {
                 <div className="text-center py-10">
                   <Home className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
                   <p className="text-muted-foreground text-sm">No saved rooms yet</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">Rooms you like in squads will appear here</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">Tap the bookmark icon on apartments to save them</p>
                 </div>
               ) : (
                 <div className="space-y-3">
