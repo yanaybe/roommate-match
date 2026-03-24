@@ -8,6 +8,8 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
+const getMockSavedApartmentKey = (userId: string, apartmentId: string) => `saved_apartment:${userId}:${apartmentId}`;
+
 interface ApartmentCardProps {
   apartment: Apartment;
   index: number;
@@ -22,20 +24,31 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(apartment.id);
 
-  // Initialize saved state from localStorage for mock data, or false for DB data
   const [saved, setSaved] = useState(() => {
-    if (!isUuid) {
+    if (!user || !isUuid) {
       try {
-        const stored = localStorage.getItem(`saved_apt_${apartment.id}`);
+        const stored = user ? localStorage.getItem(getMockSavedApartmentKey(user.id, apartment.id)) : null;
         return stored === "true";
       } catch { return false; }
     }
     return false;
   });
 
-  // Load saved state from DB on mount (only for real DB apartments)
   useEffect(() => {
-    if (!user || !isUuid) return;
+    if (!user) {
+      setSaved(false);
+      return;
+    }
+
+    if (!isUuid) {
+      try {
+        setSaved(localStorage.getItem(getMockSavedApartmentKey(user.id, apartment.id)) === "true");
+      } catch {
+        setSaved(false);
+      }
+      return;
+    }
+
     supabase
       .from("saved_apartments")
       .select("id")
@@ -43,7 +56,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
       .eq("apartment_id", apartment.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setSaved(true);
+        setSaved(Boolean(data));
       });
   }, [user, apartment.id, isUuid]);
 
@@ -52,8 +65,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
     const newSaved = !saved;
     setSaved(newSaved);
     if (!isUuid) {
-      // Persist in localStorage for mock data
-      localStorage.setItem(`saved_apt_${apartment.id}`, String(newSaved));
+      localStorage.setItem(getMockSavedApartmentKey(user.id, apartment.id), String(newSaved));
       return;
     }
     if (newSaved) {

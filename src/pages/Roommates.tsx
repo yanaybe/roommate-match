@@ -11,6 +11,8 @@ import { calculateUserMatch } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+const getMockLikedProfileKey = (userId: string, likedUserId: string) => `liked_profile:${userId}:${likedUserId}`;
+
 // Convert DB profile to mock format for SwipeCard compatibility
 function profileToUser(p: FullProfile): UserProfile {
   return {
@@ -87,11 +89,16 @@ export default function Roommates() {
       setSwiped((prev) => [...prev, current.user.id]);
 
       if (direction === "right" && user) {
-        // Persist like to DB
-        await supabase.from("liked_profiles").upsert({
-          user_id: user.id,
-          liked_user_id: current.user.id,
-        }, { onConflict: "user_id,liked_user_id" });
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(current.user.id);
+
+        if (isUuid) {
+          await supabase.from("liked_profiles").upsert({
+            user_id: user.id,
+            liked_user_id: current.user.id,
+          }, { onConflict: "user_id,liked_user_id" });
+        } else {
+          localStorage.setItem(getMockLikedProfileKey(user.id, current.user.id), "true");
+        }
 
         // Simulate match for demo
         if (Math.random() > 0.5) {
