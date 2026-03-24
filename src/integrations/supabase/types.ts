@@ -335,6 +335,166 @@ export type Database = {
         }
         Relationships: []
       }
+      squad_invites: {
+        Row: {
+          created_at: string
+          id: string
+          invitee_id: string
+          inviter_id: string
+          squad_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invitee_id: string
+          inviter_id: string
+          squad_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
+          squad_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_invites_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      squad_likes: {
+        Row: {
+          apartment_id: string
+          created_at: string
+          id: string
+          liked: boolean
+          squad_id: string
+          user_id: string
+        }
+        Insert: {
+          apartment_id: string
+          created_at?: string
+          id?: string
+          liked?: boolean
+          squad_id: string
+          user_id: string
+        }
+        Update: {
+          apartment_id?: string
+          created_at?: string
+          id?: string
+          liked?: boolean
+          squad_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_likes_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "squad_likes_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      squad_members: {
+        Row: {
+          id: string
+          joined_at: string
+          role: string
+          squad_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          role?: string
+          squad_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          role?: string
+          squad_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_members_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      squads: {
+        Row: {
+          budget_max: number
+          budget_min: number
+          created_at: string
+          creator_id: string
+          id: string
+          min_cleanliness: number
+          name: string
+          no_smoking: boolean
+          pet_friendly: boolean
+          preferred_locations: string[]
+          status: string
+          target_size: number
+          updated_at: string
+        }
+        Insert: {
+          budget_max?: number
+          budget_min?: number
+          created_at?: string
+          creator_id: string
+          id?: string
+          min_cleanliness?: number
+          name?: string
+          no_smoking?: boolean
+          pet_friendly?: boolean
+          preferred_locations?: string[]
+          status?: string
+          target_size?: number
+          updated_at?: string
+        }
+        Update: {
+          budget_max?: number
+          budget_min?: number
+          created_at?: string
+          creator_id?: string
+          id?: string
+          min_cleanliness?: number
+          name?: string
+          no_smoking?: boolean
+          pet_friendly?: boolean
+          preferred_locations?: string[]
+          status?: string
+          target_size?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -342,6 +502,14 @@ export type Database = {
     Functions: {
       is_conversation_member: {
         Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_squad_creator: {
+        Args: { _squad_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_squad_member: {
+        Args: { _squad_id: string; _user_id: string }
         Returns: boolean
       }
     }
