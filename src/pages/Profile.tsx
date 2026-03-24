@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
