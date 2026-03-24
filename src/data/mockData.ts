@@ -51,6 +51,16 @@ const avatars = [
   "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face",
   "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=face",
   "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=200&h=200&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1463453091185-61582044d556?w=200&h=200&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1502323777036-f29e3972d82f?w=200&h=200&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop&crop=face",
 ];
 
 export const mockUsers: UserProfile[] = [
@@ -60,6 +70,16 @@ export const mockUsers: UserProfile[] = [
   { id: "4", name: "Dan", age: 29, city: "Tel Aviv", occupation: "Product Manager", avatar: avatars[3], budget: 4500, roomType: "Private", sleepSchedule: "Early bird", cleanliness: 4, smoking: false, pets: false, social: 3, noise: 2, wfh: true, bio: "Foodie, hiker, early morning runner 🏃" },
   { id: "5", name: "Shira", age: 26, city: "Haifa", occupation: "Architect", avatar: avatars[4], budget: 3200, roomType: "Private", sleepSchedule: "Early bird", cleanliness: 5, smoking: false, pets: false, social: 2, noise: 1, wfh: false, bio: "Minimalist living, big dreams 🌿" },
   { id: "6", name: "Amit", age: 28, city: "Tel Aviv", occupation: "Musician", avatar: avatars[5], budget: 3000, roomType: "Shared OK", sleepSchedule: "Night owl", cleanliness: 3, smoking: false, pets: true, social: 5, noise: 4, wfh: false, bio: "Music is life 🎸 Dog dad" },
+  { id: "7", name: "Lior", age: 23, city: "Beer Sheva", occupation: "Medical Student", avatar: avatars[6], budget: 2200, roomType: "Shared OK", sleepSchedule: "Night owl", cleanliness: 4, smoking: false, pets: false, social: 3, noise: 2, wfh: false, bio: "Future doctor, coffee addict ☕ Always studying" },
+  { id: "8", name: "Oren", age: 30, city: "Herzliya", occupation: "Startup Founder", avatar: avatars[7], budget: 5500, roomType: "Private", sleepSchedule: "Night owl", cleanliness: 4, smoking: false, pets: false, social: 4, noise: 3, wfh: true, bio: "Building the next big thing 🚀 Beach runs at sunset" },
+  { id: "9", name: "Tamar", age: 22, city: "Ramat Gan", occupation: "Graphic Designer", avatar: avatars[8], budget: 2600, roomType: "Private", sleepSchedule: "Early bird", cleanliness: 3, smoking: false, pets: true, social: 4, noise: 2, wfh: true, bio: "Art, plants, and my parrot 🦜🎨" },
+  { id: "10", name: "Eyal", age: 31, city: "Netanya", occupation: "Chef", avatar: avatars[9], budget: 3000, roomType: "Private", sleepSchedule: "Early bird", cleanliness: 5, smoking: false, pets: false, social: 3, noise: 1, wfh: false, bio: "Will cook for roommates 🍳 Early riser" },
+  { id: "11", name: "Gal", age: 26, city: "Tel Aviv", occupation: "Photographer", avatar: avatars[10], budget: 3400, roomType: "Shared OK", sleepSchedule: "Night owl", cleanliness: 3, smoking: false, pets: false, social: 5, noise: 3, wfh: true, bio: "Capturing moments 📸 Night explorer" },
+  { id: "12", name: "Rotem", age: 27, city: "Haifa", occupation: "Marine Biologist", avatar: avatars[11], budget: 2900, roomType: "Private", sleepSchedule: "Early bird", cleanliness: 4, smoking: false, pets: true, social: 2, noise: 1, wfh: false, bio: "Ocean lover 🌊 Quiet evenings with my cat" },
+  { id: "13", name: "Yael", age: 24, city: "Jerusalem", occupation: "Law Student", avatar: avatars[12], budget: 3100, roomType: "Private", sleepSchedule: "Night owl", cleanliness: 5, smoking: false, pets: false, social: 3, noise: 2, wfh: false, bio: "Justice & jasmine tea ⚖️🍵" },
+  { id: "14", name: "Tomer", age: 29, city: "Rishon LeZion", occupation: "Data Scientist", avatar: avatars[13], budget: 3800, roomType: "Private", sleepSchedule: "Early bird", cleanliness: 4, smoking: false, pets: false, social: 2, noise: 1, wfh: true, bio: "Numbers by day, board games by night 🎲" },
+  { id: "15", name: "Neta", age: 25, city: "Givatayim", occupation: "Yoga Instructor", avatar: avatars[14], budget: 2500, roomType: "Shared OK", sleepSchedule: "Early bird", cleanliness: 5, smoking: false, pets: false, social: 4, noise: 1, wfh: false, bio: "Namaste 🧘‍♀️ Vegan cooking enthusiast" },
+  { id: "16", name: "Ido", age: 28, city: "Petah Tikva", occupation: "Electrician", avatar: avatars[15], budget: 2700, roomType: "Shared OK", sleepSchedule: "Early bird", cleanliness: 4, smoking: false, pets: true, social: 3, noise: 2, wfh: false, bio: "Handy around the house 🔧 Dog walks every morning" },
 ];
 
 const apartmentImages = [
