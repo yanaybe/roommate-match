@@ -22,6 +22,7 @@ export interface Apartment {
   title: string;
   price: number;
   location: string;
+  coordinates: [number, number];
   images: string[];
   rooms: number;
   bathrooms: number;
@@ -70,10 +71,10 @@ const apartmentImages = [
 ];
 
 export const mockApartments: Apartment[] = [
-  { id: "a1", title: "Sunny Loft in Florentin", price: 3200, location: "Florentin, Tel Aviv", images: [apartmentImages[0], apartmentImages[1]], rooms: 3, bathrooms: 1, size: 85, roommates: [mockUsers[0], mockUsers[1]], matchPercent: 92, amenities: ["Balcony", "AC", "Laundry", "WiFi"], available: "Immediately", isBoosted: true },
-  { id: "a2", title: "Cozy Room near Carmel Market", price: 2800, location: "Kerem, Tel Aviv", images: [apartmentImages[2], apartmentImages[3]], rooms: 4, bathrooms: 2, size: 110, roommates: [mockUsers[2]], matchPercent: 78, amenities: ["Rooftop", "AC", "Parking"], available: "March 1" },
-  { id: "a3", title: "Modern Flat in Rothschild", price: 4500, location: "Rothschild, Tel Aviv", images: [apartmentImages[4], apartmentImages[0]], rooms: 2, bathrooms: 1, size: 65, roommates: [mockUsers[3]], matchPercent: 85, amenities: ["Gym", "AC", "Elevator", "Security"], available: "April 1" },
-  { id: "a4", title: "Artsy Apartment in Neve Tzedek", price: 3800, location: "Neve Tzedek, Tel Aviv", images: [apartmentImages[1], apartmentImages[4]], rooms: 3, bathrooms: 1, size: 90, roommates: [mockUsers[4], mockUsers[5]], matchPercent: 64, amenities: ["Garden", "AC", "Laundry"], available: "Immediately" },
+  { id: "a1", title: "Sunny Loft in Florentin", price: 3200, location: "Florentin, Tel Aviv", coordinates: [32.0560, 34.7710], images: [apartmentImages[0], apartmentImages[1]], rooms: 3, bathrooms: 1, size: 85, roommates: [mockUsers[0], mockUsers[1]], matchPercent: 92, amenities: ["Balcony", "AC", "Laundry", "WiFi"], available: "Immediately", isBoosted: true },
+  { id: "a2", title: "Cozy Room near Carmel Market", price: 2800, location: "Kerem, Tel Aviv", coordinates: [32.0650, 34.7680], images: [apartmentImages[2], apartmentImages[3]], rooms: 4, bathrooms: 2, size: 110, roommates: [mockUsers[2]], matchPercent: 78, amenities: ["Rooftop", "AC", "Parking"], available: "March 1" },
+  { id: "a3", title: "Modern Flat in Rothschild", price: 4500, location: "Rothschild, Tel Aviv", coordinates: [32.0635, 34.7745], images: [apartmentImages[4], apartmentImages[0]], rooms: 2, bathrooms: 1, size: 65, roommates: [mockUsers[3]], matchPercent: 85, amenities: ["Gym", "AC", "Elevator", "Security"], available: "April 1" },
+  { id: "a4", title: "Artsy Apartment in Neve Tzedek", price: 3800, location: "Neve Tzedek, Tel Aviv", coordinates: [32.0580, 34.7660], images: [apartmentImages[1], apartmentImages[4]], rooms: 3, bathrooms: 1, size: 90, roommates: [mockUsers[4], mockUsers[5]], matchPercent: 64, amenities: ["Garden", "AC", "Laundry"], available: "Immediately" },
 ];
 
 export const mockChats: ChatPreview[] = [
