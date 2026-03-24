@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 const modes = [
   { icon: Search, title: "Find a Room", desc: "Browse available rooms in shared apartments", color: "gradient-primary", path: "/" },
   { icon: Users, title: "Find Roommates", desc: "Post your apartment and find matching roommates", color: "bg-accent", path: "/post-apartment" },
-  { icon: Home, title: "Start Fresh", desc: "Create a new apartment group from scratch", color: "bg-foreground", path: null },
+  { icon: Home, title: "Start Fresh", desc: "Form a roommate squad, then find apartments together", color: "bg-foreground", path: "/create-squad" },
 ];
 
 export default function CreateApartment() {

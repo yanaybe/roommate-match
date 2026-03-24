@@ -14,6 +14,9 @@ import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import ApartmentDetail from "./pages/ApartmentDetail";
 import PostApartment from "./pages/PostApartment";
+import CreateSquad from "./pages/CreateSquad";
+import SquadHub from "./pages/SquadHub";
+import MySquads from "./pages/MySquads";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
