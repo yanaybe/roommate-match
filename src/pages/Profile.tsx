@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit, Bookmark, Heart, Users, Home, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import MatchBadge from "@/components/MatchBadge";
 
 const menuItems = [
   { icon: Crown, label: "Go Premium", desc: "Unlock all features", accent: true, action: null },
+  { icon: Bookmark, label: "My Activity", desc: "Saved rooms, likes & requests", accent: false, action: "activity" },
   { icon: Sparkles, label: "Preferences", desc: "View your matching criteria", accent: false, action: "preferences" },
   { icon: Shield, label: "Verification", desc: "Verify your identity", action: null },
   { icon: Bell, label: "Notifications", desc: "Manage alerts", action: null },
