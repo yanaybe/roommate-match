@@ -139,35 +139,29 @@ export default function SquadHub() {
       apartment_id: apartmentId,
       user_id: user.id,
       liked,
-  const handleApartmentLikeWithCheck = async (apartmentId: string, liked: boolean) => {
-    await handleApartmentLike(apartmentId, liked);
-    if (liked) {
-      // Wait a moment for refetch to update likes, then check
-      setTimeout(() => checkSuperMatch(apartmentId), 1000);
-    }
+    }, { onConflict: "squad_id,apartment_id,user_id" });
+    if (!error) refetch();
   };
+
+  // Check for Super Match and auto-create chat
+  const checkSuperMatch = useCallback(async (apartmentId: string) => {
     if (!id || !squad) return;
     const aptLikes = likes.filter((l) => l.apartment_id === apartmentId && l.liked);
     if (aptLikes.length >= members.length && members.length > 1) {
-      // Find the apartment poster
-      const apt = apartments.find((a) => a.id === apartmentId);
+      const apt = apartments.find((a: any) => a.id === apartmentId);
       if (!apt) return;
       
-      // Find squad leader
       const leader = members.find((m) => m.role === "leader");
-      if (!leader) return;
+      if (!leader || leader.user_id === apt.user_id) return;
       
-      // Don't create chat if leader IS the apartment poster
-      if (leader.user_id === apt.user_id) return;
-      
-      // Check if conversation already exists between leader and poster
+      // Check if conversation already exists
       const { data: leaderConvos } = await supabase
         .from("conversation_participants")
         .select("conversation_id")
         .eq("user_id", leader.user_id);
       
       if (leaderConvos && leaderConvos.length > 0) {
-        const convoIds = leaderConvos.map((c) => c.conversation_id);
+        const convoIds = leaderConvos.map((c: any) => c.conversation_id);
         const { data: existingConvo } = await supabase
           .from("conversation_participants")
           .select("conversation_id")
@@ -175,13 +169,11 @@ export default function SquadHub() {
           .in("conversation_id", convoIds);
         
         if (existingConvo && existingConvo.length > 0) {
-          // Chat already exists
           toast.success("🔥 Super Match! Chat already exists with the landlord!");
           return;
         }
       }
       
-      // Create conversation using RPC (as the leader if current user is leader)
       if (user?.id === leader.user_id) {
         const { data: convId, error } = await supabase.rpc("create_conversation_with_participant", {
           other_user_id: apt.user_id,
@@ -196,6 +188,13 @@ export default function SquadHub() {
       }
     }
   }, [id, squad, likes, members, apartments, user, navigate]);
+
+  const handleApartmentLikeWithCheck = async (apartmentId: string, liked: boolean) => {
+    await handleApartmentLike(apartmentId, liked);
+    if (liked) {
+      setTimeout(() => checkSuperMatch(apartmentId), 1000);
+    }
+  };
 
   // Auto-activate squad when full
   useEffect(() => {
