@@ -168,7 +168,7 @@ export default function Onboarding() {
   const handleSubmit = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").insert({
+    const payload = {
       user_id: user.id,
       name: form.name.trim(),
       age: parseInt(form.age) || null,
@@ -199,13 +199,22 @@ export default function Onboarding() {
       activity_hours: form.activity_hours,
       bio: form.bio.trim(),
       onboarding_complete: true,
-    });
+    };
+
+    let error;
+    if (isEdit) {
+      const res = await supabase.from("profiles").update(payload).eq("user_id", user.id);
+      error = res.error;
+    } else {
+      const res = await supabase.from("profiles").insert(payload);
+      error = res.error;
+    }
     setSaving(false);
     if (error) {
       toast.error("Failed to save profile: " + error.message);
     } else {
-      toast.success("Profile created! Welcome to Roomatch 🎉");
-      navigate("/", { replace: true });
+      toast.success(isEdit ? "Preferences updated! ✨" : "Profile created! Welcome to Roomatch 🎉");
+      navigate(isEdit ? "/profile" : "/", { replace: true });
     }
   };
 
