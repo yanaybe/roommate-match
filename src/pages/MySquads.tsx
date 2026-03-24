@@ -111,12 +111,12 @@ export default function MySquads() {
     setRequesting(squadId);
     try {
       // Send an invite where the user is the inviter (request to join)
-      const { error } = await supabase.from("squad_invites").insert({
+      const { error } = await supabase.from("squad_invites").upsert({
         squad_id: squadId,
         inviter_id: user.id,
         invitee_id: creatorId,
         status: "pending",
-      });
+      }, { onConflict: "squad_id,invitee_id" });
       if (error) throw error;
       toast.success("Join request sent! 🙌");
       refetchDiscover();
