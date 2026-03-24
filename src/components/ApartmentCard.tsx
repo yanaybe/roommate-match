@@ -15,13 +15,23 @@ interface ApartmentCardProps {
 
 export default function ApartmentCard({ apartment, index }: ApartmentCardProps) {
   const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [imgIndex, setImgIndex] = useState(0);
   const { requireAuth } = useRequireAuth();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(apartment.id);
+
+  // Initialize saved state from localStorage for mock data, or false for DB data
+  const [saved, setSaved] = useState(() => {
+    if (!isUuid) {
+      try {
+        const stored = localStorage.getItem(`saved_apt_${apartment.id}`);
+        return stored === "true";
+      } catch { return false; }
+    }
+    return false;
+  });
 
   // Load saved state from DB on mount (only for real DB apartments)
   useEffect(() => {
@@ -41,7 +51,11 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
     if (!user) return;
     const newSaved = !saved;
     setSaved(newSaved);
-    if (!isUuid) return; // Skip DB for mock data, just toggle UI
+    if (!isUuid) {
+      // Persist in localStorage for mock data
+      localStorage.setItem(`saved_apt_${apartment.id}`, String(newSaved));
+      return;
+    }
     if (newSaved) {
       await supabase.from("saved_apartments").upsert({
         user_id: user.id,
