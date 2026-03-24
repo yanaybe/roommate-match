@@ -5,7 +5,6 @@ import ApartmentCard from "@/components/ApartmentCard";
 import { mockApartments } from "@/data/mockData";
 
 const ApartmentMap = lazy(() => import("@/components/ApartmentMap"));
-import { mockApartments } from "@/data/mockData";
 
 export default function Index() {
   const [view, setView] = useState<"list" | "map">("list");
