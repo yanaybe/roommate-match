@@ -208,7 +208,7 @@ export default function Roommates() {
             <h2 className="text-lg font-bold text-foreground mb-1">No more profiles</h2>
             <p className="text-muted-foreground text-sm mb-4">Check back later for new roommates!</p>
             <button
-              onClick={() => setSwiped([])}
+              onClick={() => { setSwiped([]); if (user) setSwipedMap(user.id, {}); }}
               className="gradient-primary text-primary-foreground px-6 py-2.5 rounded-xl font-semibold text-sm"
             >
               Start Over
