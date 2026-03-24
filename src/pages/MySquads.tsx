@@ -477,7 +477,7 @@ export default function MySquads() {
                         </div>
                         <div
                           className={`absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-primary-foreground ${
-                            squad.matchPercent >= 0
+                            squad.matchPercent >= 80
                               ? "bg-accent"
                               : squad.matchPercent >= 60
                                 ? "bg-primary"
