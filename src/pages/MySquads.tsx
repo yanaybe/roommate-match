@@ -55,9 +55,16 @@ export default function MySquads() {
 
   const handleAcceptInvite = async (invite: any) => {
     if (!user) return;
+
+    // Determine who should be added as a member:
+    // Regular invite: inviter is squad member, invitee (current user) joins
+    // Join request: inviter is the requester, invitee is the creator approving
+    const isJoinRequest = invite.inviter_id !== user.id;
+    const newMemberId = isJoinRequest ? invite.inviter_id : user.id;
+
     await supabase.from("squad_members").insert({
       squad_id: invite.squad_id,
-      user_id: user.id,
+      user_id: newMemberId,
       status: "joined",
       role: "member",
     });
@@ -77,7 +84,7 @@ export default function MySquads() {
       await supabase.from("squads").update({ status: "active" }).eq("id", squad.id);
     }
 
-    toast.success("Joined squad! 🎉");
+    toast.success(isJoinRequest ? `${invite.inviter_profile?.name ?? "User"} joined the squad! 🎉` : "Joined squad! 🎉");
     refetch();
     refetchInvites();
     refetchDiscover();
