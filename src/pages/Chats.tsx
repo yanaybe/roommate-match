@@ -272,11 +272,15 @@ export default function Chats() {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-bold text-sm">
-                {conv?.other_name?.charAt(0).toUpperCase()}
-              </span>
-            </div>
+            {conv?.other_avatar ? (
+              <img src={conv.other_avatar} alt={conv.other_name} className="w-9 h-9 rounded-full object-cover" />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-primary font-bold text-sm">
+                  {conv?.other_name?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
             <div>
               <h2 className="font-bold text-foreground text-sm">
                 {conv?.other_name}
