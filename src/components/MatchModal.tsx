@@ -3,6 +3,9 @@ import { Heart, MessageCircle, X } from "lucide-react";
 import type { UserProfile } from "@/data/mockData";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface MatchModalProps {
   user: UserProfile | null;
@@ -12,15 +15,50 @@ interface MatchModalProps {
 
 export default function MatchModal({ user, matchPercent, onClose }: MatchModalProps) {
   const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
 
   if (!user) return null;
 
-  const handleSend = () => {
-    if (message.trim()) {
-      // In a real app this would send the message via API
+  const handleSend = async () => {
+    if (!message.trim() || !authUser) return;
+    setSending(true);
+
+    try {
+      // Create conversation
+      const { data: conv, error: convErr } = await supabase
+        .from("conversations")
+        .insert({})
+        .select("id")
+        .single();
+
+      if (convErr || !conv) throw convErr;
+
+      // Add both participants (current user)
+      const { error: partErr } = await supabase
+        .from("conversation_participants")
+        .insert({ conversation_id: conv.id, user_id: authUser.id });
+
+      if (partErr) throw partErr;
+
+      // Send first message
+      const { error: msgErr } = await supabase
+        .from("messages")
+        .insert({
+          conversation_id: conv.id,
+          sender_id: authUser.id,
+          content: message.trim(),
+        });
+
+      if (msgErr) throw msgErr;
+
       onClose();
       navigate("/chats");
+    } catch (err: any) {
+      toast.error("Failed to start chat: " + (err?.message ?? "Unknown error"));
+    } finally {
+      setSending(false);
     }
   };
 
@@ -73,10 +111,12 @@ export default function MatchModal({ user, matchPercent, onClose }: MatchModalPr
               placeholder={`Say hi to ${user.name}...`}
               className="flex-1 bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              disabled={sending}
             />
             <button
               onClick={handleSend}
-              className="gradient-primary text-primary-foreground p-3 rounded-xl"
+              disabled={sending || !message.trim()}
+              className="gradient-primary text-primary-foreground p-3 rounded-xl disabled:opacity-50"
             >
               <MessageCircle className="w-5 h-5" />
             </button>
