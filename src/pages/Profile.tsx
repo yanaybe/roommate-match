@@ -64,10 +64,9 @@ export default function Profile() {
       // Fetch liked profiles
       const { data: likes } = await supabase
         .from("liked_profiles")
-        .select("*, profiles!liked_profiles_liked_user_id_fkey(name, age, city, occupation, avatar_url, bio)")
+        .select("*")
         .eq("user_id", user.id);
 
-      // liked_profiles has no FK so we fetch profiles separately
       const likedUserIds = (likes || []).map((l: any) => l.liked_user_id);
       if (likedUserIds.length > 0) {
         const { data: profilesData } = await supabase
