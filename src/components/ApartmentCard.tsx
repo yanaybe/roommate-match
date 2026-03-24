@@ -16,6 +16,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const [saved, setSaved] = useState(false);
   const [imgIndex, setImgIndex] = useState(0);
   const { requireAuth } = useRequireAuth();
+  const navigate = useNavigate();
 
   return (
     <motion.div
