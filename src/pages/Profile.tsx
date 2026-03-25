@@ -322,6 +322,7 @@ export default function Profile() {
   const handleMenuClick = (action: string | null) => {
     if (action === "preferences") setPrefsOpen(true);
     if (action === "activity") setActivityOpen(true);
+    if (action === "notifications") setNotificationsOpen(true);
   };
 
   return (
