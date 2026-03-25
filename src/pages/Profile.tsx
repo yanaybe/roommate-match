@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit, Bookmark, Heart, Users, Home, ArrowLeft, MessageCircle, Zap } from "lucide-react";
+import PremiumSheet from "@/components/PremiumSheet";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
