@@ -160,77 +160,110 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
               </div>
             </div>
 
-            {/* Plan selector */}
+            {/* Plan selector — side by side cards */}
             <div>
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
                 💎 Choose Your Plan
               </h3>
-              <div className="space-y-3">
-                {plans.map((plan) => {
+              <div className="grid grid-cols-3 gap-2">
+                {plans.map((plan, idx) => {
                   const isSelected = selectedPlan === plan.id;
+                  const iconMap = { plus: Zap, gold: Crown, platinum: Gem };
+                  const PlanIcon = iconMap[plan.id as keyof typeof iconMap];
+                  const gradients = {
+                    plus: "from-accent/20 to-accent/5",
+                    gold: "from-[hsl(38,92%,55%)]/25 to-[hsl(38,92%,55%)]/5",
+                    platinum: "from-primary/20 to-primary/5",
+                  };
+                  const iconColors = {
+                    plus: "text-accent",
+                    gold: "text-[hsl(38,92%,55%)]",
+                    platinum: "text-primary",
+                  };
+                  const ringColors = {
+                    plus: "ring-accent",
+                    gold: "ring-[hsl(38,92%,55%)]",
+                    platinum: "ring-primary",
+                  };
+
                   return (
                     <motion.button
                       key={plan.id}
-                      whileTap={{ scale: 0.98 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.08 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => setSelectedPlan(plan.id)}
-                      className={`w-full text-left rounded-2xl p-4 transition-all border-2 ${
+                      className={`relative flex flex-col items-center text-center rounded-2xl p-3 pt-4 transition-all border-2 bg-gradient-to-b ${gradients[plan.id as keyof typeof gradients]} ${
                         isSelected
-                          ? "border-primary bg-primary/5 shadow-md"
-                          : "border-border bg-card shadow-card"
+                          ? `${ringColors[plan.id as keyof typeof ringColors]} border-transparent ring-2 shadow-lg scale-[1.03]`
+                          : "border-border/60 shadow-card"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{plan.emoji}</span>
-                          <span className="text-sm font-extrabold text-foreground">{plan.name}</span>
-                          {plan.popular && (
-                            <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0">
-                              Most Popular
-                            </Badge>
-                          )}
+                      {plan.popular && (
+                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold text-primary-foreground whitespace-nowrap" style={{ background: "var(--gradient-primary)" }}>
+                          ⭐ BEST VALUE
                         </div>
-                        <div className="text-right">
-                          <span className="text-lg font-extrabold text-foreground">₪{plan.price}</span>
-                          <span className="text-xs text-muted-foreground">/mo</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-3">{plan.tagline}</p>
+                      )}
 
-                      <AnimatePresence>
-                        {isSelected && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="space-y-1.5 pt-2 border-t border-border/50">
-                              {plan.features.map((feat, i) => {
-                                const Icon = feat.icon;
-                                return (
-                                  <div key={i} className="flex items-start gap-2">
-                                    <Icon className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                                    <span className="text-xs text-foreground">{feat.text}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 ${isSelected ? "bg-card shadow-md" : "bg-card/60"}`}>
+                        <PlanIcon className={`w-5 h-5 ${iconColors[plan.id as keyof typeof iconColors]}`} />
+                      </div>
+
+                      <span className="text-xs font-extrabold text-foreground">{plan.name}</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{plan.tagline}</span>
+
+                      <div className="mt-2 mb-1">
+                        <span className="text-xl font-extrabold text-foreground">₪{plan.price}</span>
+                        <span className="text-[10px] text-muted-foreground">/mo</span>
+                      </div>
+
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-1 transition-colors ${
+                        isSelected ? "border-primary bg-primary" : "border-muted-foreground/30 bg-transparent"
+                      }`}>
+                        {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                      </div>
                     </motion.button>
                   );
                 })}
               </div>
 
+              {/* Expanded features for selected plan */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={selectedPlan}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="mt-3 bg-card rounded-2xl shadow-card p-4"
+                >
+                  <p className="text-xs font-bold text-foreground mb-2">
+                    {plans.find(p => p.id === selectedPlan)?.emoji}{" "}
+                    {plans.find(p => p.id === selectedPlan)?.name} includes:
+                  </p>
+                  <div className="space-y-1.5">
+                    {plans.find(p => p.id === selectedPlan)?.features.map((feat, i) => {
+                      const Icon = feat.icon;
+                      return (
+                        <div key={i} className="flex items-start gap-2">
+                          <Icon className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                          <span className="text-xs text-foreground">{feat.text}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
               {/* Subscribe CTA */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                className="w-full mt-4 py-3.5 rounded-xl font-bold text-sm text-primary-foreground flex items-center justify-center gap-2"
+                className="w-full mt-4 py-3.5 rounded-xl font-bold text-sm text-primary-foreground flex items-center justify-center gap-2 shadow-lg"
                 style={{ background: "var(--gradient-primary)" }}
               >
                 <Crown className="w-4 h-4" />
-                Subscribe to {plans.find((p) => p.id === selectedPlan)?.name} — ₪
+                Get {plans.find((p) => p.id === selectedPlan)?.name} — ₪
                 {plans.find((p) => p.id === selectedPlan)?.price}/mo
               </motion.button>
               <p className="text-[10px] text-muted-foreground text-center mt-1.5">
