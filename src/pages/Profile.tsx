@@ -19,7 +19,7 @@ const menuItems = [
   { icon: Bookmark, label: "My Activity", desc: "Saved rooms, likes & requests", accent: false, action: "activity" },
   { icon: Sparkles, label: "Preferences", desc: "View your matching criteria", accent: false, action: "preferences" },
   { icon: Shield, label: "Verification", desc: "Verify your identity", action: null },
-  { icon: Bell, label: "Notifications", desc: "Manage alerts", action: null },
+  { icon: Bell, label: "Notifications", desc: "Matches, squads & listings", action: "notifications" },
   { icon: Settings, label: "Settings", desc: "Account & privacy", action: null },
 ];
 
