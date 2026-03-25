@@ -735,6 +735,7 @@ export default function Profile() {
           </ScrollArea>
         </SheetContent>
       </Sheet>
+      <PremiumSheet open={premiumOpen} onOpenChange={setPremiumOpen} />
     </div>
   );
 }
