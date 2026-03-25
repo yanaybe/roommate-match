@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit, Bookmark, Heart, Users, Home, ArrowLeft, MessageCircle, Zap } from "lucide-react";
+import PremiumSheet from "@/components/PremiumSheet";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +17,7 @@ const getMockSavedApartmentKey = (userId: string, apartmentId: string) => `saved
 const getMockLikedProfileKey = (userId: string, likedUserId: string) => `liked_profile:${userId}:${likedUserId}`;
 
 const menuItems = [
-  { icon: Crown, label: "Go Premium", desc: "Unlock all features", accent: true, action: null },
+  { icon: Crown, label: "Go Premium", desc: "Unlock all features", accent: true, action: "premium" },
   { icon: Bookmark, label: "My Activity", desc: "Saved rooms, likes & requests", accent: false, action: "activity" },
   { icon: Sparkles, label: "Preferences", desc: "View your matching criteria", accent: false, action: "preferences" },
   { icon: Shield, label: "Verification", desc: "Verify your identity", action: null },
@@ -51,6 +52,7 @@ export default function Profile() {
   const [activityOpen, setActivityOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifTab, setNotifTab] = useState<"matches" | "squads" | "apartments">("matches");
+  const [premiumOpen, setPremiumOpen] = useState(false);
   const [activityTab, setActivityTab] = useState<"saved" | "liked" | "squads">("saved");
   const [savedApartments, setSavedApartments] = useState<any[]>([]);
   const [likedProfiles, setLikedProfiles] = useState<any[]>([]);
@@ -324,6 +326,7 @@ export default function Profile() {
     if (action === "preferences") setPrefsOpen(true);
     if (action === "activity") setActivityOpen(true);
     if (action === "notifications") setNotificationsOpen(true);
+    if (action === "premium") setPremiumOpen(true);
   };
 
   return (
@@ -732,6 +735,7 @@ export default function Profile() {
           </ScrollArea>
         </SheetContent>
       </Sheet>
+      <PremiumSheet open={premiumOpen} onOpenChange={setPremiumOpen} />
     </div>
   );
 }
