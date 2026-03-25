@@ -580,6 +580,148 @@ export default function Profile() {
           </ScrollArea>
         </SheetContent>
       </Sheet>
+
+      {/* Notifications Sheet */}
+      <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+        <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0">
+          <SheetHeader className="px-5 pt-5 pb-3 border-b border-border">
+            <SheetTitle className="text-lg font-extrabold text-foreground">Notifications</SheetTitle>
+          </SheetHeader>
+
+          <div className="px-5 pt-3 pb-2 flex gap-2">
+            {[
+              { key: "matches" as const, label: "Matches", icon: Heart },
+              { key: "squads" as const, label: "Squads", icon: Users },
+              { key: "apartments" as const, label: "Hot Rooms", icon: Home },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const count = tab.key === "matches" ? matches.length : tab.key === "squads" ? activeSquads.length : highMatchApartments.length;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setNotifTab(tab.key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-colors relative ${
+                    notifTab === tab.key
+                      ? "gradient-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                  {count > 0 && (
+                    <span className="ml-1 bg-destructive text-destructive-foreground text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <ScrollArea className="h-[calc(85vh-130px)] px-5 py-3">
+            {notifLoading ? (
+              <p className="text-muted-foreground text-sm text-center py-10">Loading...</p>
+            ) : notifTab === "matches" ? (
+              matches.length === 0 ? (
+                <div className="text-center py-10">
+                  <Heart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No matches yet</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">When someone you liked likes you back, they'll appear here</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {matches.map((p: any) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={() => { setNotificationsOpen(false); navigate("/chats"); }}
+                      className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                    >
+                      <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden ring-2 ring-primary/30">
+                        {p.avatar_url || p.photos?.[0] ? (
+                          <img src={p.avatar_url || p.photos?.[0]} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-primary text-lg font-bold">{p.name?.charAt(0)?.toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-card-foreground truncate">🎉 It's a match!</p>
+                        <p className="text-xs text-muted-foreground">{p.name}{p.age ? `, ${p.age}` : ""} · {p.occupation}</p>
+                        <p className="text-xs text-primary font-semibold mt-0.5">Tap to chat</p>
+                      </div>
+                      <MessageCircle className="w-5 h-5 text-primary" />
+                    </motion.div>
+                  ))}
+                </div>
+              )
+            ) : notifTab === "squads" ? (
+              activeSquads.length === 0 ? (
+                <div className="text-center py-10">
+                  <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No active squads</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">When your squad becomes active, you'll see it here</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activeSquads.map((squad: any) => (
+                    <motion.div
+                      key={squad.id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={() => { setNotificationsOpen(false); navigate(`/squad/${squad.id}`); }}
+                      className="bg-card rounded-2xl p-4 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-accent/20">
+                          <Zap className="w-5 h-5 text-accent-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-card-foreground">🚀 {squad.name} is active!</p>
+                          <p className="text-xs text-muted-foreground">
+                            {squad.preferred_locations?.join(", ")} · ₪{squad.budget_min?.toLocaleString()}–₪{squad.budget_max?.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-primary font-semibold mt-0.5">Tap to view squad</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )
+            ) : (
+              highMatchApartments.length === 0 ? (
+                <div className="text-center py-10">
+                  <Home className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No hot rooms yet</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">Apartments with 85%+ match to your preferences will show here</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {highMatchApartments.map((apt: any) => (
+                    <motion.div
+                      key={apt.id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={() => { setNotificationsOpen(false); navigate(`/apartment/${apt.id}`); }}
+                      className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                    >
+                      {apt.images?.[0] && (
+                        <img src={apt.images[0]} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-card-foreground truncate">🔥 {apt.title || "New Listing"}</p>
+                        <p className="text-xs text-muted-foreground">{apt.neighborhood}, {apt.city}</p>
+                        <p className="text-xs font-bold text-primary mt-0.5">₪{apt.price?.toLocaleString()}/mo</p>
+                      </div>
+                      <MatchBadge percent={apt.matchPct} />
+                    </motion.div>
+                  ))}
+                </div>
+              )
+            )}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
