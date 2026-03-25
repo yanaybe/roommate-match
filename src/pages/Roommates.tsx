@@ -66,11 +66,24 @@ export default function Roommates() {
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
 
-  // Load recently swiped IDs (within 7 days) into swiped state on mount
+  // Load recently swiped IDs (within 7 days) from localStorage + DB liked_profiles
   useEffect(() => {
-    if (user?.id) {
-      setSwiped(getRecentlySwipedIds(user.id));
-    }
+    if (!user?.id) return;
+    const localSwiped = getRecentlySwipedIds(user.id);
+
+    // Also fetch DB liked_profiles so right-swiped profiles stay hidden even if localStorage is cleared
+    supabase
+      .from("liked_profiles")
+      .select("liked_user_id, created_at")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        const now = Date.now();
+        const dbSwipedIds = (data ?? [])
+          .filter((r) => now - new Date(r.created_at).getTime() < SEVEN_DAYS_MS)
+          .map((r) => r.liked_user_id);
+        const merged = Array.from(new Set([...localSwiped, ...dbSwipedIds]));
+        setSwiped(merged);
+      });
   }, [user?.id]);
 
   // Other profiles (not current user), with match percentages
