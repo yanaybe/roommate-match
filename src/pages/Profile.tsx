@@ -164,7 +164,116 @@ export default function Profile() {
     fetchActivity();
   }, [activityOpen, user]);
 
-  if (!user) {
+  // Notifications: fetch matches, active squads, high-match apartments
+  useEffect(() => {
+    if (!notificationsOpen || !user || !profile) return;
+    setNotifLoading(true);
+
+    const fetchNotifications = async () => {
+      // 1. Mutual matches: people who liked me AND I liked them
+      const { data: myLikes } = await supabase
+        .from("liked_profiles")
+        .select("liked_user_id")
+        .eq("user_id", user.id);
+
+      const myLikedIds = (myLikes ?? []).map((l: any) => l.liked_user_id);
+
+      if (myLikedIds.length > 0) {
+        const { data: mutualLikes } = await supabase
+          .from("liked_profiles")
+          .select("user_id")
+          .eq("liked_user_id", user.id)
+          .in("user_id", myLikedIds);
+
+        const mutualIds = (mutualLikes ?? []).map((l: any) => l.user_id);
+        if (mutualIds.length > 0) {
+          const { data: matchedProfiles } = await supabase
+            .from("profiles")
+            .select("*")
+            .in("user_id", mutualIds);
+          setMatches(matchedProfiles ?? []);
+        } else {
+          setMatches([]);
+        }
+      } else {
+        setMatches([]);
+      }
+
+      // 2. Squads that became active (status = 'active' where I'm a member)
+      const { data: myMemberships } = await supabase
+        .from("squad_members")
+        .select("squad_id")
+        .eq("user_id", user.id)
+        .eq("status", "joined");
+
+      const mySquadIds = (myMemberships ?? []).map((m: any) => m.squad_id);
+      if (mySquadIds.length > 0) {
+        const { data: squadsData } = await supabase
+          .from("squads")
+          .select("*")
+          .in("id", mySquadIds)
+          .eq("status", "active");
+        setActiveSquads(squadsData ?? []);
+      } else {
+        setActiveSquads([]);
+      }
+
+      // 3. New apartments with >85% match (based on budget/city/room type similarity)
+      const { data: apts } = await supabase
+        .from("apartments")
+        .select("*")
+        .neq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      const highMatch = (apts ?? [])
+        .map((apt: any) => {
+          let score = 0;
+          let factors = 0;
+
+          // Budget proximity (weight 3)
+          if (profile.budget > 0 && apt.price > 0) {
+            const diff = Math.abs(profile.budget - apt.price) / Math.max(profile.budget, apt.price);
+            score += (1 - diff) * 3;
+            factors += 3;
+          }
+
+          // City match (weight 2)
+          if (profile.city && apt.city) {
+            score += (profile.city.toLowerCase() === apt.city.toLowerCase() ? 1 : 0) * 2;
+            factors += 2;
+          }
+
+          // Room type match (weight 1)
+          if (profile.desired_room_type && apt.room_type) {
+            score += profile.desired_room_type === apt.room_type ? 1 : 0;
+            factors += 1;
+          }
+
+          // Pet friendly alignment (weight 1)
+          if (profile.pets && apt.pet_friendly) score += 1;
+          else if (!profile.pets) score += 1;
+          factors += 1;
+
+          // Smoking alignment (weight 1)
+          factors += 1;
+          if (!profile.smoking) score += 1; // non-smoker is always compatible
+          else score += 0.5;
+
+          const matchPct = factors > 0 ? Math.round((score / factors) * 100) : 0;
+          return { ...apt, matchPct };
+        })
+        .filter((apt: any) => apt.matchPct >= 85)
+        .slice(0, 20);
+
+      setHighMatchApartments(highMatch);
+      setNotifLoading(false);
+    };
+
+    fetchNotifications();
+  }, [notificationsOpen, user, profile]);
+
+
     return (
       <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center px-4">
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
