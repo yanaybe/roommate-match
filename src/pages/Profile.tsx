@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit, Bookmark, Heart, Users, Home, ArrowLeft } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit, Bookmark, Heart, Users, Home, ArrowLeft, MessageCircle, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile, useAllProfiles } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import MatchBadge from "@/components/MatchBadge";
 import { mockApartments, mockUsers } from "@/data/mockData";
+import { calculateUserMatch } from "@/lib/matching";
 
 const getMockSavedApartmentKey = (userId: string, apartmentId: string) => `saved_apartment:${userId}:${apartmentId}`;
 const getMockLikedProfileKey = (userId: string, likedUserId: string) => `liked_profile:${userId}:${likedUserId}`;
@@ -18,7 +19,7 @@ const menuItems = [
   { icon: Bookmark, label: "My Activity", desc: "Saved rooms, likes & requests", accent: false, action: "activity" },
   { icon: Sparkles, label: "Preferences", desc: "View your matching criteria", accent: false, action: "preferences" },
   { icon: Shield, label: "Verification", desc: "Verify your identity", action: null },
-  { icon: Bell, label: "Notifications", desc: "Manage alerts", action: null },
+  { icon: Bell, label: "Notifications", desc: "Matches, squads & listings", action: "notifications" },
   { icon: Settings, label: "Settings", desc: "Account & privacy", action: null },
 ];
 
@@ -43,14 +44,21 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 export default function Profile() {
   const { user, signOut } = useAuth();
   const { profile, loading } = useProfile();
+  const { profiles: allProfiles } = useAllProfiles();
   const navigate = useNavigate();
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifTab, setNotifTab] = useState<"matches" | "squads" | "apartments">("matches");
   const [activityTab, setActivityTab] = useState<"saved" | "liked" | "squads">("saved");
   const [savedApartments, setSavedApartments] = useState<any[]>([]);
   const [likedProfiles, setLikedProfiles] = useState<any[]>([]);
   const [pendingSquads, setPendingSquads] = useState<any[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [activeSquads, setActiveSquads] = useState<any[]>([]);
+  const [highMatchApartments, setHighMatchApartments] = useState<any[]>([]);
 
   useEffect(() => {
     if (!activityOpen || !user) return;
@@ -156,6 +164,116 @@ export default function Profile() {
     fetchActivity();
   }, [activityOpen, user]);
 
+  // Notifications: fetch matches, active squads, high-match apartments
+  useEffect(() => {
+    if (!notificationsOpen || !user || !profile) return;
+    setNotifLoading(true);
+
+    const fetchNotifications = async () => {
+      // 1. Mutual matches: people who liked me AND I liked them
+      const { data: myLikes } = await supabase
+        .from("liked_profiles")
+        .select("liked_user_id")
+        .eq("user_id", user.id);
+
+      const myLikedIds = (myLikes ?? []).map((l: any) => l.liked_user_id);
+
+      if (myLikedIds.length > 0) {
+        const { data: mutualLikes } = await supabase
+          .from("liked_profiles")
+          .select("user_id")
+          .eq("liked_user_id", user.id)
+          .in("user_id", myLikedIds);
+
+        const mutualIds = (mutualLikes ?? []).map((l: any) => l.user_id);
+        if (mutualIds.length > 0) {
+          const { data: matchedProfiles } = await supabase
+            .from("profiles")
+            .select("*")
+            .in("user_id", mutualIds);
+          setMatches(matchedProfiles ?? []);
+        } else {
+          setMatches([]);
+        }
+      } else {
+        setMatches([]);
+      }
+
+      // 2. Squads that became active (status = 'active' where I'm a member)
+      const { data: myMemberships } = await supabase
+        .from("squad_members")
+        .select("squad_id")
+        .eq("user_id", user.id)
+        .eq("status", "joined");
+
+      const mySquadIds = (myMemberships ?? []).map((m: any) => m.squad_id);
+      if (mySquadIds.length > 0) {
+        const { data: squadsData } = await supabase
+          .from("squads")
+          .select("*")
+          .in("id", mySquadIds)
+          .eq("status", "active");
+        setActiveSquads(squadsData ?? []);
+      } else {
+        setActiveSquads([]);
+      }
+
+      // 3. New apartments with >85% match (based on budget/city/room type similarity)
+      const { data: apts } = await supabase
+        .from("apartments")
+        .select("*")
+        .neq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      const highMatch = (apts ?? [])
+        .map((apt: any) => {
+          let score = 0;
+          let factors = 0;
+
+          // Budget proximity (weight 3)
+          if (profile.budget > 0 && apt.price > 0) {
+            const diff = Math.abs(profile.budget - apt.price) / Math.max(profile.budget, apt.price);
+            score += (1 - diff) * 3;
+            factors += 3;
+          }
+
+          // City match (weight 2)
+          if (profile.city && apt.city) {
+            score += (profile.city.toLowerCase() === apt.city.toLowerCase() ? 1 : 0) * 2;
+            factors += 2;
+          }
+
+          // Room type match (weight 1)
+          if (profile.desired_room_type && apt.room_type) {
+            score += profile.desired_room_type === apt.room_type ? 1 : 0;
+            factors += 1;
+          }
+
+          // Pet friendly alignment (weight 1)
+          if (profile.pets && apt.pet_friendly) score += 1;
+          else if (!profile.pets) score += 1;
+          factors += 1;
+
+          // Smoking alignment (weight 1)
+          factors += 1;
+          if (!profile.smoking) score += 1; // non-smoker is always compatible
+          else score += 0.5;
+
+          const matchPct = factors > 0 ? Math.round((score / factors) * 100) : 0;
+          return { ...apt, matchPct };
+        })
+        .filter((apt: any) => apt.matchPct >= 85)
+        .slice(0, 20);
+
+      setHighMatchApartments(highMatch);
+      setNotifLoading(false);
+    };
+
+    fetchNotifications();
+  }, [notificationsOpen, user, profile]);
+
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center px-4">
@@ -204,6 +322,7 @@ export default function Profile() {
   const handleMenuClick = (action: string | null) => {
     if (action === "preferences") setPrefsOpen(true);
     if (action === "activity") setActivityOpen(true);
+    if (action === "notifications") setNotificationsOpen(true);
   };
 
   return (
@@ -453,6 +572,148 @@ export default function Profile() {
                           Pending
                         </span>
                       </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )
+            )}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+
+      {/* Notifications Sheet */}
+      <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+        <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0">
+          <SheetHeader className="px-5 pt-5 pb-3 border-b border-border">
+            <SheetTitle className="text-lg font-extrabold text-foreground">Notifications</SheetTitle>
+          </SheetHeader>
+
+          <div className="px-5 pt-3 pb-2 flex gap-2">
+            {[
+              { key: "matches" as const, label: "Matches", icon: Heart },
+              { key: "squads" as const, label: "Squads", icon: Users },
+              { key: "apartments" as const, label: "Hot Rooms", icon: Home },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const count = tab.key === "matches" ? matches.length : tab.key === "squads" ? activeSquads.length : highMatchApartments.length;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setNotifTab(tab.key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-colors relative ${
+                    notifTab === tab.key
+                      ? "gradient-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                  {count > 0 && (
+                    <span className="ml-1 bg-destructive text-destructive-foreground text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <ScrollArea className="h-[calc(85vh-130px)] px-5 py-3">
+            {notifLoading ? (
+              <p className="text-muted-foreground text-sm text-center py-10">Loading...</p>
+            ) : notifTab === "matches" ? (
+              matches.length === 0 ? (
+                <div className="text-center py-10">
+                  <Heart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No matches yet</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">When someone you liked likes you back, they'll appear here</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {matches.map((p: any) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={() => { setNotificationsOpen(false); navigate("/chats"); }}
+                      className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                    >
+                      <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden ring-2 ring-primary/30">
+                        {p.avatar_url || p.photos?.[0] ? (
+                          <img src={p.avatar_url || p.photos?.[0]} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-primary text-lg font-bold">{p.name?.charAt(0)?.toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-card-foreground truncate">🎉 It's a match!</p>
+                        <p className="text-xs text-muted-foreground">{p.name}{p.age ? `, ${p.age}` : ""} · {p.occupation}</p>
+                        <p className="text-xs text-primary font-semibold mt-0.5">Tap to chat</p>
+                      </div>
+                      <MessageCircle className="w-5 h-5 text-primary" />
+                    </motion.div>
+                  ))}
+                </div>
+              )
+            ) : notifTab === "squads" ? (
+              activeSquads.length === 0 ? (
+                <div className="text-center py-10">
+                  <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No active squads</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">When your squad becomes active, you'll see it here</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activeSquads.map((squad: any) => (
+                    <motion.div
+                      key={squad.id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={() => { setNotificationsOpen(false); navigate(`/squad/${squad.id}`); }}
+                      className="bg-card rounded-2xl p-4 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-accent/20">
+                          <Zap className="w-5 h-5 text-accent-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-card-foreground">🚀 {squad.name} is active!</p>
+                          <p className="text-xs text-muted-foreground">
+                            {squad.preferred_locations?.join(", ")} · ₪{squad.budget_min?.toLocaleString()}–₪{squad.budget_max?.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-primary font-semibold mt-0.5">Tap to view squad</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )
+            ) : (
+              highMatchApartments.length === 0 ? (
+                <div className="text-center py-10">
+                  <Home className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No hot rooms yet</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">Apartments with 85%+ match to your preferences will show here</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {highMatchApartments.map((apt: any) => (
+                    <motion.div
+                      key={apt.id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={() => { setNotificationsOpen(false); navigate(`/apartment/${apt.id}`); }}
+                      className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                    >
+                      {apt.images?.[0] && (
+                        <img src={apt.images[0]} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-card-foreground truncate">🔥 {apt.title || "New Listing"}</p>
+                        <p className="text-xs text-muted-foreground">{apt.neighborhood}, {apt.city}</p>
+                        <p className="text-xs font-bold text-primary mt-0.5">₪{apt.price?.toLocaleString()}/mo</p>
+                      </div>
+                      <MatchBadge percent={apt.matchPct} />
                     </motion.div>
                   ))}
                 </div>
