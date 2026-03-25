@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit, Bookmark, Heart, Users, Home, ArrowLeft, MessageCircle, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles } from "@/hooks/useProfile";
@@ -648,7 +649,10 @@ export default function Profile() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-card-foreground truncate">🎉 It's a match!</p>
                         <p className="text-xs text-muted-foreground">{p.name}{p.age ? `, ${p.age}` : ""} · {p.occupation}</p>
-                        <p className="text-xs text-primary font-semibold mt-0.5">Tap to chat</p>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <p className="text-xs text-primary font-semibold">Tap to chat</p>
+                          <p className="text-[10px] text-muted-foreground/60">{p.updated_at ? format(new Date(p.updated_at), "MMM d, HH:mm") : ""}</p>
+                        </div>
                       </div>
                       <MessageCircle className="w-5 h-5 text-primary" />
                     </motion.div>
@@ -681,7 +685,10 @@ export default function Profile() {
                           <p className="text-xs text-muted-foreground">
                             {squad.preferred_locations?.join(", ")} · ₪{squad.budget_min?.toLocaleString()}–₪{squad.budget_max?.toLocaleString()}
                           </p>
-                          <p className="text-xs text-primary font-semibold mt-0.5">Tap to view squad</p>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <p className="text-xs text-primary font-semibold">Tap to view squad</p>
+                            <p className="text-[10px] text-muted-foreground/60">{squad.updated_at ? format(new Date(squad.updated_at), "MMM d, HH:mm") : ""}</p>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
@@ -711,7 +718,10 @@ export default function Profile() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-card-foreground truncate">🔥 {apt.title || "New Listing"}</p>
                         <p className="text-xs text-muted-foreground">{apt.neighborhood}, {apt.city}</p>
-                        <p className="text-xs font-bold text-primary mt-0.5">₪{apt.price?.toLocaleString()}/mo</p>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <p className="text-xs font-bold text-primary">₪{apt.price?.toLocaleString()}/mo</p>
+                          <p className="text-[10px] text-muted-foreground/60">{apt.created_at ? format(new Date(apt.created_at), "MMM d, HH:mm") : ""}</p>
+                        </div>
                       </div>
                       <MatchBadge percent={apt.matchPct} />
                     </motion.div>
