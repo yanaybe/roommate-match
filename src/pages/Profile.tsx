@@ -44,14 +44,21 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 export default function Profile() {
   const { user, signOut } = useAuth();
   const { profile, loading } = useProfile();
+  const { profiles: allProfiles } = useAllProfiles();
   const navigate = useNavigate();
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifTab, setNotifTab] = useState<"matches" | "squads" | "apartments">("matches");
   const [activityTab, setActivityTab] = useState<"saved" | "liked" | "squads">("saved");
   const [savedApartments, setSavedApartments] = useState<any[]>([]);
   const [likedProfiles, setLikedProfiles] = useState<any[]>([]);
   const [pendingSquads, setPendingSquads] = useState<any[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [activeSquads, setActiveSquads] = useState<any[]>([]);
+  const [highMatchApartments, setHighMatchApartments] = useState<any[]>([]);
 
   useEffect(() => {
     if (!activityOpen || !user) return;
