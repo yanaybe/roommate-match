@@ -685,7 +685,10 @@ export default function Profile() {
                           <p className="text-xs text-muted-foreground">
                             {squad.preferred_locations?.join(", ")} · ₪{squad.budget_min?.toLocaleString()}–₪{squad.budget_max?.toLocaleString()}
                           </p>
-                          <p className="text-xs text-primary font-semibold mt-0.5">Tap to view squad</p>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <p className="text-xs text-primary font-semibold">Tap to view squad</p>
+                            <p className="text-[10px] text-muted-foreground/60">{squad.updated_at ? format(new Date(squad.updated_at), "MMM d, HH:mm") : ""}</p>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
