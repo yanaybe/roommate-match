@@ -717,8 +717,10 @@ export default function Profile() {
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-card-foreground truncate">🔥 {apt.title || "New Listing"}</p>
-                        <p className="text-xs text-muted-foreground">{apt.neighborhood}, {apt.city}</p>
-                        <p className="text-xs font-bold text-primary mt-0.5">₪{apt.price?.toLocaleString()}/mo</p>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <p className="text-xs font-bold text-primary">₪{apt.price?.toLocaleString()}/mo</p>
+                          <p className="text-[10px] text-muted-foreground/60">{apt.created_at ? format(new Date(apt.created_at), "MMM d, HH:mm") : ""}</p>
+                        </div>
                       </div>
                       <MatchBadge percent={apt.matchPct} />
                     </motion.div>
