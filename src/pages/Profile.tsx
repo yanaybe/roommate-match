@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit, Bookmark, Heart, Users, Home, ArrowLeft } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Shield, Bell, LogOut, LogIn, Edit, Bookmark, Heart, Users, Home, ArrowLeft, MessageCircle, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile, useAllProfiles } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import MatchBadge from "@/components/MatchBadge";
 import { mockApartments, mockUsers } from "@/data/mockData";
+import { calculateUserMatch } from "@/lib/matching";
 
 const getMockSavedApartmentKey = (userId: string, apartmentId: string) => `saved_apartment:${userId}:${apartmentId}`;
 const getMockLikedProfileKey = (userId: string, likedUserId: string) => `liked_profile:${userId}:${likedUserId}`;
