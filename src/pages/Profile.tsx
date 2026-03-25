@@ -649,7 +649,10 @@ export default function Profile() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-card-foreground truncate">🎉 It's a match!</p>
                         <p className="text-xs text-muted-foreground">{p.name}{p.age ? `, ${p.age}` : ""} · {p.occupation}</p>
-                        <p className="text-xs text-primary font-semibold mt-0.5">Tap to chat</p>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <p className="text-xs text-primary font-semibold">Tap to chat</p>
+                          <p className="text-[10px] text-muted-foreground/60">{p.updated_at ? format(new Date(p.updated_at), "MMM d, HH:mm") : ""}</p>
+                        </div>
                       </div>
                       <MessageCircle className="w-5 h-5 text-primary" />
                     </motion.div>
