@@ -274,6 +274,7 @@ export default function Profile() {
   }, [notificationsOpen, user, profile]);
 
 
+  if (!user) {
     return (
       <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center px-4">
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
