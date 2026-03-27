@@ -15,6 +15,11 @@ export default function Auth() {
 
   useEffect(() => {
     if (!user) return;
+    // If email not verified, send to verification screen
+    if (!user.email_confirmed_at) {
+      navigate("/verify-email", { replace: true });
+      return;
+    }
     // Check if user has completed onboarding
     const checkProfile = async () => {
       const { data } = await supabase
