@@ -94,6 +94,53 @@ export default function VerifyEmail() {
     );
   }
 
+  // Success state - show verified animation before redirect
+  if (verified) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, type: "spring" }}
+          className="w-full max-w-sm text-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+            className="mx-auto w-24 h-24 rounded-full bg-green-500/10 flex items-center justify-center mb-6"
+          >
+            <CheckCircle2 className="w-14 h-14 text-green-500" />
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-2xl font-extrabold text-foreground tracking-tight mb-2"
+          >
+            Email Verified! ✨
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-muted-foreground text-sm"
+          >
+            Setting up your profile…
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="mt-6"
+          >
+            <RefreshCw className="w-5 h-5 animate-spin text-primary mx-auto" />
+          </motion.div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <motion.div
