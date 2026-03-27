@@ -46,7 +46,7 @@ export default function Auth() {
         options: { emailRedirectTo: window.location.origin },
       });
       if (error) toast.error(error.message);
-      else toast.success("Check your email to confirm your account!");
+      else navigate("/verify-email");
     }
     setLoading(false);
   };
