@@ -15,6 +15,11 @@ export default function Auth() {
 
   useEffect(() => {
     if (!user) return;
+    // If email not verified, send to verification screen
+    if (!user.email_confirmed_at) {
+      navigate("/verify-email", { replace: true });
+      return;
+    }
     // Check if user has completed onboarding
     const checkProfile = async () => {
       const { data } = await supabase
@@ -46,7 +51,7 @@ export default function Auth() {
         options: { emailRedirectTo: window.location.origin },
       });
       if (error) toast.error(error.message);
-      else toast.success("Check your email to confirm your account!");
+      else navigate("/verify-email");
     }
     setLoading(false);
   };

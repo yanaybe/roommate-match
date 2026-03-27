@@ -18,6 +18,16 @@ export function useRequireAuth() {
         navigate("/auth");
         return;
       }
+      if (!user.email_confirmed_at) {
+        toast("📧 Please verify your email to continue", {
+          description: "Check your inbox for the verification link",
+          action: {
+            label: "Verify",
+            onClick: () => navigate("/verify-email"),
+          },
+        });
+        return;
+      }
       action();
     },
     [user, navigate]
