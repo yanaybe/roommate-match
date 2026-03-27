@@ -3,40 +3,59 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Mail, RefreshCw, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Mail, RefreshCw, ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function VerifyEmail() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resending, setResending] = useState(false);
+  const [verified, setVerified] = useState(false);
 
-  // If already verified, redirect
+  // If already verified, check onboarding and redirect
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth", { replace: true });
       return;
     }
-    if (user?.email_confirmed_at) {
-      navigate("/onboarding", { replace: true });
+    if (user?.email_confirmed_at && !verified) {
+      handleVerifiedRedirect();
     }
   }, [user, loading, navigate]);
 
+  const handleVerifiedRedirect = async () => {
+    setVerified(true);
+    // Check onboarding status
+    const { data } = await supabase
+      .from("profiles")
+      .select("onboarding_complete")
+      .eq("user_id", user!.id)
+      .maybeSingle();
+
+    // Brief success animation before redirect
+    setTimeout(() => {
+      if (data?.onboarding_complete) {
+        navigate("/", { replace: true });
+      } else {
+        navigate("/onboarding", { replace: true });
+      }
+    }, 1800);
+  };
+
   // Poll for verification every 3 seconds
   useEffect(() => {
-    if (!user || user.email_confirmed_at) return;
+    if (!user || user.email_confirmed_at || verified) return;
     const interval = setInterval(async () => {
       const { data } = await supabase.auth.getUser();
       if (data.user?.email_confirmed_at) {
         toast.success("Email verified! 🎉");
-        // Refresh session so context updates
         await supabase.auth.refreshSession();
-        navigate("/onboarding", { replace: true });
+        handleVerifiedRedirect();
       }
     }, 3000);
     return () => clearInterval(interval);
-  }, [user, navigate]);
+  }, [user, navigate, verified]);
 
   // Cooldown timer
   useEffect(() => {
@@ -71,6 +90,53 @@ export default function VerifyEmail() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Success state - show verified animation before redirect
+  if (verified) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, type: "spring" }}
+          className="w-full max-w-sm text-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+            className="mx-auto w-24 h-24 rounded-full bg-green-500/10 flex items-center justify-center mb-6"
+          >
+            <CheckCircle2 className="w-14 h-14 text-green-500" />
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-2xl font-extrabold text-foreground tracking-tight mb-2"
+          >
+            Email Verified! ✨
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-muted-foreground text-sm"
+          >
+            Setting up your profile…
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="mt-6"
+          >
+            <RefreshCw className="w-5 h-5 animate-spin text-primary mx-auto" />
+          </motion.div>
+        </motion.div>
       </div>
     );
   }
