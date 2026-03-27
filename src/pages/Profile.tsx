@@ -318,6 +318,15 @@ export default function Profile() {
         >
           Set Up Profile
         </button>
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut();
+            navigate("/auth", { replace: true });
+          }}
+          className="mt-4 text-muted-foreground text-sm hover:text-foreground transition-colors"
+        >
+          Sign out
+        </button>
       </div>
     );
   }
