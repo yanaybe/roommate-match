@@ -18,7 +18,9 @@ const getSwipeKey = (userId: string) => `swiped_profiles:${userId}`;
 function getSwipedMap(userId: string): Record<string, number> {
   try {
     return JSON.parse(localStorage.getItem(getSwipeKey(userId)) || "{}");
-  } catch { return {}; }
+  } catch {
+    return {};
+  }
 }
 
 function setSwipedMap(userId: string, map: Record<string, number>) {
@@ -42,7 +44,10 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
     age: p.age ?? 0,
     city: p.city,
     occupation: p.occupation,
-    avatar: p.avatar_url || photos?.[0] || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&size=200`,
+    avatar:
+      p.avatar_url ||
+      photos?.[0] ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&size=200`,
     budget: p.budget,
     roomType: p.desired_room_type,
     sleepSchedule: p.sleep_schedule,
@@ -141,10 +146,13 @@ export default function Roommates() {
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(current.user.id);
 
         if (isUuid) {
-          await supabase.from("liked_profiles").upsert({
-            user_id: user.id,
-            liked_user_id: current.user.id,
-          }, { onConflict: "user_id,liked_user_id" });
+          await supabase.from("liked_profiles").upsert(
+            {
+              user_id: user.id,
+              liked_user_id: current.user.id,
+            },
+            { onConflict: "user_id,liked_user_id" },
+          );
         } else {
           localStorage.setItem(getMockLikedProfileKey(user.id, current.user.id), "true");
         }
@@ -156,7 +164,7 @@ export default function Roommates() {
         }
       }
     },
-    [remaining, requireAuth, user]
+    [remaining, requireAuth, user],
   );
 
   const handleUndo = () => {
@@ -171,9 +179,6 @@ export default function Roommates() {
         <div className="max-w-lg mx-auto px-4 pt-12 pb-3 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-extrabold text-foreground">Find Roommates</h1>
-            <p className="text-muted-foreground text-sm">
-              {remaining.length} {remaining.length === 1 ? "person" : "people"} left
-            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -183,10 +188,7 @@ export default function Roommates() {
               <Users className="w-4 h-4" />
               Squads
             </button>
-            <button
-              onClick={() => navigate("/create-squad")}
-              className="gradient-primary p-2 rounded-xl"
-            >
+            <button onClick={() => navigate("/create-squad")} className="gradient-primary p-2 rounded-xl">
               <Plus className="w-4 h-4 text-primary-foreground" />
             </button>
           </div>
@@ -222,12 +224,6 @@ export default function Roommates() {
             </div>
             <h2 className="text-lg font-bold text-foreground mb-1">No more profiles</h2>
             <p className="text-muted-foreground text-sm mb-4">Check back later for new roommates!</p>
-            <button
-              onClick={() => { setSwiped([]); if (user) setSwipedMap(user.id, {}); }}
-              className="gradient-primary text-primary-foreground px-6 py-2.5 rounded-xl font-semibold text-sm"
-            >
-              Start Over
-            </button>
           </div>
         )}
 
@@ -257,11 +253,7 @@ export default function Roommates() {
       </div>
 
       {matchedUser && (
-        <MatchModal
-          user={matchedUser}
-          matchPercent={matchedPercent}
-          onClose={() => setMatchedUser(null)}
-        />
+        <MatchModal user={matchedUser} matchPercent={matchedPercent} onClose={() => setMatchedUser(null)} />
       )}
     </div>
   );
