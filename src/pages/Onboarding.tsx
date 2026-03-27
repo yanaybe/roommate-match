@@ -115,7 +115,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
 }
 
 export default function Onboarding() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -123,6 +123,21 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(initial);
   const [saving, setSaving] = useState(false);
+
+  // Guard: redirect unverified users to verify-email, unauthenticated to auth
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      navigate("/auth", { replace: true });
+      return;
+    }
+    if (!isEdit && !user.email_confirmed_at) {
+      toast("📧 Please verify your email first", {
+        description: "You need to verify your email before setting up your profile",
+      });
+      navigate("/verify-email", { replace: true });
+    }
+  }, [user, authLoading, navigate, isEdit]);
 
   useEffect(() => {
     if (isEdit && profile) {

@@ -3,40 +3,59 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Mail, RefreshCw, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Mail, RefreshCw, ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function VerifyEmail() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resending, setResending] = useState(false);
+  const [verified, setVerified] = useState(false);
 
-  // If already verified, redirect
+  // If already verified, check onboarding and redirect
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth", { replace: true });
       return;
     }
-    if (user?.email_confirmed_at) {
-      navigate("/onboarding", { replace: true });
+    if (user?.email_confirmed_at && !verified) {
+      handleVerifiedRedirect();
     }
   }, [user, loading, navigate]);
 
+  const handleVerifiedRedirect = async () => {
+    setVerified(true);
+    // Check onboarding status
+    const { data } = await supabase
+      .from("profiles")
+      .select("onboarding_complete")
+      .eq("user_id", user!.id)
+      .maybeSingle();
+
+    // Brief success animation before redirect
+    setTimeout(() => {
+      if (data?.onboarding_complete) {
+        navigate("/", { replace: true });
+      } else {
+        navigate("/onboarding", { replace: true });
+      }
+    }, 1800);
+  };
+
   // Poll for verification every 3 seconds
   useEffect(() => {
-    if (!user || user.email_confirmed_at) return;
+    if (!user || user.email_confirmed_at || verified) return;
     const interval = setInterval(async () => {
       const { data } = await supabase.auth.getUser();
       if (data.user?.email_confirmed_at) {
         toast.success("Email verified! 🎉");
-        // Refresh session so context updates
         await supabase.auth.refreshSession();
-        navigate("/onboarding", { replace: true });
+        handleVerifiedRedirect();
       }
     }, 3000);
     return () => clearInterval(interval);
-  }, [user, navigate]);
+  }, [user, navigate, verified]);
 
   // Cooldown timer
   useEffect(() => {
