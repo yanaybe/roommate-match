@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Crown, CreditCard, Receipt, ChevronRight, TrendingUp,
   Eye, Heart, BarChart3, Lock, HelpCircle, MessageCircle, FileText,
-  ShieldCheck, Globe, Moon, MapPin, Sun, Sparkles, Zap, Star
+  ShieldCheck, Globe, Moon, MapPin, Sun, Sparkles, Zap, Star, Check
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Switch } from "@/components/ui/switch";
 import PremiumSheet from "@/components/PremiumSheet";
+import { useLanguage, languages } from "@/hooks/useLanguage";
 
 const currentPlan = "Free"; // Will be dynamic once Stripe is integrated
 
@@ -115,7 +116,9 @@ const planIcons: Record<string, React.ElementType> = {
 export default function Settings() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { language, setLanguage, t, languageInfo } = useLanguage();
   const [premiumOpen, setPremiumOpen] = useState(false);
+  const [langPickerOpen, setLangPickerOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() =>
     document.documentElement.classList.contains("dark")
   );
@@ -142,14 +145,14 @@ export default function Settings() {
           >
             <ArrowLeft size={18} className="text-foreground" />
           </button>
-          <h1 className="text-lg font-bold text-foreground">Settings</h1>
+          <h1 className="text-lg font-bold text-foreground">{t("settings")}</h1>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 pt-5 space-y-6">
         {/* 💎 Subscription & Payments */}
         <section>
-          <SectionHeader title="Subscription & Payments" />
+          <SectionHeader title={t("subscriptionAndPayments")} />
 
           {/* Current plan card */}
           <motion.div
@@ -161,7 +164,7 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-primary-foreground/70 text-xs font-medium mb-1">
-                    Current Plan
+                    {t("currentPlan")}
                   </p>
                   <div className="flex items-center gap-2">
                     <PlanIcon size={20} className="text-primary-foreground" />
@@ -175,13 +178,13 @@ export default function Settings() {
                     onClick={() => setPremiumOpen(true)}
                     className="bg-primary-foreground text-primary px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:scale-105 transition-transform"
                   >
-                    Upgrade ✨
+                    {t("upgrade")}
                   </button>
                 )}
               </div>
               {currentPlan === "Free" && (
                 <p className="text-primary-foreground/60 text-xs mt-3">
-                  Unlock unlimited likes, see who viewed you & more
+                  {t("unlockDesc")}
                 </p>
               )}
             </div>
@@ -190,21 +193,21 @@ export default function Settings() {
           <div className="bg-card rounded-2xl shadow-card divide-y divide-border/30">
             <SettingsItem
               icon={Crown}
-              label="Manage Subscription"
-              desc="Upgrade, downgrade or cancel"
+              label={t("manageSubscription")}
+              desc={t("manageSubscriptionDesc")}
               accent
               onClick={() => setPremiumOpen(true)}
             />
             <SettingsItem
               icon={CreditCard}
-              label="Payment Methods"
-              desc="Add or remove cards"
+              label={t("paymentMethods")}
+              desc={t("paymentMethodsDesc")}
               onClick={() => {}}
             />
             <SettingsItem
               icon={Receipt}
-              label="Billing History"
-              desc="View past payments"
+              label={t("billingHistory")}
+              desc={t("billingHistoryDesc")}
               onClick={() => {}}
             />
           </div>
@@ -212,26 +215,26 @@ export default function Settings() {
 
         {/* 📊 Activity & Insights */}
         <section>
-          <SectionHeader title="Activity & Insights" />
+          <SectionHeader title={t("activityAndInsights")} />
 
           <div className="flex gap-3 mb-3">
             <InsightCard
               icon={Eye}
-              label="Profile Views"
+              label={t("profileViews")}
               value={42}
               locked={currentPlan === "Free"}
               onUpgrade={() => setPremiumOpen(true)}
             />
             <InsightCard
               icon={Heart}
-              label="Likes Received"
+              label={t("likesReceived")}
               value={18}
               locked={currentPlan === "Free"}
               onUpgrade={() => setPremiumOpen(true)}
             />
             <InsightCard
               icon={BarChart3}
-              label="Match Rate"
+              label={t("matchRate")}
               value="76%"
             />
           </div>
@@ -245,7 +248,7 @@ export default function Settings() {
             >
               <Lock size={14} className="text-primary" />
               <span className="text-sm font-semibold text-primary">
-                Upgrade to see full insights
+                {t("upgradeFullInsights")}
               </span>
             </motion.button>
           )}
@@ -253,28 +256,28 @@ export default function Settings() {
 
         {/* 🆘 Support & Legal */}
         <section>
-          <SectionHeader title="Support & Legal" />
+          <SectionHeader title={t("supportAndLegal")} />
           <div className="bg-card rounded-2xl shadow-card divide-y divide-border/30">
             <SettingsItem
               icon={HelpCircle}
-              label="Help Center"
-              desc="FAQs and guides"
+              label={t("helpCenter")}
+              desc={t("helpCenterDesc")}
               onClick={() => {}}
             />
             <SettingsItem
               icon={MessageCircle}
-              label="Contact Support"
-              desc="Get in touch with us"
+              label={t("contactSupport")}
+              desc={t("contactSupportDesc")}
               onClick={() => {}}
             />
             <SettingsItem
               icon={FileText}
-              label="Terms of Service"
+              label={t("termsOfService")}
               onClick={() => {}}
             />
             <SettingsItem
               icon={ShieldCheck}
-              label="Privacy Policy"
+              label={t("privacyPolicy")}
               onClick={() => {}}
             />
           </div>
@@ -282,20 +285,57 @@ export default function Settings() {
 
         {/* 🌍 App Settings */}
         <section>
-          <SectionHeader title="App Settings" />
+          <SectionHeader title={t("appSettings")} />
           <div className="bg-card rounded-2xl shadow-card divide-y divide-border/30">
             <SettingsItem
               icon={Globe}
-              label="Language"
-              desc="English"
+              label={t("language")}
+              desc={languageInfo.nativeLabel}
               trailing={
-                <span className="text-xs text-muted-foreground font-medium mr-1">EN</span>
+                <span className="text-xs text-muted-foreground font-medium mr-1">{languageInfo.shortCode}</span>
               }
-              onClick={() => {}}
+              onClick={() => setLangPickerOpen(!langPickerOpen)}
             />
+
+            {/* Language picker */}
+            <AnimatePresence>
+              {langPickerOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 py-2 space-y-1">
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          setLanguage(lang.code);
+                          setLangPickerOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors ${
+                          language === lang.code
+                            ? "bg-primary/10 text-primary"
+                            : "hover:bg-muted/50 text-foreground"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium">{lang.nativeLabel}</span>
+                          <span className="text-xs text-muted-foreground">{lang.label}</span>
+                        </div>
+                        {language === lang.code && <Check size={16} className="text-primary" />}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <SettingsItem
               icon={darkMode ? Moon : Sun}
-              label="Dark Mode"
+              label={t("darkMode")}
               trailing={
                 <Switch
                   checked={darkMode}
@@ -306,8 +346,8 @@ export default function Settings() {
             />
             <SettingsItem
               icon={MapPin}
-              label="Location Preferences"
-              desc="Set your preferred areas"
+              label={t("locationPreferences")}
+              desc={t("locationPreferencesDesc")}
               onClick={() => {}}
             />
           </div>
