@@ -336,6 +336,7 @@ export default function Profile() {
     if (action === "activity") setActivityOpen(true);
     if (action === "notifications") setNotificationsOpen(true);
     if (action === "premium") setPremiumOpen(true);
+    if (action === "settings") navigate("/settings");
   };
 
   return (
