@@ -22,7 +22,7 @@ const menuItems = [
   { icon: Sparkles, label: "Preferences", desc: "View your matching criteria", accent: false, action: "preferences" },
   
   { icon: Bell, label: "Notifications", desc: "Matches, squads & listings", action: "notifications" },
-  { icon: Settings, label: "Settings", desc: "Account & privacy", action: null },
+  { icon: Settings, label: "Settings", desc: "Account & privacy", action: "settings" },
 ];
 
 function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
