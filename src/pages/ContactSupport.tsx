@@ -7,34 +7,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const contactMethods = [
-  {
-    icon: Phone,
-    label: "Phone",
-    value: "+972 54-540-4192",
-    href: "tel:+972545404192",
-    color: "from-emerald-500 to-green-600",
-  },
-  {
-    icon: Mail,
-    label: "Email",
-    value: "support@roomatch.app",
-    href: "mailto:support@roomatch.app",
-    color: "from-blue-500 to-cyan-600",
-  },
-  {
-    icon: Instagram,
-    label: "Instagram",
-    value: "@_roomatch_",
-    href: "https://instagram.com/_roomatch_",
-    color: "from-pink-500 to-purple-600",
-  },
-  {
-    icon: Facebook,
-    label: "Facebook",
-    value: "_roomatch_",
-    href: "https://facebook.com/_roomatch_",
-    color: "from-blue-600 to-indigo-600",
-  },
+  { icon: Phone, label: "Phone", value: "+972 54-540-4192", href: "tel:+972545404192", color: "from-emerald-500 to-green-600" },
+  { icon: Mail, label: "Email", value: "support@roomatch.app", href: "mailto:support@roomatch.app", color: "from-blue-500 to-cyan-600" },
+  { icon: Instagram, label: "Instagram", value: "@_roomatch_", href: "https://instagram.com/_roomatch_", color: "from-pink-500 to-purple-600" },
+  { icon: Facebook, label: "Facebook", value: "_roomatch_", href: "https://facebook.com/_roomatch_", color: "from-blue-600 to-indigo-600" },
 ];
 
 const categories = [
@@ -53,29 +29,13 @@ export default function ContactSupport() {
   const [sent, setSent] = useState(false);
 
   const handleSubmit = async () => {
-    if (!message.trim()) {
-      toast.error("Please write a message");
-      return;
-    }
-    if (!user) {
-      toast.error("Please log in to send a message");
-      return;
-    }
+    if (!message.trim()) { toast.error("Please write a message"); return; }
+    if (!user) { toast.error("Please log in to send a message"); return; }
     setSending(true);
-    const { error } = await supabase.from("support_messages").insert({
-      user_id: user.id,
-      category,
-      message: message.trim(),
-    });
+    const { error } = await supabase.from("support_messages").insert({ user_id: user.id, category, message: message.trim() });
     setSending(false);
-    if (error) {
-      toast.error("Failed to send message. Please try again.");
-    } else {
-      setSent(true);
-      setMessage("");
-      setTimeout(() => setSent(false), 3000);
-      toast.success("Message sent! We'll get back to you soon.");
-    }
+    if (error) { toast.error("Failed to send message. Please try again."); }
+    else { setSent(true); setMessage(""); setTimeout(() => setSent(false), 3000); toast.success("Message sent! We'll get back to you soon."); }
   };
 
   return (
@@ -89,11 +49,7 @@ export default function ContactSupport() {
 
       <div className="px-5 py-6 max-w-md mx-auto space-y-8">
         {/* Hero */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-3 pt-2"
-        >
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3 pt-2">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
             <MessageCircle className="w-8 h-8 text-primary" />
           </div>
@@ -103,98 +59,9 @@ export default function ContactSupport() {
           </p>
         </motion.div>
 
-        {/* Write to Us Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="space-y-4"
-        >
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
-            Write to us
-          </h3>
-
-          <div className="rounded-2xl bg-card border border-border p-4 space-y-4">
-            {/* Category pills */}
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat.value}
-                  onClick={() => setCategory(cat.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    category === cat.value
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <cat.icon className="w-3.5 h-3.5" />
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Message textarea */}
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={
-                category === "bug"
-                  ? "Describe the issue you're experiencing..."
-                  : category === "suggestion"
-                  ? "Share your idea to improve Roomatch..."
-                  : category === "review"
-                  ? "Tell us what you think about Roomatch..."
-                  : "Write your message here..."
-              }
-              rows={4}
-              maxLength={1000}
-              className="w-full rounded-xl bg-background border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
-            />
-
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {message.length}/1000
-              </span>
-
-              <AnimatePresence mode="wait">
-                {sent ? (
-                  <motion.div
-                    key="sent"
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.8, opacity: 0 }}
-                    className="flex items-center gap-1.5 text-emerald-500 text-sm font-medium"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Sent!
-                  </motion.div>
-                ) : (
-                  <motion.button
-                    key="send"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    onClick={handleSubmit}
-                    disabled={sending || !message.trim()}
-                    className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity"
-                  >
-                    {sending ? (
-                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
-                    {sending ? "Sending..." : "Send"}
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Contact Cards */}
         <div className="space-y-3">
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
-            Other ways to reach us
-          </h3>
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Other ways to reach us</h3>
           {contactMethods.map((method, i) => (
             <motion.a
               key={method.label}
@@ -203,7 +70,7 @@ export default function ContactSupport() {
               rel={method.href.startsWith("http") ? "noopener noreferrer" : undefined}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + i * 0.08 }}
+              transition={{ delay: 0.1 + i * 0.08 }}
               className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-md transition-all group"
             >
               <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${method.color} flex items-center justify-center shrink-0 shadow-sm`}>
@@ -218,16 +85,64 @@ export default function ContactSupport() {
           ))}
         </div>
 
+        {/* Write to Us Form */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="space-y-4">
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Write to us</h3>
+
+          <div className="rounded-2xl bg-card border border-border p-4 space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => (
+                <button
+                  key={cat.value}
+                  onClick={() => setCategory(cat.value)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    category === cat.value ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  <cat.icon className="w-3.5 h-3.5" />
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={
+                category === "bug" ? "Describe the issue you're experiencing..."
+                : category === "suggestion" ? "Share your idea to improve Roomatch..."
+                : category === "review" ? "Tell us what you think about Roomatch..."
+                : "Write your message here..."
+              }
+              rows={4}
+              maxLength={1000}
+              className="w-full rounded-xl bg-background border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+            />
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{message.length}/1000</span>
+              <AnimatePresence mode="wait">
+                {sent ? (
+                  <motion.div key="sent" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
+                    className="flex items-center gap-1.5 text-emerald-500 text-sm font-medium">
+                    <CheckCircle className="w-4 h-4" /> Sent!
+                  </motion.div>
+                ) : (
+                  <motion.button key="send" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={handleSubmit}
+                    disabled={sending || !message.trim()}
+                    className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity">
+                    {sending ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
+                    {sending ? "Sending..." : "Send"}
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Response time note */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-center"
-        >
-          <p className="text-xs text-muted-foreground">
-            We typically respond within 24 hours 💬
-          </p>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-center">
+          <p className="text-xs text-muted-foreground">We typically respond within 24 hours 💬</p>
         </motion.div>
       </div>
     </div>
