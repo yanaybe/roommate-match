@@ -273,12 +273,12 @@ export default function Settings() {
             <SettingsItem
               icon={FileText}
               label={t("termsOfService")}
-              onClick={() => {}}
+              onClick={() => navigate("/terms-of-service")}
             />
             <SettingsItem
               icon={ShieldCheck}
               label={t("privacyPolicy")}
-              onClick={() => {}}
+              onClick={() => navigate("/privacy-policy")}
             />
           </div>
         </section>
