@@ -268,7 +268,7 @@ export default function Settings() {
               icon={MessageCircle}
               label={t("contactSupport")}
               desc={t("contactSupportDesc")}
-              onClick={() => {}}
+              onClick={() => navigate("/contact-support")}
             />
             <SettingsItem
               icon={FileText}
