@@ -309,15 +309,15 @@ export default function Profile() {
   if (!profile || !profile.onboarding_complete) {
     return (
       <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center px-4">
-        <h2 className="text-xl font-extrabold text-foreground mb-2">Complete your profile</h2>
+        <h2 className="text-xl font-extrabold text-foreground mb-2">{t("completeYourProfile")}</h2>
         <p className="text-muted-foreground text-sm text-center mb-6">
-          Fill out your profile to start matching with roommates
+          {t("fillOutProfile")}
         </p>
         <button
           onClick={() => navigate("/onboarding")}
           className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-semibold text-sm"
         >
-          Set Up Profile
+          {t("setUpProfile")}
         </button>
         <button
           onClick={async () => {
