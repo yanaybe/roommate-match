@@ -48,6 +48,7 @@ export default function Profile() {
   const { profile, loading } = useProfile();
   const { profiles: allProfiles } = useAllProfiles();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
