@@ -287,7 +287,7 @@ export default function Chats() {
               <h2 className="font-bold text-foreground text-sm">
                 {conv?.other_name}
               </h2>
-              <p className="text-muted-foreground text-xs">Online</p>
+              <p className="text-muted-foreground text-xs">{t("online")}</p>
             </div>
           </div>
         </div>
