@@ -68,6 +68,7 @@ export default function Roommates() {
   const { profile: myProfile } = useProfile();
   const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [swiped, setSwiped] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
