@@ -6,6 +6,7 @@ import PremiumSheet from "@/components/PremiumSheet";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
