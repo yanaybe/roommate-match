@@ -181,6 +181,7 @@ export default function Roommates() {
         <div className="max-w-lg mx-auto px-4 pt-12 pb-3 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-extrabold text-foreground">{t("findRoommates")}</h1>
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate("/my-squads")}
