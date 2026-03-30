@@ -410,7 +410,7 @@ export default function Chats() {
                     </span>
                   </div>
                   <p className="text-muted-foreground text-sm truncate">
-                    {conv.last_message ?? "Start chatting..."}
+                    {conv.last_message ?? t("startChatting")}
                   </p>
                 </div>
                 {conv.unread_count > 0 && (
