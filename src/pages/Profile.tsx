@@ -584,7 +584,7 @@ export default function Profile() {
                           </p>
                         </div>
                         <span className="text-xs font-semibold px-3 py-1 rounded-full bg-accent text-accent-foreground">
-                          Pending
+                          {t("pending")}
                         </span>
                       </div>
                     </motion.div>
