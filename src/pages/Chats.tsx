@@ -361,7 +361,7 @@ export default function Chats() {
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 pb-3">
-          <h1 className="text-xl font-extrabold text-foreground">Messages</h1>
+          <h1 className="text-xl font-extrabold text-foreground">{t("messages")}</h1>
         </div>
       </div>
 
