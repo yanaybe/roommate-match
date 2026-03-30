@@ -27,6 +27,7 @@ interface Message {
 export default function Chats() {
   const { user } = useAuth();
   const { refresh: refreshUnread } = useUnreadCount();
+  const { t } = useLanguage();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
