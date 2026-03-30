@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Conversation {
   id: string;

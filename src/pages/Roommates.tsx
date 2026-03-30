@@ -7,6 +7,7 @@ import MatchModal from "@/components/MatchModal";
 import { mockUsers, type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
+import { useLanguage } from "@/hooks/useLanguage";
 import { calculateUserMatch } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
