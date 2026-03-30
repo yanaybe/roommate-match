@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Phone, Mail, MessageCircle, Instagram, Facebook, ExternalLink, Send, Bug, Lightbulb, Star, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
