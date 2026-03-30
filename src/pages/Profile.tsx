@@ -412,41 +412,41 @@ export default function Profile() {
             <SheetTitle className="text-lg font-extrabold text-foreground">{t("preferences")}</SheetTitle>
           </SheetHeader>
           <ScrollArea className="h-[calc(85vh-70px)] px-5 py-4">
-            <ProfileSection title="Basic Info">
-              <InfoRow label="Budget" value={`₪${profile.budget.toLocaleString()}/mo`} />
-              <InfoRow label="Room type" value={profile.desired_room_type} />
+            <ProfileSection title={t("basicInfo")}>
+              <InfoRow label={t("budget")} value={`₪${profile.budget.toLocaleString()}/mo`} />
+              <InfoRow label={t("roomType")} value={profile.desired_room_type} />
             </ProfileSection>
 
-            <ProfileSection title="Living Habits">
-              <InfoRow label="Sleep schedule" value={profile.sleep_schedule} />
-              <InfoRow label="Cleanliness" value={`${profile.cleanliness}/5`} />
-              <InfoRow label="Cooking" value={profile.cooking_habits} />
-              <InfoRow label="Shared space" value={profile.shared_space_org} />
+            <ProfileSection title={t("livingHabits")}>
+              <InfoRow label={t("sleepSchedule")} value={profile.sleep_schedule} />
+              <InfoRow label={t("cleanliness")} value={`${profile.cleanliness}/5`} />
+              <InfoRow label={t("cooking")} value={profile.cooking_habits} />
+              <InfoRow label={t("sharedSpace")} value={profile.shared_space_org} />
             </ProfileSection>
 
-            <ProfileSection title="Lifestyle">
-              <InfoRow label="Smoking" value={profile.smoking ? "Yes" : "No"} />
-              <InfoRow label="Religious level" value={profile.religious_level} />
-              <InfoRow label="Alcohol" value={profile.alcohol} />
-              <InfoRow label="Pets" value={profile.pets ? "Yes" : "No"} />
-              <InfoRow label="Fitness" value={profile.fitness} />
-              <InfoRow label="Work from home" value={profile.wfh ? "Yes" : "No"} />
-              <InfoRow label="Guests" value={profile.guests} />
+            <ProfileSection title={t("lifestyle")}>
+              <InfoRow label={t("smoking")} value={profile.smoking ? t("yes") : t("no")} />
+              <InfoRow label={t("religiousLevel")} value={profile.religious_level} />
+              <InfoRow label={t("alcohol")} value={profile.alcohol} />
+              <InfoRow label={t("pets")} value={profile.pets ? t("yes") : t("no")} />
+              <InfoRow label={t("fitness")} value={profile.fitness} />
+              <InfoRow label={t("workFromHome")} value={profile.wfh ? t("yes") : t("no")} />
+              <InfoRow label={t("guests")} value={profile.guests} />
             </ProfileSection>
 
-            <ProfileSection title="Personality">
-              <InfoRow label="Social level" value={`${profile.social_level}/5`} />
-              <InfoRow label="Noise level" value={`${profile.noise_level}/5`} />
-              <InfoRow label="Partying" value={profile.partying} />
-              <InfoRow label="Vibe" value={profile.lifestyle_vibe} />
+            <ProfileSection title={t("personality")}>
+              <InfoRow label={t("socialLevel")} value={`${profile.social_level}/5`} />
+              <InfoRow label={t("noiseLevel")} value={`${profile.noise_level}/5`} />
+              <InfoRow label={t("partying")} value={profile.partying} />
+              <InfoRow label={t("vibe")} value={profile.lifestyle_vibe} />
             </ProfileSection>
 
-            <ProfileSection title="Roommate Preferences">
-              <InfoRow label="Age range" value={`${profile.preferred_age_min} - ${profile.preferred_age_max}`} />
-              <InfoRow label="Gender" value={profile.gender_preference} />
-              <InfoRow label="Lifestyle similarity" value={profile.lifestyle_similarity} />
-              <InfoRow label="Cleanliness expected" value={`${profile.cleanliness_expectations}/5`} />
-              <InfoRow label="Activity hours" value={profile.activity_hours} />
+            <ProfileSection title={t("roommatePreferences")}>
+              <InfoRow label={t("ageRange")} value={`${profile.preferred_age_min} - ${profile.preferred_age_max}`} />
+              <InfoRow label={t("gender")} value={profile.gender_preference} />
+              <InfoRow label={t("lifestyleSimilarity")} value={profile.lifestyle_similarity} />
+              <InfoRow label={t("cleanlinessExpected")} value={`${profile.cleanliness_expectations}/5`} />
+              <InfoRow label={t("activityHours")} value={profile.activity_hours} />
             </ProfileSection>
             <div className="pb-4">
               <button
