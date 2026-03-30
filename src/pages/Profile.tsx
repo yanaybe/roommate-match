@@ -17,13 +17,12 @@ import { calculateUserMatch } from "@/lib/matching";
 const getMockSavedApartmentKey = (userId: string, apartmentId: string) => `saved_apartment:${userId}:${apartmentId}`;
 const getMockLikedProfileKey = (userId: string, likedUserId: string) => `liked_profile:${userId}:${likedUserId}`;
 
-const menuItems = [
-  { icon: Crown, label: "Go Premium", desc: "Unlock all features", accent: true, action: "premium" },
-  { icon: Bookmark, label: "My Activity", desc: "Saved rooms, likes & requests", accent: false, action: "activity" },
-  { icon: Sparkles, label: "Preferences", desc: "View your matching criteria", accent: false, action: "preferences" },
-  
-  { icon: Bell, label: "Notifications", desc: "Matches, squads & listings", action: "notifications" },
-  { icon: Settings, label: "Settings", desc: "Account & privacy", action: "settings" },
+const getMenuItems = (t: (key: string) => string) => [
+  { icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" },
+  { icon: Bookmark, label: t("myActivity"), desc: t("myActivityDesc"), accent: false, action: "activity" },
+  { icon: Sparkles, label: t("preferences"), desc: t("preferencesDesc"), accent: false, action: "preferences" },
+  { icon: Bell, label: t("notifications"), desc: t("notificationsDesc"), action: "notifications" },
+  { icon: Settings, label: t("settings"), desc: t("settingsDesc"), action: "settings" },
 ];
 
 function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
