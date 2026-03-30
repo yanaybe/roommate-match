@@ -464,7 +464,7 @@ export default function Profile() {
       <Sheet open={activityOpen} onOpenChange={setActivityOpen}>
         <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0">
           <SheetHeader className="px-5 pt-5 pb-3 border-b border-border">
-            <SheetTitle className="text-lg font-extrabold text-foreground">My Activity</SheetTitle>
+            <SheetTitle className="text-lg font-extrabold text-foreground">{t("myActivity")}</SheetTitle>
           </SheetHeader>
 
           <div className="px-5 pt-3 pb-2 flex gap-2">
