@@ -187,7 +187,7 @@ export default function Roommates() {
               className="flex items-center gap-1.5 px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-xl text-sm font-semibold text-foreground transition-colors"
             >
               <Users className="w-4 h-4" />
-              Squads
+              {t("squads")}
             </button>
             <button onClick={() => navigate("/create-squad")} className="gradient-primary p-2 rounded-xl">
               <Plus className="w-4 h-4 text-primary-foreground" />
