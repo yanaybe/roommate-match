@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "sonner";
 
 const contactMethods = [
@@ -13,33 +14,43 @@ const contactMethods = [
   { icon: Facebook, label: "Facebook", value: "_roomatch_", href: "https://facebook.com/_roomatch_", color: "from-blue-600 to-indigo-600" },
 ];
 
-const categories = [
-  { value: "bug", label: "Bug Report", icon: Bug, color: "text-red-500 bg-red-500/10" },
-  { value: "suggestion", label: "Suggestion", icon: Lightbulb, color: "text-amber-500 bg-amber-500/10" },
-  { value: "review", label: "Review", icon: Star, color: "text-primary bg-primary/10" },
-  { value: "general", label: "General", icon: MessageCircle, color: "text-muted-foreground bg-muted" },
-];
-
 export default function ContactSupport() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [category, setCategory] = useState("general");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sent, setSentState] = useState(false);
+
+  const categories = [
+    { value: "bug", label: t("bugReport"), icon: Bug, color: "text-red-500 bg-red-500/10" },
+    { value: "suggestion", label: t("suggestion"), icon: Lightbulb, color: "text-amber-500 bg-amber-500/10" },
+    { value: "review", label: t("review"), icon: Star, color: "text-primary bg-primary/10" },
+    { value: "general", label: t("general"), icon: MessageCircle, color: "text-muted-foreground bg-muted" },
+  ];
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   const handleSubmit = async () => {
-    if (!message.trim()) { toast.error("Please write a message"); return; }
-    if (!user) { toast.error("Please log in to send a message"); return; }
+    if (!message.trim()) { toast.error(t("pleaseWriteMessage")); return; }
+    if (!user) { toast.error(t("pleaseLogIn")); return; }
     setSending(true);
     const { error } = await supabase.from("support_messages").insert({ user_id: user.id, category, message: message.trim() });
     setSending(false);
-    if (error) { toast.error("Failed to send message. Please try again."); }
-    else { setSent(true); setMessage(""); setTimeout(() => setSent(false), 3000); toast.success("Message sent! We'll get back to you soon."); }
+    if (error) { toast.error(t("failedToSend")); }
+    else { setSentState(true); setMessage(""); setTimeout(() => setSentState(false), 3000); toast.success(t("messageSent")); }
+  };
+
+  const getPlaceholder = () => {
+    switch (category) {
+      case "bug": return t("bugPlaceholder");
+      case "suggestion": return t("suggestionPlaceholder");
+      case "review": return t("reviewPlaceholder");
+      default: return t("generalPlaceholder");
+    }
   };
 
   return (
@@ -48,24 +59,20 @@ export default function ContactSupport() {
         <button onClick={() => navigate(-1)} className="p-1.5 rounded-xl hover:bg-muted transition-colors">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-lg font-bold text-foreground">Contact Support</h1>
+        <h1 className="text-lg font-bold text-foreground">{t("contactSupportTitle")}</h1>
       </div>
 
       <div className="px-5 py-6 max-w-md mx-auto space-y-8">
-        {/* Hero */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3 pt-2">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
             <MessageCircle className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-xl font-bold text-foreground">We're here to help</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">
-            Have a question, feedback, or need assistance? Reach out to us through any of the channels below.
-          </p>
+          <h2 className="text-xl font-bold text-foreground">{t("wereHereToHelp")}</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">{t("contactHeroDesc")}</p>
         </motion.div>
 
-        {/* Contact Cards */}
         <div className="space-y-3">
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Other ways to reach us</h3>
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">{t("otherWaysToReach")}</h3>
           {contactMethods.map((method, i) => (
             <motion.a
               key={method.label}
@@ -89,9 +96,8 @@ export default function ContactSupport() {
           ))}
         </div>
 
-        {/* Write to Us Form */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="space-y-4">
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Write to us</h3>
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">{t("writeToUs")}</h3>
 
           <div className="rounded-2xl bg-card border border-border p-4 space-y-4">
             <div className="flex flex-wrap gap-2">
@@ -112,12 +118,7 @@ export default function ContactSupport() {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={
-                category === "bug" ? "Describe the issue you're experiencing..."
-                : category === "suggestion" ? "Share your idea to improve Roomatch..."
-                : category === "review" ? "Tell us what you think about Roomatch..."
-                : "Write your message here..."
-              }
+              placeholder={getPlaceholder()}
               rows={4}
               maxLength={1000}
               className="w-full rounded-xl bg-background border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
@@ -129,14 +130,14 @@ export default function ContactSupport() {
                 {sent ? (
                   <motion.div key="sent" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
                     className="flex items-center gap-1.5 text-emerald-500 text-sm font-medium">
-                    <CheckCircle className="w-4 h-4" /> Sent!
+                    <CheckCircle className="w-4 h-4" /> {t("sent")}
                   </motion.div>
                 ) : (
                   <motion.button key="send" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={handleSubmit}
                     disabled={sending || !message.trim()}
                     className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity">
                     {sending ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
-                    {sending ? "Sending..." : "Send"}
+                    {sending ? t("sending") : t("send")}
                   </motion.button>
                 )}
               </AnimatePresence>
@@ -144,9 +145,8 @@ export default function ContactSupport() {
           </div>
         </motion.div>
 
-        {/* Response time note */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-center">
-          <p className="text-xs text-muted-foreground">We typically respond within 24 hours 💬</p>
+          <p className="text-xs text-muted-foreground">{t("responseTime")}</p>
         </motion.div>
       </div>
     </div>
