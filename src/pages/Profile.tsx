@@ -713,8 +713,8 @@ export default function Profile() {
               highMatchApartments.length === 0 ? (
                 <div className="text-center py-10">
                   <Home className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No hot rooms yet</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">Apartments with 85%+ match to your preferences will show here</p>
+                  <p className="text-muted-foreground text-sm">{t("noHotRooms")}</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">{t("hotRoomsDesc")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
