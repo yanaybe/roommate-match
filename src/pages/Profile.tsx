@@ -677,8 +677,8 @@ export default function Profile() {
               activeSquads.length === 0 ? (
                 <div className="text-center py-10">
                   <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No active squads</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">When your squad becomes active, you'll see it here</p>
+                  <p className="text-muted-foreground text-sm">{t("noActiveSquads")}</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">{t("activeSquadsDesc")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
