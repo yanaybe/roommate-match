@@ -284,15 +284,15 @@ export default function Profile() {
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
           <LogIn className="w-8 h-8 text-primary" />
         </div>
-        <h2 className="text-xl font-extrabold text-foreground mb-1">Sign in to Roomatch</h2>
+        <h2 className="text-xl font-extrabold text-foreground mb-1">{t("signInToRoomatch")}</h2>
         <p className="text-muted-foreground text-sm text-center mb-6">
-          Create an account to like rooms, match with roommates, and chat
+          {t("signInDesc")}
         </p>
         <button
           onClick={() => navigate("/auth")}
           className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-semibold text-sm"
         >
-          Sign In / Sign Up
+          {t("signInSignUp")}
         </button>
       </div>
     );
