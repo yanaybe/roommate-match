@@ -401,7 +401,7 @@ export default function Profile() {
           className="w-full mt-2 flex items-center justify-center gap-2 py-3 text-destructive text-sm font-semibold"
         >
           <LogOut className="w-4 h-4" />
-          Log Out
+          {t("logOut")}
         </button>
       </div>
 
