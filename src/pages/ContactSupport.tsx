@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Phone, Mail, MessageCircle, Instagram, Facebook, ExternalLink, Send, Bug, Lightbulb, Star, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,6 +27,10 @@ export default function ContactSupport() {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleSubmit = async () => {
     if (!message.trim()) { toast.error("Please write a message"); return; }
