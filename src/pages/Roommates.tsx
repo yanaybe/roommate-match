@@ -199,7 +199,7 @@ export default function Roommates() {
       <div className="flex-1 max-w-lg mx-auto w-full px-4 pt-4">
         {profilesLoading ? (
           <div className="flex items-center justify-center py-20">
-            <p className="text-muted-foreground text-sm">Loading profiles...</p>
+            <p className="text-muted-foreground text-sm">{t("loadingProfiles")}</p>
           </div>
         ) : remaining.length > 0 ? (
           <div className="relative w-full aspect-[3/4] max-h-[520px]">
