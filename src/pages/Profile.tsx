@@ -695,12 +695,12 @@ export default function Profile() {
                           <Zap className="w-5 h-5 text-accent-foreground" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-card-foreground">🚀 {squad.name} is active!</p>
+                          <p className="text-sm font-bold text-card-foreground">🚀 {squad.name} {t("isActive")}</p>
                           <p className="text-xs text-muted-foreground">
                             {squad.preferred_locations?.join(", ")} · ₪{squad.budget_min?.toLocaleString()}–₪{squad.budget_max?.toLocaleString()}
                           </p>
                           <div className="flex items-center justify-between mt-0.5">
-                            <p className="text-xs text-primary font-semibold">Tap to view squad</p>
+                            <p className="text-xs text-primary font-semibold">{t("tapToViewSquad")}</p>
                             <p className="text-[10px] text-muted-foreground/60">{squad.updated_at ? format(new Date(squad.updated_at), "MMM d, HH:mm") : ""}</p>
                           </div>
                         </div>
