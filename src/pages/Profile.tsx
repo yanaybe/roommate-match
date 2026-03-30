@@ -326,7 +326,7 @@ export default function Profile() {
           }}
           className="mt-4 text-muted-foreground text-sm hover:text-foreground transition-colors"
         >
-          Sign out
+          {t("signOut")}
         </button>
       </div>
     );
