@@ -28,6 +28,10 @@ export default function ContactSupport() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const handleSubmit = async () => {
     if (!message.trim()) { toast.error("Please write a message"); return; }
     if (!user) { toast.error("Please log in to send a message"); return; }
