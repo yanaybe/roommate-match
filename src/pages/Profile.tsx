@@ -409,7 +409,7 @@ export default function Profile() {
       <Sheet open={prefsOpen} onOpenChange={setPrefsOpen}>
         <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0">
           <SheetHeader className="px-5 pt-5 pb-3 border-b border-border">
-            <SheetTitle className="text-lg font-extrabold text-foreground">Preferences</SheetTitle>
+            <SheetTitle className="text-lg font-extrabold text-foreground">{t("preferences")}</SheetTitle>
           </SheetHeader>
           <ScrollArea className="h-[calc(85vh-70px)] px-5 py-4">
             <ProfileSection title="Basic Info">
