@@ -223,8 +223,8 @@ export default function Roommates() {
             <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
               <Heart className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-bold text-foreground mb-1">No more profiles</h2>
-            <p className="text-muted-foreground text-sm mb-4">Check back later for new roommates!</p>
+            <h2 className="text-lg font-bold text-foreground mb-1">{t("noMoreProfiles")}</h2>
+            <p className="text-muted-foreground text-sm mb-4">{t("checkBackLater")}</p>
           </div>
         )}
 
