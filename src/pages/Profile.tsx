@@ -493,7 +493,7 @@ export default function Profile() {
 
           <ScrollArea className="h-[calc(85vh-130px)] px-5 py-3">
             {activityLoading ? (
-              <p className="text-muted-foreground text-sm text-center py-10">Loading...</p>
+              <p className="text-muted-foreground text-sm text-center py-10">{t("loading")}</p>
             ) : activityTab === "saved" ? (
               savedApartments.length === 0 ? (
                 <div className="text-center py-10">
