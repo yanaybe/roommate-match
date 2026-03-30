@@ -117,17 +117,17 @@ export default function Roommates() {
 
   const requireAuth = useCallback(() => {
     if (!user) {
-      toast.info("Sign in to swipe on roommates");
+      toast.info(t("signInToSwipe"));
       navigate("/auth");
       return false;
     }
     if (!myProfile?.onboarding_complete) {
-      toast.info("Complete your profile first");
+      toast.info(t("completeProfileFirst"));
       navigate("/onboarding");
       return false;
     }
     return true;
-  }, [user, myProfile, navigate]);
+  }, [user, myProfile, navigate, t]);
 
   const handleSwipe = useCallback(
     async (direction: "left" | "right") => {
