@@ -369,7 +369,7 @@ export default function Profile() {
         </motion.div>
 
         <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-4">
-          {menuItems.map((item, i) => {
+          {getMenuItems(t).map((item, i) => {
             const Icon = item.icon;
             return (
               <motion.button
