@@ -528,8 +528,8 @@ export default function Profile() {
               likedProfiles.length === 0 ? (
                 <div className="text-center py-10">
                   <Heart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No liked people yet</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">Swipe right on roommates to see them here</p>
+                  <p className="text-muted-foreground text-sm">{t("noLikedPeople")}</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">{t("swipeRight")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
