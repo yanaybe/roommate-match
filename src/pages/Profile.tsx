@@ -561,8 +561,8 @@ export default function Profile() {
               pendingSquads.length === 0 ? (
                 <div className="text-center py-10">
                   <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No pending squad requests</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">Squads you ask to join will appear here</p>
+                  <p className="text-muted-foreground text-sm">{t("noPendingSquads")}</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">{t("squadsJoinHere")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
