@@ -453,7 +453,7 @@ export default function Profile() {
                 onClick={() => { setPrefsOpen(false); navigate("/onboarding?edit=true"); }}
                 className="w-full gradient-primary text-primary-foreground py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
               >
-                <Edit className="w-4 h-4" /> Edit Preferences
+                <Edit className="w-4 h-4" /> {t("editPreferences")}
               </button>
             </div>
           </ScrollArea>
