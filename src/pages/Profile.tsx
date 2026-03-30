@@ -605,9 +605,9 @@ export default function Profile() {
 
           <div className="px-5 pt-3 pb-2 flex gap-2">
             {[
-              { key: "matches" as const, label: "Matches", icon: Heart },
-              { key: "squads" as const, label: "Squads", icon: Users },
-              { key: "apartments" as const, label: "Hot Rooms", icon: Home },
+              { key: "matches" as const, label: t("matches"), icon: Heart },
+              { key: "squads" as const, label: t("squads"), icon: Users },
+              { key: "apartments" as const, label: t("hotRooms"), icon: Home },
             ].map((tab) => {
               const Icon = tab.icon;
               const count = tab.key === "matches" ? matches.length : tab.key === "squads" ? activeSquads.length : highMatchApartments.length;
