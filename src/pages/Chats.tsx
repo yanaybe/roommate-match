@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Conversation {
   id: string;
@@ -26,6 +27,7 @@ interface Message {
 export default function Chats() {
   const { user } = useAuth();
   const { refresh: refreshUnread } = useUnreadCount();
+  const { t } = useLanguage();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -255,7 +257,7 @@ export default function Chats() {
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pb-20">
-        <p className="text-muted-foreground">Please sign in to use chat</p>
+        <p className="text-muted-foreground">{t("signInToChat")}</p>
       </div>
     );
   }
@@ -285,7 +287,7 @@ export default function Chats() {
               <h2 className="font-bold text-foreground text-sm">
                 {conv?.other_name}
               </h2>
-              <p className="text-muted-foreground text-xs">Online</p>
+              <p className="text-muted-foreground text-xs">{t("online")}</p>
             </div>
           </div>
         </div>
@@ -339,7 +341,7 @@ export default function Chats() {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Type a message..."
+              placeholder={t("typeMessage")}
               className="flex-1 bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <button
@@ -359,23 +361,23 @@ export default function Chats() {
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 pb-3">
-          <h1 className="text-xl font-extrabold text-foreground">Messages</h1>
+          <h1 className="text-xl font-extrabold text-foreground">{t("messages")}</h1>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <p className="text-muted-foreground text-sm">Loading chats...</p>
+            <p className="text-muted-foreground text-sm">{t("loadingChats")}</p>
           </div>
         ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <Send className="w-7 h-7 text-primary" />
             </div>
-            <h2 className="font-bold text-foreground mb-1">No conversations yet</h2>
+            <h2 className="font-bold text-foreground mb-1">{t("noConversationsYet")}</h2>
             <p className="text-muted-foreground text-sm">
-              Match with roommates to start chatting!
+              {t("matchToChat")}
             </p>
           </div>
         ) : (
@@ -408,7 +410,7 @@ export default function Chats() {
                     </span>
                   </div>
                   <p className="text-muted-foreground text-sm truncate">
-                    {conv.last_message ?? "Start chatting..."}
+                    {conv.last_message ?? t("startChatting")}
                   </p>
                 </div>
                 {conv.unread_count > 0 && (

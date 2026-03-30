@@ -3,6 +3,7 @@ import { useState, useMemo, lazy, Suspense } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
 import FilterModal, { defaultFilters, type Filters } from "@/components/FilterModal";
 import { mockApartments } from "@/data/mockData";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const ApartmentMap = lazy(() => import("@/components/ApartmentMap"));
 
@@ -11,10 +12,10 @@ export default function Index() {
   const [search, setSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const { t } = useLanguage();
 
   const filtered = useMemo(() => {
     return mockApartments.filter((apt) => {
-      // Search by location/title
       if (search.trim()) {
         const q = search.toLowerCase();
         if (
@@ -23,38 +24,23 @@ export default function Index() {
         )
           return false;
       }
-
-      // Budget
       if (apt.price < filters.budgetMin || apt.price > filters.budgetMax) return false;
-
-      // Rooms
       if (apt.rooms < filters.roomsMin || apt.rooms > filters.roomsMax) return false;
-
-      // Size
       if (apt.size < filters.sizeMin) return false;
-
-      // Match
       if (apt.matchPercent < filters.matchMin) return false;
-
-      // Amenities
       if (filters.amenities.length > 0) {
         if (!filters.amenities.every((a) => apt.amenities.includes(a))) return false;
       }
-
-      // Smoking (check roommates)
       if (filters.smoking !== "any") {
         const hasSmokingRoommate = apt.roommates.some((r) => r.smoking);
         if (filters.smoking === "no" && hasSmokingRoommate) return false;
         if (filters.smoking === "yes" && !hasSmokingRoommate) return false;
       }
-
-      // Pets (check roommates)
       if (filters.pets !== "any") {
         const hasPetRoommate = apt.roommates.some((r) => r.pets);
         if (filters.pets === "no" && hasPetRoommate) return false;
         if (filters.pets === "yes" && !hasPetRoommate) return false;
       }
-
       return true;
     });
   }, [search, filters]);
@@ -74,7 +60,6 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 pb-3">
           <div className="flex items-center justify-between mb-3">
@@ -82,7 +67,7 @@ export default function Index() {
               <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
                 Roo<span className="text-primary">match</span>
               </h1>
-              <p className="text-muted-foreground text-sm">Find your perfect room</p>
+              <p className="text-muted-foreground text-sm">{t("findYourPerfectRoom")}</p>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -97,7 +82,6 @@ export default function Index() {
               </button>
             </div>
           </div>
-          {/* Search */}
           <div className="flex gap-2">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -105,7 +89,7 @@ export default function Index() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by area or neighborhood..."
+                placeholder={t("searchPlaceholder")}
                 className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
@@ -124,7 +108,6 @@ export default function Index() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-lg mx-auto px-4 pt-4">
         {view === "list" ? (
           filtered.length > 0 ? (
@@ -138,17 +121,15 @@ export default function Index() {
               <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
                 <Search className="w-7 h-7 text-muted-foreground" />
               </div>
-              <h2 className="font-bold text-foreground mb-1">No results found</h2>
-              <p className="text-muted-foreground text-sm">
-                Try adjusting your search or filters
-              </p>
+              <h2 className="font-bold text-foreground mb-1">{t("noResultsFound")}</h2>
+              <p className="text-muted-foreground text-sm">{t("tryAdjusting")}</p>
             </div>
           )
         ) : (
           <Suspense
             fallback={
               <div className="bg-secondary rounded-2xl h-[60vh] flex items-center justify-center">
-                <p className="text-muted-foreground text-sm">Loading map…</p>
+                <p className="text-muted-foreground text-sm">{t("loadingMap")}</p>
               </div>
             }
           >
@@ -157,7 +138,6 @@ export default function Index() {
         )}
       </div>
 
-      {/* Filter Modal */}
       <FilterModal
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}

@@ -6,6 +6,7 @@ import PremiumSheet from "@/components/PremiumSheet";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,13 +17,12 @@ import { calculateUserMatch } from "@/lib/matching";
 const getMockSavedApartmentKey = (userId: string, apartmentId: string) => `saved_apartment:${userId}:${apartmentId}`;
 const getMockLikedProfileKey = (userId: string, likedUserId: string) => `liked_profile:${userId}:${likedUserId}`;
 
-const menuItems = [
-  { icon: Crown, label: "Go Premium", desc: "Unlock all features", accent: true, action: "premium" },
-  { icon: Bookmark, label: "My Activity", desc: "Saved rooms, likes & requests", accent: false, action: "activity" },
-  { icon: Sparkles, label: "Preferences", desc: "View your matching criteria", accent: false, action: "preferences" },
-  
-  { icon: Bell, label: "Notifications", desc: "Matches, squads & listings", action: "notifications" },
-  { icon: Settings, label: "Settings", desc: "Account & privacy", action: "settings" },
+const getMenuItems = (t: (key: string) => string) => [
+  { icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" },
+  { icon: Bookmark, label: t("myActivity"), desc: t("myActivityDesc"), accent: false, action: "activity" },
+  { icon: Sparkles, label: t("preferences"), desc: t("preferencesDesc"), accent: false, action: "preferences" },
+  { icon: Bell, label: t("notifications"), desc: t("notificationsDesc"), action: "notifications" },
+  { icon: Settings, label: t("settings"), desc: t("settingsDesc"), action: "settings" },
 ];
 
 function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -48,6 +48,7 @@ export default function Profile() {
   const { profile, loading } = useProfile();
   const { profiles: allProfiles } = useAllProfiles();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -283,15 +284,15 @@ export default function Profile() {
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
           <LogIn className="w-8 h-8 text-primary" />
         </div>
-        <h2 className="text-xl font-extrabold text-foreground mb-1">Sign in to Roomatch</h2>
+        <h2 className="text-xl font-extrabold text-foreground mb-1">{t("signInToRoomatch")}</h2>
         <p className="text-muted-foreground text-sm text-center mb-6">
-          Create an account to like rooms, match with roommates, and chat
+          {t("signInDesc")}
         </p>
         <button
           onClick={() => navigate("/auth")}
           className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-semibold text-sm"
         >
-          Sign In / Sign Up
+          {t("signInSignUp")}
         </button>
       </div>
     );
@@ -300,7 +301,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pb-20">
-        <p className="text-muted-foreground text-sm">Loading profile...</p>
+        <p className="text-muted-foreground text-sm">{t("loadingProfile")}</p>
       </div>
     );
   }
@@ -308,15 +309,15 @@ export default function Profile() {
   if (!profile || !profile.onboarding_complete) {
     return (
       <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center px-4">
-        <h2 className="text-xl font-extrabold text-foreground mb-2">Complete your profile</h2>
+        <h2 className="text-xl font-extrabold text-foreground mb-2">{t("completeYourProfile")}</h2>
         <p className="text-muted-foreground text-sm text-center mb-6">
-          Fill out your profile to start matching with roommates
+          {t("fillOutProfile")}
         </p>
         <button
           onClick={() => navigate("/onboarding")}
           className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-semibold text-sm"
         >
-          Set Up Profile
+          {t("setUpProfile")}
         </button>
         <button
           onClick={async () => {
@@ -325,7 +326,7 @@ export default function Profile() {
           }}
           className="mt-4 text-muted-foreground text-sm hover:text-foreground transition-colors"
         >
-          Sign out
+          {t("signOut")}
         </button>
       </div>
     );
@@ -368,7 +369,7 @@ export default function Profile() {
         </motion.div>
 
         <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-4">
-          {menuItems.map((item, i) => {
+          {getMenuItems(t).map((item, i) => {
             const Icon = item.icon;
             return (
               <motion.button
@@ -400,7 +401,7 @@ export default function Profile() {
           className="w-full mt-2 flex items-center justify-center gap-2 py-3 text-destructive text-sm font-semibold"
         >
           <LogOut className="w-4 h-4" />
-          Log Out
+          {t("logOut")}
         </button>
       </div>
 
@@ -408,51 +409,51 @@ export default function Profile() {
       <Sheet open={prefsOpen} onOpenChange={setPrefsOpen}>
         <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0">
           <SheetHeader className="px-5 pt-5 pb-3 border-b border-border">
-            <SheetTitle className="text-lg font-extrabold text-foreground">Preferences</SheetTitle>
+            <SheetTitle className="text-lg font-extrabold text-foreground">{t("preferences")}</SheetTitle>
           </SheetHeader>
           <ScrollArea className="h-[calc(85vh-70px)] px-5 py-4">
-            <ProfileSection title="Basic Info">
-              <InfoRow label="Budget" value={`₪${profile.budget.toLocaleString()}/mo`} />
-              <InfoRow label="Room type" value={profile.desired_room_type} />
+            <ProfileSection title={t("basicInfo")}>
+              <InfoRow label={t("budget")} value={`₪${profile.budget.toLocaleString()}/mo`} />
+              <InfoRow label={t("roomType")} value={profile.desired_room_type} />
             </ProfileSection>
 
-            <ProfileSection title="Living Habits">
-              <InfoRow label="Sleep schedule" value={profile.sleep_schedule} />
-              <InfoRow label="Cleanliness" value={`${profile.cleanliness}/5`} />
-              <InfoRow label="Cooking" value={profile.cooking_habits} />
-              <InfoRow label="Shared space" value={profile.shared_space_org} />
+            <ProfileSection title={t("livingHabits")}>
+              <InfoRow label={t("sleepSchedule")} value={profile.sleep_schedule} />
+              <InfoRow label={t("cleanliness")} value={`${profile.cleanliness}/5`} />
+              <InfoRow label={t("cooking")} value={profile.cooking_habits} />
+              <InfoRow label={t("sharedSpace")} value={profile.shared_space_org} />
             </ProfileSection>
 
-            <ProfileSection title="Lifestyle">
-              <InfoRow label="Smoking" value={profile.smoking ? "Yes" : "No"} />
-              <InfoRow label="Religious level" value={profile.religious_level} />
-              <InfoRow label="Alcohol" value={profile.alcohol} />
-              <InfoRow label="Pets" value={profile.pets ? "Yes" : "No"} />
-              <InfoRow label="Fitness" value={profile.fitness} />
-              <InfoRow label="Work from home" value={profile.wfh ? "Yes" : "No"} />
-              <InfoRow label="Guests" value={profile.guests} />
+            <ProfileSection title={t("lifestyle")}>
+              <InfoRow label={t("smoking")} value={profile.smoking ? t("yes") : t("no")} />
+              <InfoRow label={t("religiousLevel")} value={profile.religious_level} />
+              <InfoRow label={t("alcohol")} value={profile.alcohol} />
+              <InfoRow label={t("pets")} value={profile.pets ? t("yes") : t("no")} />
+              <InfoRow label={t("fitness")} value={profile.fitness} />
+              <InfoRow label={t("workFromHome")} value={profile.wfh ? t("yes") : t("no")} />
+              <InfoRow label={t("guests")} value={profile.guests} />
             </ProfileSection>
 
-            <ProfileSection title="Personality">
-              <InfoRow label="Social level" value={`${profile.social_level}/5`} />
-              <InfoRow label="Noise level" value={`${profile.noise_level}/5`} />
-              <InfoRow label="Partying" value={profile.partying} />
-              <InfoRow label="Vibe" value={profile.lifestyle_vibe} />
+            <ProfileSection title={t("personality")}>
+              <InfoRow label={t("socialLevel")} value={`${profile.social_level}/5`} />
+              <InfoRow label={t("noiseLevel")} value={`${profile.noise_level}/5`} />
+              <InfoRow label={t("partying")} value={profile.partying} />
+              <InfoRow label={t("vibe")} value={profile.lifestyle_vibe} />
             </ProfileSection>
 
-            <ProfileSection title="Roommate Preferences">
-              <InfoRow label="Age range" value={`${profile.preferred_age_min} - ${profile.preferred_age_max}`} />
-              <InfoRow label="Gender" value={profile.gender_preference} />
-              <InfoRow label="Lifestyle similarity" value={profile.lifestyle_similarity} />
-              <InfoRow label="Cleanliness expected" value={`${profile.cleanliness_expectations}/5`} />
-              <InfoRow label="Activity hours" value={profile.activity_hours} />
+            <ProfileSection title={t("roommatePreferences")}>
+              <InfoRow label={t("ageRange")} value={`${profile.preferred_age_min} - ${profile.preferred_age_max}`} />
+              <InfoRow label={t("gender")} value={profile.gender_preference} />
+              <InfoRow label={t("lifestyleSimilarity")} value={profile.lifestyle_similarity} />
+              <InfoRow label={t("cleanlinessExpected")} value={`${profile.cleanliness_expectations}/5`} />
+              <InfoRow label={t("activityHours")} value={profile.activity_hours} />
             </ProfileSection>
             <div className="pb-4">
               <button
                 onClick={() => { setPrefsOpen(false); navigate("/onboarding?edit=true"); }}
                 className="w-full gradient-primary text-primary-foreground py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
               >
-                <Edit className="w-4 h-4" /> Edit Preferences
+                <Edit className="w-4 h-4" /> {t("editPreferences")}
               </button>
             </div>
           </ScrollArea>
@@ -463,14 +464,14 @@ export default function Profile() {
       <Sheet open={activityOpen} onOpenChange={setActivityOpen}>
         <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0">
           <SheetHeader className="px-5 pt-5 pb-3 border-b border-border">
-            <SheetTitle className="text-lg font-extrabold text-foreground">My Activity</SheetTitle>
+            <SheetTitle className="text-lg font-extrabold text-foreground">{t("myActivity")}</SheetTitle>
           </SheetHeader>
 
           <div className="px-5 pt-3 pb-2 flex gap-2">
             {[
-              { key: "saved" as const, label: "Saved Rooms", icon: Home },
-              { key: "liked" as const, label: "Liked People", icon: Heart },
-              { key: "squads" as const, label: "Pending Squads", icon: Users },
+              { key: "saved" as const, label: t("savedRooms"), icon: Home },
+              { key: "liked" as const, label: t("likedPeople"), icon: Heart },
+              { key: "squads" as const, label: t("pendingSquads"), icon: Users },
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -492,13 +493,13 @@ export default function Profile() {
 
           <ScrollArea className="h-[calc(85vh-130px)] px-5 py-3">
             {activityLoading ? (
-              <p className="text-muted-foreground text-sm text-center py-10">Loading...</p>
+              <p className="text-muted-foreground text-sm text-center py-10">{t("loading")}</p>
             ) : activityTab === "saved" ? (
               savedApartments.length === 0 ? (
                 <div className="text-center py-10">
                   <Home className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No saved rooms yet</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">Tap the bookmark icon on apartments to save them</p>
+                  <p className="text-muted-foreground text-sm">{t("noSavedRooms")}</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">{t("tapBookmark")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -527,8 +528,8 @@ export default function Profile() {
               likedProfiles.length === 0 ? (
                 <div className="text-center py-10">
                   <Heart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No liked people yet</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">Swipe right on roommates to see them here</p>
+                  <p className="text-muted-foreground text-sm">{t("noLikedPeople")}</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">{t("swipeRight")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -560,8 +561,8 @@ export default function Profile() {
               pendingSquads.length === 0 ? (
                 <div className="text-center py-10">
                   <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No pending squad requests</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">Squads you ask to join will appear here</p>
+                  <p className="text-muted-foreground text-sm">{t("noPendingSquads")}</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">{t("squadsJoinHere")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -583,7 +584,7 @@ export default function Profile() {
                           </p>
                         </div>
                         <span className="text-xs font-semibold px-3 py-1 rounded-full bg-accent text-accent-foreground">
-                          Pending
+                          {t("pending")}
                         </span>
                       </div>
                     </motion.div>
@@ -599,14 +600,14 @@ export default function Profile() {
       <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
         <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0">
           <SheetHeader className="px-5 pt-5 pb-3 border-b border-border">
-            <SheetTitle className="text-lg font-extrabold text-foreground">Notifications</SheetTitle>
+            <SheetTitle className="text-lg font-extrabold text-foreground">{t("notifications")}</SheetTitle>
           </SheetHeader>
 
           <div className="px-5 pt-3 pb-2 flex gap-2">
             {[
-              { key: "matches" as const, label: "Matches", icon: Heart },
-              { key: "squads" as const, label: "Squads", icon: Users },
-              { key: "apartments" as const, label: "Hot Rooms", icon: Home },
+              { key: "matches" as const, label: t("matches"), icon: Heart },
+              { key: "squads" as const, label: t("squads"), icon: Users },
+              { key: "apartments" as const, label: t("hotRooms"), icon: Home },
             ].map((tab) => {
               const Icon = tab.icon;
               const count = tab.key === "matches" ? matches.length : tab.key === "squads" ? activeSquads.length : highMatchApartments.length;
@@ -634,13 +635,13 @@ export default function Profile() {
 
           <ScrollArea className="h-[calc(85vh-130px)] px-5 py-3">
             {notifLoading ? (
-              <p className="text-muted-foreground text-sm text-center py-10">Loading...</p>
+              <p className="text-muted-foreground text-sm text-center py-10">{t("loading")}</p>
             ) : notifTab === "matches" ? (
               matches.length === 0 ? (
                 <div className="text-center py-10">
                   <Heart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No matches yet</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">When someone you liked likes you back, they'll appear here</p>
+                  <p className="text-muted-foreground text-sm">{t("noMatchesYet")}</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">{t("matchesDesc")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -660,10 +661,10 @@ export default function Profile() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-card-foreground truncate">🎉 It's a match!</p>
+                        <p className="text-sm font-bold text-card-foreground truncate">{t("itsAMatch")}</p>
                         <p className="text-xs text-muted-foreground">{p.name}{p.age ? `, ${p.age}` : ""} · {p.occupation}</p>
                         <div className="flex items-center justify-between mt-0.5">
-                          <p className="text-xs text-primary font-semibold">Tap to chat</p>
+                          <p className="text-xs text-primary font-semibold">{t("tapToChat")}</p>
                           <p className="text-[10px] text-muted-foreground/60">{p.updated_at ? format(new Date(p.updated_at), "MMM d, HH:mm") : ""}</p>
                         </div>
                       </div>
@@ -676,8 +677,8 @@ export default function Profile() {
               activeSquads.length === 0 ? (
                 <div className="text-center py-10">
                   <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No active squads</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">When your squad becomes active, you'll see it here</p>
+                  <p className="text-muted-foreground text-sm">{t("noActiveSquads")}</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">{t("activeSquadsDesc")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -694,12 +695,12 @@ export default function Profile() {
                           <Zap className="w-5 h-5 text-accent-foreground" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-card-foreground">🚀 {squad.name} is active!</p>
+                          <p className="text-sm font-bold text-card-foreground">🚀 {squad.name} {t("isActive")}</p>
                           <p className="text-xs text-muted-foreground">
                             {squad.preferred_locations?.join(", ")} · ₪{squad.budget_min?.toLocaleString()}–₪{squad.budget_max?.toLocaleString()}
                           </p>
                           <div className="flex items-center justify-between mt-0.5">
-                            <p className="text-xs text-primary font-semibold">Tap to view squad</p>
+                            <p className="text-xs text-primary font-semibold">{t("tapToViewSquad")}</p>
                             <p className="text-[10px] text-muted-foreground/60">{squad.updated_at ? format(new Date(squad.updated_at), "MMM d, HH:mm") : ""}</p>
                           </div>
                         </div>
@@ -712,8 +713,8 @@ export default function Profile() {
               highMatchApartments.length === 0 ? (
                 <div className="text-center py-10">
                   <Home className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No hot rooms yet</p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">Apartments with 85%+ match to your preferences will show here</p>
+                  <p className="text-muted-foreground text-sm">{t("noHotRooms")}</p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">{t("hotRoomsDesc")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">

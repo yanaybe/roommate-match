@@ -1,21 +1,24 @@
 import { motion } from "framer-motion";
 import { Users, Home, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const modes = [
-  { icon: Search, title: "Find a Room", desc: "Browse available rooms in shared apartments", color: "gradient-primary", path: "/" },
-  { icon: Users, title: "Find Roommates", desc: "Post your apartment and find matching roommates", color: "bg-accent", path: "/post-apartment" },
-  { icon: Home, title: "Start Fresh", desc: "Form a roommate squad, then find apartments together", color: "bg-foreground", path: "/create-squad" },
-];
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function CreateApartment() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const modes = [
+    { icon: Search, title: t("findARoom"), desc: t("findARoomDesc"), color: "gradient-primary", path: "/" },
+    { icon: Users, title: t("findRoommatesCreate"), desc: t("findRoommatesCreateDesc"), color: "bg-accent", path: "/post-apartment" },
+    { icon: Home, title: t("startFresh"), desc: t("startFreshDesc"), color: "bg-foreground", path: "/create-squad" },
+  ];
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="max-w-lg mx-auto px-4 pt-16">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl font-extrabold text-foreground mb-2">Create</h1>
-          <p className="text-muted-foreground mb-8">What are you looking for?</p>
+          <h1 className="text-2xl font-extrabold text-foreground mb-2">{t("create")}</h1>
+          <p className="text-muted-foreground mb-8">{t("whatLookingFor")}</p>
         </motion.div>
 
         <div className="space-y-4">

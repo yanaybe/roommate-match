@@ -7,6 +7,7 @@ import MatchModal from "@/components/MatchModal";
 import { mockUsers, type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
+import { useLanguage } from "@/hooks/useLanguage";
 import { calculateUserMatch } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -67,6 +68,7 @@ export default function Roommates() {
   const { profile: myProfile } = useProfile();
   const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [swiped, setSwiped] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
@@ -115,17 +117,17 @@ export default function Roommates() {
 
   const requireAuth = useCallback(() => {
     if (!user) {
-      toast.info("Sign in to swipe on roommates");
+      toast.info(t("signInToSwipe"));
       navigate("/auth");
       return false;
     }
     if (!myProfile?.onboarding_complete) {
-      toast.info("Complete your profile first");
+      toast.info(t("completeProfileFirst"));
       navigate("/onboarding");
       return false;
     }
     return true;
-  }, [user, myProfile, navigate]);
+  }, [user, myProfile, navigate, t]);
 
   const handleSwipe = useCallback(
     async (direction: "left" | "right") => {
@@ -178,7 +180,7 @@ export default function Roommates() {
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 pb-3 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-extrabold text-foreground">Find Roommates</h1>
+            <h1 className="text-xl font-extrabold text-foreground">{t("findRoommates")}</h1>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -186,7 +188,7 @@ export default function Roommates() {
               className="flex items-center gap-1.5 px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-xl text-sm font-semibold text-foreground transition-colors"
             >
               <Users className="w-4 h-4" />
-              Squads
+              {t("squads")}
             </button>
             <button onClick={() => navigate("/create-squad")} className="gradient-primary p-2 rounded-xl">
               <Plus className="w-4 h-4 text-primary-foreground" />
@@ -198,7 +200,7 @@ export default function Roommates() {
       <div className="flex-1 max-w-lg mx-auto w-full px-4 pt-4">
         {profilesLoading ? (
           <div className="flex items-center justify-center py-20">
-            <p className="text-muted-foreground text-sm">Loading profiles...</p>
+            <p className="text-muted-foreground text-sm">{t("loadingProfiles")}</p>
           </div>
         ) : remaining.length > 0 ? (
           <div className="relative w-full aspect-[3/4] max-h-[520px]">
@@ -222,8 +224,8 @@ export default function Roommates() {
             <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
               <Heart className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-bold text-foreground mb-1">No more profiles</h2>
-            <p className="text-muted-foreground text-sm mb-4">Check back later for new roommates!</p>
+            <h2 className="text-lg font-bold text-foreground mb-1">{t("noMoreProfiles")}</h2>
+            <p className="text-muted-foreground text-sm mb-4">{t("checkBackLater")}</p>
           </div>
         )}
 

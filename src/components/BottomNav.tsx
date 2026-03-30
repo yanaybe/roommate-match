@@ -2,19 +2,21 @@ import { Home, Users, Plus, MessageCircle, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
-
-const tabs = [
-  { path: "/", icon: Home, label: "Rooms" },
-  { path: "/roommates", icon: Users, label: "Roommates" },
-  { path: "/create", icon: Plus, label: "Create" },
-  { path: "/chats", icon: MessageCircle, label: "Chats" },
-  { path: "/profile", icon: User, label: "Profile" },
-];
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { totalUnread } = useUnreadCount();
+  const { t } = useLanguage();
+
+  const tabs = [
+    { path: "/", icon: Home, label: t("navRooms") },
+    { path: "/roommates", icon: Users, label: t("navRoommates") },
+    { path: "/create", icon: Plus, label: t("navCreate") },
+    { path: "/chats", icon: MessageCircle, label: t("navChats") },
+    { path: "/profile", icon: User, label: t("navProfile") },
+  ];
 
   if (location.pathname === "/auth") return null;
 
