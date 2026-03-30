@@ -469,9 +469,9 @@ export default function Profile() {
 
           <div className="px-5 pt-3 pb-2 flex gap-2">
             {[
-              { key: "saved" as const, label: "Saved Rooms", icon: Home },
-              { key: "liked" as const, label: "Liked People", icon: Heart },
-              { key: "squads" as const, label: "Pending Squads", icon: Users },
+              { key: "saved" as const, label: t("savedRooms"), icon: Home },
+              { key: "liked" as const, label: t("likedPeople"), icon: Heart },
+              { key: "squads" as const, label: t("pendingSquads"), icon: Users },
             ].map((tab) => {
               const Icon = tab.icon;
               return (
