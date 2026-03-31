@@ -402,6 +402,16 @@ export default function Profile() {
                   <span className={`text-sm font-semibold ${item.accent ? "text-primary" : "text-card-foreground"}`}>{item.label}</span>
                   <span className="text-muted-foreground text-xs block">{item.desc}</span>
                 </div>
+                {item.action === "notifications" && (() => {
+                  const unread = matches.filter(m => !readNotifs.has(`match_${m.user_id}`)).length +
+                    activeSquads.filter(s => !readNotifs.has(`squad_${s.id}`)).length +
+                    highMatchApartments.filter(a => !readNotifs.has(`apt_${a.id}`)).length;
+                  return unread > 0 ? (
+                    <span className="bg-destructive text-destructive-foreground text-[10px] font-bold min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
+                      {unread}
+                    </span>
+                  ) : null;
+                })()}
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </motion.button>
             );
