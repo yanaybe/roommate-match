@@ -216,10 +216,6 @@ export default function ApartmentDetail() {
           <div className="absolute bottom-4 right-4">
             <MatchBadge percent={apartment.matchPercent} size="lg" />
           </div>
-          {/* Match badge */}
-          <div className="absolute bottom-4 right-4">
-            <MatchBadge percent={apartment.matchPercent} size="lg" />
-          </div>
 
           {/* Hot listing badge */}
           {apartment.isBoosted && (
