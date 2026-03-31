@@ -703,8 +703,8 @@ export default function Profile() {
                       key={squad.id}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      onClick={() => { setNotificationsOpen(false); navigate(`/squad/${squad.id}`); }}
-                      className="bg-card rounded-2xl p-4 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                      onClick={() => { markRead(`squad_${squad.id}`); setNotificationsOpen(false); navigate(`/squad/${squad.id}`); }}
+                      className={`bg-card rounded-2xl p-4 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors relative ${readNotifs.has(`squad_${squad.id}`) ? "opacity-70" : ""}`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="p-2.5 rounded-xl bg-accent/20">
