@@ -13,6 +13,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  MessageCircle,
 } from "lucide-react";
 import { mockApartments, mockUsers, type UserProfile, getMatchColor, getMatchTextColor } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
@@ -335,21 +336,11 @@ export default function ApartmentDetail() {
       <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-40">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           <button
-            onClick={() => requireAuth(() => setLiked(!liked))}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all ${
-              liked
-                ? "gradient-primary text-primary-foreground"
-                : "bg-secondary text-secondary-foreground"
-            }`}
-          >
-            <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
-            {liked ? "Liked!" : "Like"}
-          </button>
-          <button
             onClick={() => requireAuth(() => navigate("/chats"))}
-            className="flex-1 py-3 rounded-xl font-bold text-sm gradient-primary text-primary-foreground"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm gradient-primary text-primary-foreground transition-all"
           >
-            Contact
+            <MessageCircle className="w-4 h-4" />
+            Message Owner
           </button>
         </div>
       </div>
