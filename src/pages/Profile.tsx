@@ -665,8 +665,8 @@ export default function Profile() {
                       key={p.id}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      onClick={() => { setNotificationsOpen(false); navigate("/chats"); }}
-                      className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                      onClick={() => { markRead(`match_${p.user_id}`); setNotificationsOpen(false); navigate("/chats"); }}
+                      className={`flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors relative ${readNotifs.has(`match_${p.user_id}`) ? "opacity-70" : ""}`}
                     >
                       <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden ring-2 ring-primary/30">
                         {p.avatar_url || p.photos?.[0] ? (
