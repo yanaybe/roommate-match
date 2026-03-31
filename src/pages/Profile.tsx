@@ -63,6 +63,21 @@ export default function Profile() {
   const [matches, setMatches] = useState<any[]>([]);
   const [activeSquads, setActiveSquads] = useState<any[]>([]);
   const [highMatchApartments, setHighMatchApartments] = useState<any[]>([]);
+  const [readNotifs, setReadNotifs] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("read_notifs");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  const markRead = (id: string) => {
+    setReadNotifs(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      localStorage.setItem("read_notifs", JSON.stringify([...next]));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!activityOpen || !user) return;
@@ -387,6 +402,16 @@ export default function Profile() {
                   <span className={`text-sm font-semibold ${item.accent ? "text-primary" : "text-card-foreground"}`}>{item.label}</span>
                   <span className="text-muted-foreground text-xs block">{item.desc}</span>
                 </div>
+                {item.action === "notifications" && (() => {
+                  const unread = matches.filter(m => !readNotifs.has(`match_${m.user_id}`)).length +
+                    activeSquads.filter(s => !readNotifs.has(`squad_${s.id}`)).length +
+                    highMatchApartments.filter(a => !readNotifs.has(`apt_${a.id}`)).length;
+                  return unread > 0 ? (
+                    <span className="bg-destructive text-destructive-foreground text-[10px] font-bold min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
+                      {unread}
+                    </span>
+                  ) : null;
+                })()}
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </motion.button>
             );
@@ -610,7 +635,7 @@ export default function Profile() {
               { key: "apartments" as const, label: t("hotRooms"), icon: Home },
             ].map((tab) => {
               const Icon = tab.icon;
-              const count = tab.key === "matches" ? matches.length : tab.key === "squads" ? activeSquads.length : highMatchApartments.length;
+              const count = tab.key === "matches" ? matches.filter(m => !readNotifs.has(`match_${m.user_id}`)).length : tab.key === "squads" ? activeSquads.filter(s => !readNotifs.has(`squad_${s.id}`)).length : highMatchApartments.filter(a => !readNotifs.has(`apt_${a.id}`)).length;
               return (
                 <button
                   key={tab.key}
@@ -650,8 +675,8 @@ export default function Profile() {
                       key={p.id}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      onClick={() => { setNotificationsOpen(false); navigate("/chats"); }}
-                      className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                      onClick={() => { markRead(`match_${p.user_id}`); setNotificationsOpen(false); navigate("/chats"); }}
+                      className={`flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors relative ${readNotifs.has(`match_${p.user_id}`) ? "opacity-70" : ""}`}
                     >
                       <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden ring-2 ring-primary/30">
                         {p.avatar_url || p.photos?.[0] ? (
@@ -669,6 +694,7 @@ export default function Profile() {
                         </div>
                       </div>
                       <MessageCircle className="w-5 h-5 text-primary" />
+                      {!readNotifs.has(`match_${p.user_id}`) && <span className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-primary" />}
                     </motion.div>
                   ))}
                 </div>
@@ -687,8 +713,8 @@ export default function Profile() {
                       key={squad.id}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      onClick={() => { setNotificationsOpen(false); navigate(`/squad/${squad.id}`); }}
-                      className="bg-card rounded-2xl p-4 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                      onClick={() => { markRead(`squad_${squad.id}`); setNotificationsOpen(false); navigate(`/squad/${squad.id}`); }}
+                      className={`bg-card rounded-2xl p-4 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors relative ${readNotifs.has(`squad_${squad.id}`) ? "opacity-70" : ""}`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="p-2.5 rounded-xl bg-accent/20">
@@ -700,9 +726,10 @@ export default function Profile() {
                             {squad.preferred_locations?.join(", ")} · ₪{squad.budget_min?.toLocaleString()}–₪{squad.budget_max?.toLocaleString()}
                           </p>
                           <div className="flex items-center justify-between mt-0.5">
-                            <p className="text-xs text-primary font-semibold">{t("tapToViewSquad")}</p>
+                          <p className="text-xs text-primary font-semibold">{t("tapToViewSquad")}</p>
                             <p className="text-[10px] text-muted-foreground/60">{squad.updated_at ? format(new Date(squad.updated_at), "MMM d, HH:mm") : ""}</p>
                           </div>
+                          {!readNotifs.has(`squad_${squad.id}`) && <span className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-primary" />}
                         </div>
                       </div>
                     </motion.div>
@@ -723,8 +750,8 @@ export default function Profile() {
                       key={apt.id}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      onClick={() => { setNotificationsOpen(false); navigate(`/apartment/${apt.id}`); }}
-                      className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                      onClick={() => { markRead(`apt_${apt.id}`); setNotificationsOpen(false); navigate(`/apartment/${apt.id}`); }}
+                      className={`flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors relative ${readNotifs.has(`apt_${apt.id}`) ? "opacity-70" : ""}`}
                     >
                       {apt.images?.[0] && (
                         <img src={apt.images[0]} alt="" className="w-16 h-16 rounded-xl object-cover" />
@@ -738,6 +765,7 @@ export default function Profile() {
                         </div>
                       </div>
                       <MatchBadge percent={apt.matchPct} />
+                      {!readNotifs.has(`apt_${apt.id}`) && <span className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-primary" />}
                     </motion.div>
                   ))}
                 </div>
