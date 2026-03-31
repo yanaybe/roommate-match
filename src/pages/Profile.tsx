@@ -740,8 +740,8 @@ export default function Profile() {
                       key={apt.id}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      onClick={() => { setNotificationsOpen(false); navigate(`/apartment/${apt.id}`); }}
-                      className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+                      onClick={() => { markRead(`apt_${apt.id}`); setNotificationsOpen(false); navigate(`/apartment/${apt.id}`); }}
+                      className={`flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors relative ${readNotifs.has(`apt_${apt.id}`) ? "opacity-70" : ""}`}
                     >
                       {apt.images?.[0] && (
                         <img src={apt.images[0]} alt="" className="w-16 h-16 rounded-xl object-cover" />
