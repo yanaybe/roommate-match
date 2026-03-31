@@ -625,7 +625,7 @@ export default function Profile() {
               { key: "apartments" as const, label: t("hotRooms"), icon: Home },
             ].map((tab) => {
               const Icon = tab.icon;
-              const count = tab.key === "matches" ? matches.length : tab.key === "squads" ? activeSquads.length : highMatchApartments.length;
+              const count = tab.key === "matches" ? matches.filter(m => !readNotifs.has(`match_${m.user_id}`)).length : tab.key === "squads" ? activeSquads.filter(s => !readNotifs.has(`squad_${s.id}`)).length : highMatchApartments.filter(a => !readNotifs.has(`apt_${a.id}`)).length;
               return (
                 <button
                   key={tab.key}
