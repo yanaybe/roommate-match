@@ -716,9 +716,10 @@ export default function Profile() {
                             {squad.preferred_locations?.join(", ")} · ₪{squad.budget_min?.toLocaleString()}–₪{squad.budget_max?.toLocaleString()}
                           </p>
                           <div className="flex items-center justify-between mt-0.5">
-                            <p className="text-xs text-primary font-semibold">{t("tapToViewSquad")}</p>
+                          <p className="text-xs text-primary font-semibold">{t("tapToViewSquad")}</p>
                             <p className="text-[10px] text-muted-foreground/60">{squad.updated_at ? format(new Date(squad.updated_at), "MMM d, HH:mm") : ""}</p>
                           </div>
+                          {!readNotifs.has(`squad_${squad.id}`) && <span className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-primary" />}
                         </div>
                       </div>
                     </motion.div>
