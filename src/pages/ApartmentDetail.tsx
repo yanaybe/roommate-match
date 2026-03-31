@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -119,6 +119,9 @@ export default function ApartmentDetail() {
   const [imgIndex, setImgIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [selectedRoommate, setSelectedRoommate] = useState<UserProfile | null>(null);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const apartment = mockApartments.find((a) => a.id === id);
 
@@ -146,74 +149,96 @@ export default function ApartmentDetail() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Image gallery */}
-      <div className="relative aspect-[4/3] max-h-[400px] overflow-hidden max-w-2xl mx-auto">
-        <img
-          src={apartment.images[imgIndex]}
-          alt={apartment.title}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative max-w-2xl mx-auto overflow-hidden">
+        <div className="relative aspect-[16/10] overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={imgIndex}
+              src={apartment.images[imgIndex]}
+              alt={apartment.title}
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="w-full h-full object-cover"
+            />
+          </AnimatePresence>
 
-        {/* Nav buttons */}
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-12 left-4 bg-card/80 backdrop-blur-sm p-2 rounded-full"
-        >
-          <ArrowLeft className="w-5 h-5 text-foreground" />
-        </button>
+          {/* Gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 pointer-events-none" />
 
-        <div className="absolute top-12 right-4 flex gap-2">
-          <button className="bg-card/80 backdrop-blur-sm p-2 rounded-full">
-            <Share2 className="w-4 h-4 text-foreground" />
-          </button>
+          {/* Nav buttons */}
           <button
-            onClick={() => requireAuth(() => setLiked(!liked))}
-            className="bg-card/80 backdrop-blur-sm p-2 rounded-full"
+            onClick={() => navigate(-1)}
+            className="absolute top-4 left-4 bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg"
           >
-            <Heart
-              className={`w-4 h-4 ${liked ? "fill-primary text-primary" : "text-foreground"}`}
-            />
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
+
+          <div className="absolute top-4 right-4 flex gap-2">
+            <button className="bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg">
+              <Share2 className="w-4 h-4 text-foreground" />
+            </button>
+            <button
+              onClick={() => requireAuth(() => setLiked(!liked))}
+              className="bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg"
+            >
+              <Heart
+                className={`w-4 h-4 ${liked ? "fill-primary text-primary" : "text-foreground"}`}
+              />
+            </button>
+          </div>
+
+          {/* Image arrows */}
+          {apartment.images.length > 1 && (
+            <>
+              <button
+                onClick={prevImg}
+                className="absolute left-3 top-1/2 -translate-y-1/2 bg-card/70 backdrop-blur-md p-2 rounded-full shadow-lg hover:bg-card/90 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-foreground" />
+              </button>
+              <button
+                onClick={nextImg}
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-card/70 backdrop-blur-md p-2 rounded-full shadow-lg hover:bg-card/90 transition-colors"
+              >
+                <ChevronRight className="w-5 h-5 text-foreground" />
+              </button>
+            </>
+          )}
+
+          {/* Image counter */}
+          <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+            {imgIndex + 1} / {apartment.images.length}
+          </div>
+
+          {/* Match badge */}
+          <div className="absolute bottom-4 right-4">
+            <MatchBadge percent={apartment.matchPercent} size="lg" />
+          </div>
+
+          {/* Hot listing badge */}
+          {apartment.isBoosted && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 gradient-primary text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg">
+              🔥 Hot Listing
+            </div>
+          )}
         </div>
 
-        {/* Image arrows */}
+        {/* Thumbnail strip */}
         {apartment.images.length > 1 && (
-          <>
-            <button
-              onClick={prevImg}
-              className="absolute left-3 top-1/2 -translate-y-1/2 bg-card/60 backdrop-blur-sm p-1.5 rounded-full"
-            >
-              <ChevronLeft className="w-4 h-4 text-foreground" />
-            </button>
-            <button
-              onClick={nextImg}
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-card/60 backdrop-blur-sm p-1.5 rounded-full"
-            >
-              <ChevronRight className="w-4 h-4 text-foreground" />
-            </button>
-          </>
-        )}
-
-        {/* Image dots */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-          {apartment.images.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setImgIndex(i)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                i === imgIndex ? "bg-primary-foreground w-5" : "bg-primary-foreground/50"
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Match badge */}
-        <div className="absolute bottom-3 right-3">
-          <MatchBadge percent={apartment.matchPercent} size="md" />
-        </div>
-
-        {apartment.isBoosted && (
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 gradient-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-            🔥 Hot Listing
+          <div className="flex gap-2 p-3 bg-card">
+            {apartment.images.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => setImgIndex(i)}
+                className={`relative flex-1 aspect-[4/3] rounded-lg overflow-hidden transition-all ${
+                  i === imgIndex ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : "opacity-60 hover:opacity-90"
+                }`}
+              >
+                <img src={img} alt="" className="w-full h-full object-cover" />
+              </button>
+            ))}
           </div>
         )}
       </div>
