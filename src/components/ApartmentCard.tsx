@@ -162,11 +162,52 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
 
         <div className="flex gap-2 pt-2">
           <button
-            onClick={() => requireAuth(() => setLiked(!liked))}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-all ${liked ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+            onClick={() => requireAuth(async () => {
+              if (!user) return;
+              // For DB apartments with a real owner
+              if (isUuid && (apartment as any).user_id && (apartment as any).user_id !== user.id) {
+                try {
+                  // Check if conversation already exists
+                  const { data: existing } = await supabase
+                    .from("conversation_participants")
+                    .select("conversation_id")
+                    .eq("user_id", user.id);
+                  
+                  let existingConvId: string | null = null;
+                  if (existing) {
+                    for (const p of existing) {
+                      const { data: other } = await supabase
+                        .from("conversation_participants")
+                        .select("user_id")
+                        .eq("conversation_id", p.conversation_id)
+                        .eq("user_id", (apartment as any).user_id)
+                        .maybeSingle();
+                      if (other) {
+                        existingConvId = p.conversation_id;
+                        break;
+                      }
+                    }
+                  }
+
+                  if (existingConvId) {
+                    navigate("/chats");
+                  } else {
+                    await supabase.rpc("create_conversation_with_participant", {
+                      other_user_id: (apartment as any).user_id,
+                    });
+                    navigate("/chats");
+                  }
+                } catch {
+                  toast.error("Could not start conversation");
+                }
+              } else {
+                navigate("/chats");
+              }
+            })}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground transition-all"
           >
-            <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
-            {liked ? "Liked!" : "Like"}
+            <MessageCircle className="w-4 h-4" />
+            Message
           </button>
           <button
             onClick={() => navigate(`/apartment/${apartment.id}`)}
