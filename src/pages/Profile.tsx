@@ -684,6 +684,7 @@ export default function Profile() {
                         </div>
                       </div>
                       <MessageCircle className="w-5 h-5 text-primary" />
+                      {!readNotifs.has(`match_${p.user_id}`) && <span className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-primary" />}
                     </motion.div>
                   ))}
                 </div>
