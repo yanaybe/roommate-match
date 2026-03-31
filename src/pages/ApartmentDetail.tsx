@@ -119,6 +119,9 @@ export default function ApartmentDetail() {
   const [imgIndex, setImgIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [selectedRoommate, setSelectedRoommate] = useState<UserProfile | null>(null);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const apartment = mockApartments.find((a) => a.id === id);
 
