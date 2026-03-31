@@ -17,7 +17,6 @@ interface ApartmentCardProps {
 }
 
 export default function ApartmentCard({ apartment, index }: ApartmentCardProps) {
-  const [liked, setLiked] = useState(false);
   const [imgIndex, setImgIndex] = useState(0);
   const { requireAuth } = useRequireAuth();
   const { user } = useAuth();
