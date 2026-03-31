@@ -755,6 +755,7 @@ export default function Profile() {
                         </div>
                       </div>
                       <MatchBadge percent={apt.matchPct} />
+                      {!readNotifs.has(`apt_${apt.id}`) && <span className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-primary" />}
                     </motion.div>
                   ))}
                 </div>
