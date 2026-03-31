@@ -13,6 +13,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  MessageCircle,
 } from "lucide-react";
 import { mockApartments, mockUsers, type UserProfile, getMatchColor, getMatchTextColor } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
