@@ -63,6 +63,21 @@ export default function Profile() {
   const [matches, setMatches] = useState<any[]>([]);
   const [activeSquads, setActiveSquads] = useState<any[]>([]);
   const [highMatchApartments, setHighMatchApartments] = useState<any[]>([]);
+  const [readNotifs, setReadNotifs] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("read_notifs");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  const markRead = (id: string) => {
+    setReadNotifs(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      localStorage.setItem("read_notifs", JSON.stringify([...next]));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!activityOpen || !user) return;
