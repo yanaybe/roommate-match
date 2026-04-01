@@ -56,6 +56,7 @@ const App = () => (
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/contact-support" element={<ContactSupport />} />
+              <Route path="/help-center" element={<HelpCenter />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <BottomNav />

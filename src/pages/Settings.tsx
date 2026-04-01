@@ -262,7 +262,7 @@ export default function Settings() {
               icon={HelpCircle}
               label={t("helpCenter")}
               desc={t("helpCenterDesc")}
-              onClick={() => {}}
+              onClick={() => navigate("/help-center")}
             />
             <SettingsItem
               icon={MessageCircle}
