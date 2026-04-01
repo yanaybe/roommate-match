@@ -86,7 +86,8 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.4 }}
-      className="bg-card rounded-2xl shadow-card overflow-hidden"
+      className="bg-card rounded-2xl shadow-card overflow-hidden cursor-pointer"
+      onClick={() => navigate(`/apartment/${apartment.id}`)}
     >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -99,7 +100,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
           {apartment.images.map((_, i) => (
             <button
               key={i}
-              onClick={() => setImgIndex(i)}
+              onClick={(e) => { e.stopPropagation(); setImgIndex(i); }}
               className={`w-1.5 h-1.5 rounded-full transition-all ${i === imgIndex ? "bg-primary-foreground w-4" : "bg-primary-foreground/50"}`}
             />
           ))}
@@ -114,7 +115,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
         )}
         <div className="absolute top-3 right-3 flex flex-col gap-2">
           <button
-            onClick={() => requireAuth(() => toggleSave())}
+            onClick={(e) => { e.stopPropagation(); requireAuth(() => toggleSave()); }}
             className="bg-card/80 backdrop-blur-sm p-2 rounded-full"
           >
             <Bookmark className={`w-4 h-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} />
@@ -162,12 +163,10 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
 
         <div className="flex gap-2 pt-2">
           <button
-            onClick={() => requireAuth(async () => {
+            onClick={(e) => { e.stopPropagation(); requireAuth(async () => {
               if (!user) return;
-              // For DB apartments with a real owner
               if (isUuid && (apartment as any).user_id && (apartment as any).user_id !== user.id) {
                 try {
-                  // Check if conversation already exists
                   const { data: existing } = await supabase
                     .from("conversation_participants")
                     .select("conversation_id")
@@ -203,14 +202,14 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
               } else {
                 navigate("/chats");
               }
-            })}
+            }); }}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground transition-all"
           >
             <MessageCircle className="w-4 h-4" />
             Message
           </button>
           <button
-            onClick={() => navigate(`/apartment/${apartment.id}`)}
+            onClick={(e) => { e.stopPropagation(); navigate(`/apartment/${apartment.id}`); }}
             className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
           >
             Details
