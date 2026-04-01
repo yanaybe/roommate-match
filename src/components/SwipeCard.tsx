@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Briefcase, Moon, Sun, Sparkles, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
 import type { UserProfile } from "@/data/mockData";
 
