@@ -13,6 +13,7 @@ interface SwipeCardProps {
 }
 
 export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeCardProps) {
+  const navigate = useNavigate();
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
