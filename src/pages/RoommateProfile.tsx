@@ -342,18 +342,6 @@ export default function RoommateProfile() {
         </motion.div>
       </div>
 
-      {/* Bottom action bar */}
-      <div className="fixed bottom-16 left-0 right-0 z-30 px-4 pb-4 pt-2 bg-gradient-to-t from-background via-background to-transparent">
-        <div className="max-w-lg mx-auto">
-          <button
-            onClick={handleMessage}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-elevated active:scale-[0.98] transition-transform"
-          >
-            <MessageCircle size={20} />
-            Message {userData.name}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

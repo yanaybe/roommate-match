@@ -1,5 +1,6 @@
-import { Bookmark, MapPin, Bed, Bath, Maximize } from "lucide-react";
+import { MessageCircle, Bookmark, MapPin, Bed, Bath, Maximize } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
 import type { Apartment } from "@/data/mockData";
@@ -162,8 +163,54 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
 
         <div className="flex gap-2 pt-2">
           <button
+            onClick={(e) => { e.stopPropagation(); requireAuth(async () => {
+              if (!user) return;
+              if (isUuid && (apartment as any).user_id && (apartment as any).user_id !== user.id) {
+                try {
+                  const { data: existing } = await supabase
+                    .from("conversation_participants")
+                    .select("conversation_id")
+                    .eq("user_id", user.id);
+                  
+                  let existingConvId: string | null = null;
+                  if (existing) {
+                    for (const p of existing) {
+                      const { data: other } = await supabase
+                        .from("conversation_participants")
+                        .select("user_id")
+                        .eq("conversation_id", p.conversation_id)
+                        .eq("user_id", (apartment as any).user_id)
+                        .maybeSingle();
+                      if (other) {
+                        existingConvId = p.conversation_id;
+                        break;
+                      }
+                    }
+                  }
+
+                  if (existingConvId) {
+                    navigate("/chats");
+                  } else {
+                    await supabase.rpc("create_conversation_with_participant", {
+                      other_user_id: (apartment as any).user_id,
+                    });
+                    navigate("/chats");
+                  }
+                } catch {
+                  toast.error("Could not start conversation");
+                }
+              } else {
+                navigate("/chats");
+              }
+            }); }}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground transition-all"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Message
+          </button>
+          <button
             onClick={(e) => { e.stopPropagation(); navigate(`/apartment/${apartment.id}`); }}
-            className="flex-1 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground transition-all"
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
           >
             Details
           </button>
