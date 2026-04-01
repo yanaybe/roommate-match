@@ -25,6 +25,7 @@ import Settings from "./pages/Settings";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ContactSupport from "./pages/ContactSupport";
+import HelpCenter from "./pages/HelpCenter";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/contact-support" element={<ContactSupport />} />
+              <Route path="/help-center" element={<HelpCenter />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <BottomNav />
