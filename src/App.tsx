@@ -25,6 +25,7 @@ import Settings from "./pages/Settings";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ContactSupport from "./pages/ContactSupport";
+import HelpCenter from "./pages/HelpCenter";
 
 const queryClient = new QueryClient();
 
