@@ -1,6 +1,6 @@
-import { MessageCircle, Bookmark, MapPin, Bed, Bath, Maximize } from "lucide-react";
+import { Bookmark, MapPin, Bed, Bath, Maximize } from "lucide-react";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
 import type { Apartment } from "@/data/mockData";
