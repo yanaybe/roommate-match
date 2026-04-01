@@ -26,6 +26,7 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ContactSupport from "./pages/ContactSupport";
 import HelpCenter from "./pages/HelpCenter";
+import RoommateProfile from "./pages/RoommateProfile";
 
 const queryClient = new QueryClient();
 
