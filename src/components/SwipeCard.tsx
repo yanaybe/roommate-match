@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Briefcase, Moon, Sun, Sparkles, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
 import type { UserProfile } from "@/data/mockData";
 
@@ -12,6 +13,7 @@ interface SwipeCardProps {
 }
 
 export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeCardProps) {
+  const navigate = useNavigate();
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
@@ -106,8 +108,16 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
           <MatchBadge percent={matchPercent} />
         </div>
 
-        {/* User info */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+        {/* User info — tappable */}
+        <div
+          className="absolute bottom-0 left-0 right-0 p-6 z-10 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (Math.abs(x.get()) < 5) {
+              navigate(`/roommate/${user.id}`);
+            }
+          }}
+        >
           <h2 className="text-primary-foreground font-extrabold text-2xl">
             {user.name}, {user.age}
           </h2>
@@ -138,6 +148,7 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
               <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🐾 Pets</span>
             )}
           </div>
+          <p className="text-primary-foreground/50 text-xs mt-2 text-center">Tap to see full profile</p>
         </div>
       </div>
     </motion.div>

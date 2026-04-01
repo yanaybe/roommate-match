@@ -26,6 +26,7 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ContactSupport from "./pages/ContactSupport";
 import HelpCenter from "./pages/HelpCenter";
+import RoommateProfile from "./pages/RoommateProfile";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/apartment/:id" element={<ApartmentDetail />} />
               <Route path="/roommates" element={<Roommates />} />
+              <Route path="/roommate/:id" element={<RoommateProfile />} />
               <Route path="/create" element={<CreateApartment />} />
               <Route path="/post-apartment" element={<PostApartment />} />
               <Route path="/create-squad" element={<CreateSquad />} />
