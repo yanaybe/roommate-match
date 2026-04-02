@@ -558,15 +558,91 @@ export default function SquadHub() {
 
         {/* CHAT TAB */}
         {tab === "chat" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col" style={{ minHeight: "calc(100vh - 240px)" }}>
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center py-16">
-                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="w-7 h-7 text-muted-foreground" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col" style={{ height: "calc(100vh - 240px)" }}>
+            {/* Messages */}
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-1 pb-2">
+              {chatLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <p className="text-muted-foreground text-sm">Loading messages...</p>
                 </div>
-                <h2 className="font-bold text-foreground mb-1">Squad Chat</h2>
-                <p className="text-muted-foreground text-sm">Group chat coming soon!</p>
-                <p className="text-muted-foreground text-xs mt-1">Use the individual chat for now</p>
+              ) : chatMessages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
+                    <MessageCircle className="w-7 h-7 text-muted-foreground" />
+                  </div>
+                  <h2 className="font-bold text-foreground mb-1">Start the conversation!</h2>
+                  <p className="text-muted-foreground text-sm">Say hi to your squad 👋</p>
+                </div>
+              ) : (
+                <>
+                  {chatMessages.map((msg, idx) => {
+                    const isMe = msg.sender_id === user?.id;
+                    const senderProfile = memberProfileMap.get(msg.sender_id);
+                    const showDateSep = idx === 0 || formatMsgDate(msg.created_at) !== formatMsgDate(chatMessages[idx - 1].created_at);
+                    const showSender = !isMe && (idx === 0 || chatMessages[idx - 1].sender_id !== msg.sender_id || showDateSep);
+
+                    return (
+                      <div key={msg.id}>
+                        {showDateSep && (
+                          <div className="flex items-center justify-center py-3">
+                            <span className="text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-full">{formatMsgDate(msg.created_at)}</span>
+                          </div>
+                        )}
+                        <div className={`flex gap-2 px-1 ${isMe ? "justify-end" : "justify-start"}`}>
+                          {!isMe && (
+                            <div className="w-7 h-7 rounded-full shrink-0 mt-auto">
+                              {showSender ? (
+                                senderProfile?.avatar_url ? (
+                                  <img src={senderProfile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
+                                ) : (
+                                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
+                                    <span className="text-primary text-xs font-bold">{senderProfile?.name?.charAt(0)?.toUpperCase() ?? "?"}</span>
+                                  </div>
+                                )
+                              ) : <div className="w-7 h-7" />}
+                            </div>
+                          )}
+                          <div className={`max-w-[75%] ${isMe ? "" : ""}`}>
+                            {showSender && !isMe && (
+                              <p className="text-xs font-semibold text-primary ml-1 mb-0.5">{senderProfile?.name ?? "Unknown"}</p>
+                            )}
+                            <div className={`px-3 py-2 rounded-2xl text-sm ${
+                              isMe
+                                ? "bg-primary text-primary-foreground rounded-br-md"
+                                : "bg-card text-card-foreground shadow-card rounded-bl-md"
+                            }`}>
+                              <p className="break-words">{msg.content}</p>
+                              <p className={`text-[10px] mt-0.5 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"} text-right`}>
+                                {formatMsgTime(msg.created_at)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </>
+              )}
+            </div>
+
+            {/* Input */}
+            <div className="sticky bottom-0 bg-background pt-2 pb-1 border-t border-border">
+              <div className="flex items-center gap-2">
+                <input
+                  value={newMsg}
+                  onChange={(e) => setNewMsg(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendMessage())}
+                  placeholder="Type a message..."
+                  className="flex-1 bg-card text-card-foreground rounded-full px-4 py-2.5 text-sm border border-border focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={!newMsg.trim()}
+                  className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center disabled:opacity-40 transition-opacity"
+                >
+                  <Send className="w-4 h-4 text-primary-foreground" />
+                </button>
               </div>
             </div>
           </motion.div>
