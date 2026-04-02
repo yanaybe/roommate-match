@@ -51,7 +51,9 @@ export default function SquadHub() {
   // Chat state
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [newMsg, setNewMsg] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Discover state
   const [swiped, setSwiped] = useState<string[]>([]);
