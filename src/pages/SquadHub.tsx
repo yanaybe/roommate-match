@@ -570,41 +570,47 @@ export default function SquadHub() {
               <div className="flex items-center justify-center py-16">
                 <p className="text-muted-foreground text-sm">Loading apartments...</p>
               </div>
-            ) : apartments.length === 0 ? (
+            ) : visibleApartments.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
                   <Home className="w-7 h-7 text-muted-foreground" />
                 </div>
-                <h2 className="font-bold text-foreground mb-1">No apartments yet</h2>
-                <p className="text-muted-foreground text-sm">Apartments will appear here once listed</p>
+                <h2 className="font-bold text-foreground mb-1">No compatible apartments</h2>
+                <p className="text-muted-foreground text-sm">No listings match your squad's preferences yet</p>
               </div>
             ) : (
               <div className="space-y-4">
                 <p className="text-muted-foreground text-sm text-center mb-4">
-                  Like apartments as a group. When everyone likes a listing → Super Match! 🔥
+                  Vote on apartments as a squad. Majority likes → chat with owner! 🔥
                 </p>
 
-                {apartments.map((apt: any) => {
-                  const aptLikes = likes.filter((l) => l.apartment_id === apt.id && l.liked);
-                  const myLike = likes.find((l) => l.apartment_id === apt.id && l.user_id === user?.id);
-                  const allLiked = aptLikes.length >= members.length && members.length > 1;
-                  const likeCount = aptLikes.length;
+                {visibleApartments.map((apt: any) => {
+                  const aptLikesCount = likes.filter(l => l.apartment_id === apt.id && l.liked).length;
+                  const aptDislikesCount = likes.filter(l => l.apartment_id === apt.id && !l.liked).length;
+                  const myVote = likes.find(l => l.apartment_id === apt.id && l.user_id === user?.id);
+                  const threshold = Math.ceil(members.length / 2);
+                  const majorityLiked = aptLikesCount >= threshold && members.length > 1;
 
                   return (
                     <motion.div key={apt.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      className={`bg-card rounded-2xl shadow-card overflow-hidden ${allLiked ? "ring-2 ring-accent" : ""}`}
+                      className={`bg-card rounded-2xl shadow-card overflow-hidden ${majorityLiked ? "ring-2 ring-accent" : ""}`}
                     >
+                      {/* Image with match badge */}
                       <div className="relative">
                         {apt.images?.[0] ? (
-                          <img src={apt.images[0]} alt={apt.title} className="w-full h-40 object-cover" />
+                          <img src={apt.images[0]} alt={apt.title} className="w-full h-44 object-cover" />
                         ) : (
-                          <div className="w-full h-40 bg-secondary flex items-center justify-center">
+                          <div className="w-full h-44 bg-secondary flex items-center justify-center">
                             <Home className="w-8 h-8 text-muted-foreground" />
                           </div>
                         )}
-                        {allLiked && (
+                        {/* Compatibility badge */}
+                        <div className="absolute top-3 right-3">
+                          <MatchBadge percent={apt.matchPercent} size="md" />
+                        </div>
+                        {majorityLiked && (
                           <div className="absolute top-3 left-3 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" /> Super Match!
+                            <Sparkles className="w-3 h-3" /> Squad Approved!
                           </div>
                         )}
                       </div>
@@ -619,21 +625,57 @@ export default function SquadHub() {
                           <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {apt.bathrooms}</span>
                           <span className="flex items-center gap-1"><Maximize className="w-3 h-3" /> {apt.size}m²</span>
                         </div>
+
+                        {/* Price + voting row */}
                         <div className="flex items-center justify-between mt-3">
                           <span className="font-bold text-foreground">₪{apt.price?.toLocaleString()}/mo</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              {likeCount}/{members.length} liked
-                            </span>
+
+                          <div className="flex items-center gap-3">
+                            {/* Vote count */}
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <span className="text-accent font-semibold">{aptLikesCount}👍</span>
+                              <span className="text-destructive font-semibold">{aptDislikesCount}👎</span>
+                            </div>
+
+                            {/* Dislike button */}
                             <button
-                              onClick={() => handleApartmentLikeWithCheck(apt.id, !myLike?.liked)}
+                              onClick={() => handleApartmentVote(apt.id, false)}
                               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                                myLike?.liked ? "gradient-primary" : "bg-secondary"
+                                myVote && !myVote.liked ? "bg-destructive/20 ring-2 ring-destructive" : "bg-secondary hover:bg-destructive/10"
                               }`}
                             >
-                              <Heart className={`w-5 h-5 ${myLike?.liked ? "text-primary-foreground fill-current" : "text-muted-foreground"}`} />
+                              <ThumbsDown className={`w-4 h-4 ${myVote && !myVote.liked ? "text-destructive" : "text-muted-foreground"}`} />
+                            </button>
+
+                            {/* Like button */}
+                            <button
+                              onClick={() => handleApartmentVote(apt.id, true)}
+                              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                                myVote?.liked ? "gradient-primary ring-2 ring-primary" : "bg-secondary hover:bg-primary/10"
+                              }`}
+                            >
+                              <Heart className={`w-4 h-4 ${myVote?.liked ? "text-primary-foreground fill-current" : "text-muted-foreground"}`} />
                             </button>
                           </div>
+                        </div>
+
+                        {/* Member votes indicator */}
+                        <div className="flex items-center gap-1 mt-2">
+                          {members.map(m => {
+                            const vote = likes.find(l => l.apartment_id === apt.id && l.user_id === m.user_id);
+                            return (
+                              <div key={m.id} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                vote?.liked ? "border-accent bg-accent/10" : vote && !vote.liked ? "border-destructive bg-destructive/10" : "border-border bg-secondary"
+                              }`}>
+                                {m.profile?.avatar_url ? (
+                                  <img src={m.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                                ) : (
+                                  <span className="text-[8px] font-bold text-muted-foreground">{m.profile?.name?.charAt(0)?.toUpperCase() ?? "?"}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                          <span className="text-[10px] text-muted-foreground ml-1">{aptLikesCount + aptDislikesCount}/{members.length} voted</span>
                         </div>
                       </div>
                     </motion.div>
