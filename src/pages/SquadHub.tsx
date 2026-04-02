@@ -205,6 +205,82 @@ export default function SquadHub() {
     }
   }, [squad, members.length]);
 
+  // Squad group chat
+  const memberProfileMap = useMemo(() => {
+    const map = new Map<string, FullProfile>();
+    members.forEach((m) => { if (m.profile) map.set(m.user_id, m.profile); });
+    return map;
+  }, [members]);
+
+  const loadMessages = useCallback(async () => {
+    if (!id) return;
+    setChatLoading(true);
+    const { data } = await supabase
+      .from("squad_messages")
+      .select("*")
+      .eq("squad_id", id)
+      .order("created_at", { ascending: true })
+      .limit(200);
+    setChatMessages(data ?? []);
+    setChatLoading(false);
+  }, [id]);
+
+  useEffect(() => {
+    if (tab === "chat" && id) {
+      loadMessages();
+    }
+  }, [tab, id, loadMessages]);
+
+  // Realtime chat subscription
+  useEffect(() => {
+    if (!id || tab !== "chat") return;
+    const channel = supabase
+      .channel(`squad-chat:${id}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "squad_messages",
+        filter: `squad_id=eq.${id}`,
+      }, (payload) => {
+        setChatMessages((prev) => [...prev, payload.new]);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [id, tab]);
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    if (tab === "chat") {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages, tab]);
+
+  const sendMessage = async () => {
+    if (!newMsg.trim() || !user || !id) return;
+    const content = newMsg.trim();
+    setNewMsg("");
+    await supabase.from("squad_messages").insert({
+      squad_id: id,
+      sender_id: user.id,
+      content,
+    });
+  };
+
+  const formatMsgTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatMsgDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const today = new Date();
+    if (d.toDateString() === today.toDateString()) return "Today";
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+    return d.toLocaleDateString([], { month: "short", day: "numeric" });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pb-20">
