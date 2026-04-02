@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSquadDetail } from "@/hooks/useSquad";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
@@ -122,16 +122,86 @@ export default function SquadHub() {
     }
   }, [user, id, remainingDiscover]);
 
-  // Fetch real apartments
+  // Fetch compatible apartments based on squad filters
   useEffect(() => {
     const fetchApartments = async () => {
+      if (!squad) return;
       setApartmentsLoading(true);
-      const { data } = await supabase.from("apartments").select("*").order("created_at", { ascending: false });
+      let query = supabase.from("apartments").select("*")
+        .gte("price", squad.budget_min)
+        .lte("price", squad.budget_max)
+        .order("created_at", { ascending: false });
+
+      if (squad.pet_friendly) {
+        query = query.eq("pet_friendly", true);
+      }
+      if (squad.preferred_locations.length > 0) {
+        query = query.in("city", squad.preferred_locations);
+      }
+
+      const { data } = await query;
       setApartments(data ?? []);
       setApartmentsLoading(false);
     };
-    if (tab === "apartments") fetchApartments();
-  }, [tab]);
+    if (tab === "apartments" && squad) fetchApartments();
+  }, [tab, squad]);
+
+  // Calculate squad-apartment compatibility
+  const apartmentsWithMatch = useMemo(() => {
+    if (!squad || !myProfile) return apartments.map((a: any) => ({ ...a, matchPercent: 0 }));
+
+    const memberProfiles = members.map(m => m.profile).filter(Boolean) as FullProfile[];
+
+    return apartments.map((apt: any) => {
+      // Budget fit (30%)
+      const budgetRange = squad.budget_max - squad.budget_min;
+      const budgetMid = (squad.budget_min + squad.budget_max) / 2;
+      const budgetDiff = Math.abs(apt.price - budgetMid);
+      const budgetScore = budgetRange > 0 ? Math.max(0, 1 - budgetDiff / (budgetRange * 0.75)) : (apt.price >= squad.budget_min && apt.price <= squad.budget_max ? 1 : 0);
+
+      // Preference alignment (25%)
+      let prefScore = 1;
+      if (squad.no_smoking) prefScore *= 1; // can't check apartment smoking, keep full
+      if (squad.pet_friendly && !apt.pet_friendly) prefScore *= 0.3;
+      // Location match bonus
+      if (squad.preferred_locations.length > 0) {
+        const locMatch = squad.preferred_locations.some(
+          (loc: string) => loc.toLowerCase() === (apt.city || "").toLowerCase() ||
+            loc.toLowerCase() === (apt.neighborhood || "").toLowerCase()
+        );
+        if (locMatch) prefScore = Math.min(1, prefScore + 0.1);
+      }
+
+      // Size/rooms fit (15%)
+      const sizeScore = apt.rooms >= members.length ? 1 : Math.max(0.3, apt.rooms / members.length);
+
+      // Average member lifestyle compatibility with apartment price (30%)
+      let lifestyleScore = 0.75;
+      if (memberProfiles.length > 0) {
+        const perMemberBudgetFit = memberProfiles.map(p => {
+          const diff = Math.abs(p.budget - apt.price);
+          return Math.max(0, 1 - diff / 3000);
+        });
+        lifestyleScore = perMemberBudgetFit.reduce((a, b) => a + b, 0) / perMemberBudgetFit.length;
+      }
+
+      const matchPercent = Math.round(
+        budgetScore * 30 + prefScore * 25 + sizeScore * 15 + lifestyleScore * 30
+      );
+
+      return { ...apt, matchPercent: Math.min(99, Math.max(5, matchPercent)) };
+    }).sort((a: any, b: any) => b.matchPercent - a.matchPercent);
+  }, [apartments, squad, members, myProfile]);
+
+  // Filtered apartments: remove ones with >50% dislikes
+  const visibleApartments = useMemo(() => {
+    if (members.length === 0) return apartmentsWithMatch;
+    const threshold = Math.ceil(members.length / 2);
+    return apartmentsWithMatch.filter((apt: any) => {
+      const dislikes = likes.filter(l => l.apartment_id === apt.id && !l.liked).length;
+      return dislikes < threshold;
+    });
+  }, [apartmentsWithMatch, likes, members]);
 
   // Apartment likes
   const handleApartmentLike = async (apartmentId: string, liked: boolean) => {
@@ -145,23 +215,35 @@ export default function SquadHub() {
     if (!error) refetch();
   };
 
-  // Check for Super Match and auto-create chat
-  const checkSuperMatch = useCallback(async (apartmentId: string) => {
-    if (!id || !squad) return;
-    const aptLikes = likes.filter((l) => l.apartment_id === apartmentId && l.liked);
-    if (aptLikes.length >= members.length && members.length > 1) {
+  // Check majority like → open chat with leader & poster
+  const checkMajorityLike = useCallback(async (apartmentId: string) => {
+    if (!id || !squad || members.length < 2) return;
+    const threshold = Math.ceil(members.length / 2);
+    const aptLikes = likes.filter(l => l.apartment_id === apartmentId && l.liked);
+
+    // Need fresh count after refetch
+    setTimeout(async () => {
+      const { data: freshLikes } = await supabase.from("squad_likes")
+        .select("*")
+        .eq("squad_id", id)
+        .eq("apartment_id", apartmentId)
+        .eq("liked", true);
+
+      const likeCount = freshLikes?.length ?? 0;
+      if (likeCount < threshold) return;
+
       const apt = apartments.find((a: any) => a.id === apartmentId);
       if (!apt) return;
-      
-      const leader = members.find((m) => m.role === "leader");
+
+      const leader = members.find(m => m.role === "leader");
       if (!leader || leader.user_id === apt.user_id) return;
-      
+
       // Check if conversation already exists
       const { data: leaderConvos } = await supabase
         .from("conversation_participants")
         .select("conversation_id")
         .eq("user_id", leader.user_id);
-      
+
       if (leaderConvos && leaderConvos.length > 0) {
         const convoIds = leaderConvos.map((c: any) => c.conversation_id);
         const { data: existingConvo } = await supabase
@@ -169,32 +251,38 @@ export default function SquadHub() {
           .select("conversation_id")
           .eq("user_id", apt.user_id)
           .in("conversation_id", convoIds);
-        
+
         if (existingConvo && existingConvo.length > 0) {
-          toast.success("🔥 Super Match! Chat already exists with the landlord!");
+          toast.success("🔥 Majority liked! Chat already exists with the owner!");
           return;
         }
       }
-      
+
       if (user?.id === leader.user_id) {
         const { data: convId, error } = await supabase.rpc("create_conversation_with_participant", {
           other_user_id: apt.user_id,
         });
         if (!error && convId) {
-          toast.success("🔥 Super Match! Chat opened with the landlord!", {
+          toast.success("🔥 Squad approved! Chat opened with the apartment owner!", {
             action: { label: "Go to Chat", onClick: () => navigate("/chats") },
           });
         }
       } else {
-        toast.success("🔥 Super Match! The squad leader can now chat with the landlord!");
+        toast.success("🔥 Squad approved this listing! The leader can now chat with the owner!");
       }
-    }
+    }, 800);
   }, [id, squad, likes, members, apartments, user, navigate]);
 
-  const handleApartmentLikeWithCheck = async (apartmentId: string, liked: boolean) => {
+  const handleApartmentVote = async (apartmentId: string, liked: boolean) => {
     await handleApartmentLike(apartmentId, liked);
-    if (liked) {
-      setTimeout(() => checkSuperMatch(apartmentId), 1000);
+    if (liked) checkMajorityLike(apartmentId);
+    if (!liked) {
+      // Check if this dislike triggers removal
+      const threshold = Math.ceil(members.length / 2);
+      const currentDislikes = likes.filter(l => l.apartment_id === apartmentId && !l.liked).length + 1;
+      if (currentDislikes >= threshold) {
+        toast("Listing removed — majority voted it down", { icon: "👎" });
+      }
     }
   };
 
@@ -482,41 +570,47 @@ export default function SquadHub() {
               <div className="flex items-center justify-center py-16">
                 <p className="text-muted-foreground text-sm">Loading apartments...</p>
               </div>
-            ) : apartments.length === 0 ? (
+            ) : visibleApartments.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
                   <Home className="w-7 h-7 text-muted-foreground" />
                 </div>
-                <h2 className="font-bold text-foreground mb-1">No apartments yet</h2>
-                <p className="text-muted-foreground text-sm">Apartments will appear here once listed</p>
+                <h2 className="font-bold text-foreground mb-1">No compatible apartments</h2>
+                <p className="text-muted-foreground text-sm">No listings match your squad's preferences yet</p>
               </div>
             ) : (
               <div className="space-y-4">
                 <p className="text-muted-foreground text-sm text-center mb-4">
-                  Like apartments as a group. When everyone likes a listing → Super Match! 🔥
+                  Vote on apartments as a squad. Majority likes → chat with owner! 🔥
                 </p>
 
-                {apartments.map((apt: any) => {
-                  const aptLikes = likes.filter((l) => l.apartment_id === apt.id && l.liked);
-                  const myLike = likes.find((l) => l.apartment_id === apt.id && l.user_id === user?.id);
-                  const allLiked = aptLikes.length >= members.length && members.length > 1;
-                  const likeCount = aptLikes.length;
+                {visibleApartments.map((apt: any) => {
+                  const aptLikesCount = likes.filter(l => l.apartment_id === apt.id && l.liked).length;
+                  const aptDislikesCount = likes.filter(l => l.apartment_id === apt.id && !l.liked).length;
+                  const myVote = likes.find(l => l.apartment_id === apt.id && l.user_id === user?.id);
+                  const threshold = Math.ceil(members.length / 2);
+                  const majorityLiked = aptLikesCount >= threshold && members.length > 1;
 
                   return (
                     <motion.div key={apt.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      className={`bg-card rounded-2xl shadow-card overflow-hidden ${allLiked ? "ring-2 ring-accent" : ""}`}
+                      className={`bg-card rounded-2xl shadow-card overflow-hidden ${majorityLiked ? "ring-2 ring-accent" : ""}`}
                     >
+                      {/* Image with match badge */}
                       <div className="relative">
                         {apt.images?.[0] ? (
-                          <img src={apt.images[0]} alt={apt.title} className="w-full h-40 object-cover" />
+                          <img src={apt.images[0]} alt={apt.title} className="w-full h-44 object-cover" />
                         ) : (
-                          <div className="w-full h-40 bg-secondary flex items-center justify-center">
+                          <div className="w-full h-44 bg-secondary flex items-center justify-center">
                             <Home className="w-8 h-8 text-muted-foreground" />
                           </div>
                         )}
-                        {allLiked && (
+                        {/* Compatibility badge */}
+                        <div className="absolute top-3 right-3">
+                          <MatchBadge percent={apt.matchPercent} size="md" />
+                        </div>
+                        {majorityLiked && (
                           <div className="absolute top-3 left-3 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" /> Super Match!
+                            <Sparkles className="w-3 h-3" /> Squad Approved!
                           </div>
                         )}
                       </div>
@@ -531,21 +625,57 @@ export default function SquadHub() {
                           <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {apt.bathrooms}</span>
                           <span className="flex items-center gap-1"><Maximize className="w-3 h-3" /> {apt.size}m²</span>
                         </div>
+
+                        {/* Price + voting row */}
                         <div className="flex items-center justify-between mt-3">
                           <span className="font-bold text-foreground">₪{apt.price?.toLocaleString()}/mo</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              {likeCount}/{members.length} liked
-                            </span>
+
+                          <div className="flex items-center gap-3">
+                            {/* Vote count */}
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <span className="text-accent font-semibold">{aptLikesCount}👍</span>
+                              <span className="text-destructive font-semibold">{aptDislikesCount}👎</span>
+                            </div>
+
+                            {/* Dislike button */}
                             <button
-                              onClick={() => handleApartmentLikeWithCheck(apt.id, !myLike?.liked)}
+                              onClick={() => handleApartmentVote(apt.id, false)}
                               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                                myLike?.liked ? "gradient-primary" : "bg-secondary"
+                                myVote && !myVote.liked ? "bg-destructive/20 ring-2 ring-destructive" : "bg-secondary hover:bg-destructive/10"
                               }`}
                             >
-                              <Heart className={`w-5 h-5 ${myLike?.liked ? "text-primary-foreground fill-current" : "text-muted-foreground"}`} />
+                              <ThumbsDown className={`w-4 h-4 ${myVote && !myVote.liked ? "text-destructive" : "text-muted-foreground"}`} />
+                            </button>
+
+                            {/* Like button */}
+                            <button
+                              onClick={() => handleApartmentVote(apt.id, true)}
+                              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                                myVote?.liked ? "gradient-primary ring-2 ring-primary" : "bg-secondary hover:bg-primary/10"
+                              }`}
+                            >
+                              <Heart className={`w-4 h-4 ${myVote?.liked ? "text-primary-foreground fill-current" : "text-muted-foreground"}`} />
                             </button>
                           </div>
+                        </div>
+
+                        {/* Member votes indicator */}
+                        <div className="flex items-center gap-1 mt-2">
+                          {members.map(m => {
+                            const vote = likes.find(l => l.apartment_id === apt.id && l.user_id === m.user_id);
+                            return (
+                              <div key={m.id} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                vote?.liked ? "border-accent bg-accent/10" : vote && !vote.liked ? "border-destructive bg-destructive/10" : "border-border bg-secondary"
+                              }`}>
+                                {m.profile?.avatar_url ? (
+                                  <img src={m.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                                ) : (
+                                  <span className="text-[8px] font-bold text-muted-foreground">{m.profile?.name?.charAt(0)?.toUpperCase() ?? "?"}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                          <span className="text-[10px] text-muted-foreground ml-1">{aptLikesCount + aptDislikesCount}/{members.length} voted</span>
                         </div>
                       </div>
                     </motion.div>
