@@ -203,9 +203,16 @@ export default function SquadHub() {
     });
   }, [apartmentsWithMatch, likes, members]);
 
-  // Apartment likes
+  // Apartment likes — toggle: if same vote exists, remove it
   const handleApartmentLike = async (apartmentId: string, liked: boolean) => {
     if (!user || !id) return;
+    const existing = likes.find(l => l.apartment_id === apartmentId && l.user_id === user.id);
+    if (existing && existing.liked === liked) {
+      // Toggle off — remove vote
+      await supabase.from("squad_likes").delete().eq("squad_id", id).eq("apartment_id", apartmentId).eq("user_id", user.id);
+      refetch();
+      return;
+    }
     const { error } = await supabase.from("squad_likes").upsert({
       squad_id: id,
       apartment_id: apartmentId,
