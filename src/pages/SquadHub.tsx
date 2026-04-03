@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ThumbsUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSquadDetail } from "@/hooks/useSquad";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
