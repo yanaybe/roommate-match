@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { ProfileData } from "@/lib/matching";
+
+const PAGE_SIZE = 20;
 
 export interface FullProfile extends ProfileData {
   id: string;
@@ -56,22 +58,39 @@ export function useAllProfiles() {
   const [profiles, setProfiles] = useState<FullProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
 
-  useEffect(() => {
-    const load = async () => {
-      const { data, error: fetchError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("onboarding_complete", true);
-      if (fetchError) {
-        setError(fetchError.message);
-      } else {
-        setProfiles((data as FullProfile[]) ?? []);
-      }
-      setLoading(false);
-    };
-    load();
+  const loadPage = useCallback(async (pageNum: number) => {
+    const from = pageNum * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data, error: fetchError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("onboarding_complete", true)
+      .range(from, to);
+
+    if (fetchError) {
+      setError(fetchError.message);
+    } else {
+      const batch = (data as FullProfile[]) ?? [];
+      setProfiles((prev) => (pageNum === 0 ? batch : [...prev, ...batch]));
+      setHasMore(batch.length === PAGE_SIZE);
+    }
+    setLoading(false);
   }, []);
 
-  return { profiles, loading, error };
+  useEffect(() => {
+    setLoading(true);
+    loadPage(0);
+  }, [loadPage]);
+
+  const loadMore = useCallback(() => {
+    if (!hasMore || loading) return;
+    const next = page + 1;
+    setPage(next);
+    loadPage(next);
+  }, [hasMore, loading, page, loadPage]);
+
+  return { profiles, loading, error, hasMore, loadMore };
 }

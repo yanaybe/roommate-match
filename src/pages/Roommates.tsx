@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-const getMockLikedProfileKey = (userId: string, likedUserId: string) => `liked_profile:${userId}:${likedUserId}`;
+import { getMockLikedProfileKey, isUUID } from "@/lib/profileUtils";
 const getSwipeKey = (userId: string) => `swiped_profiles:${userId}`;
 
 function getSwipedMap(userId: string): Record<string, number> {
@@ -66,7 +66,7 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
 export default function Roommates() {
   const { user } = useAuth();
   const { profile: myProfile } = useProfile();
-  const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles();
+  const { profiles: allProfiles, loading: profilesLoading, hasMore, loadMore } = useAllProfiles();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [swiped, setSwiped] = useState<string[]>([]);
@@ -145,9 +145,7 @@ export default function Roommates() {
       }
 
       if (direction === "right" && user) {
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(current.user.id);
-
-        if (isUuid) {
+        if (isUUID(current.user.id)) {
           await supabase.from("liked_profiles").upsert(
             {
               user_id: user.id,
@@ -172,6 +170,13 @@ export default function Roommates() {
   const handleUndo = () => {
     setSwiped((prev) => prev.slice(0, -1));
   };
+
+  // Load more profiles from DB when the local stack runs low
+  useEffect(() => {
+    if (remaining.length <= 2 && hasMore && !profilesLoading) {
+      loadMore();
+    }
+  }, [remaining.length, hasMore, profilesLoading, loadMore]);
 
   const visibleCards = remaining.slice(0, 2);
 
