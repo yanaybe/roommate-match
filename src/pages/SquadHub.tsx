@@ -640,7 +640,7 @@ export default function SquadHub() {
 
                             {/* Dislike button */}
                             <button
-                              onClick={() => handleApartmentVote(apt.id, false)}
+                              onClick={(e) => { e.stopPropagation(); handleApartmentVote(apt.id, false); }}
                               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                                 myVote && !myVote.liked ? "bg-destructive/20 ring-2 ring-destructive" : "bg-secondary hover:bg-destructive/10"
                               }`}
@@ -650,7 +650,7 @@ export default function SquadHub() {
 
                             {/* Like button */}
                             <button
-                              onClick={() => handleApartmentVote(apt.id, true)}
+                              onClick={(e) => { e.stopPropagation(); handleApartmentVote(apt.id, true); }}
                               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                                 myVote?.liked ? "gradient-primary ring-2 ring-primary" : "bg-secondary hover:bg-primary/10"
                               }`}
