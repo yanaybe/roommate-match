@@ -662,7 +662,7 @@ export default function SquadHub() {
                                 myVote?.liked ? "gradient-primary ring-2 ring-primary" : "bg-secondary hover:bg-primary/10"
                               }`}
                             >
-                              <Heart className={`w-4 h-4 ${myVote?.liked ? "text-primary-foreground fill-current" : "text-muted-foreground"}`} />
+                              <ThumbsUp className={`w-4 h-4 ${myVote?.liked ? "text-primary-foreground" : "text-muted-foreground"}`} />
                             </button>
                           </div>
                         </div>
