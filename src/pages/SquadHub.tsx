@@ -593,7 +593,8 @@ export default function SquadHub() {
 
                   return (
                     <motion.div key={apt.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      className={`bg-card rounded-2xl shadow-card overflow-hidden ${majorityLiked ? "ring-2 ring-accent" : ""}`}
+                      className={`bg-card rounded-2xl shadow-card overflow-hidden cursor-pointer ${majorityLiked ? "ring-2 ring-accent" : ""}`}
+                      onClick={() => navigate(`/apartment/${apt.id}`)}
                     >
                       {/* Image with match badge */}
                       <div className="relative">
