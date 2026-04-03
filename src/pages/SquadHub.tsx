@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ThumbsUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSquadDetail } from "@/hooks/useSquad";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
@@ -203,9 +203,16 @@ export default function SquadHub() {
     });
   }, [apartmentsWithMatch, likes, members]);
 
-  // Apartment likes
+  // Apartment likes — toggle: if same vote exists, remove it
   const handleApartmentLike = async (apartmentId: string, liked: boolean) => {
     if (!user || !id) return;
+    const existing = likes.find(l => l.apartment_id === apartmentId && l.user_id === user.id);
+    if (existing && existing.liked === liked) {
+      // Toggle off — remove vote
+      await supabase.from("squad_likes").delete().eq("squad_id", id).eq("apartment_id", apartmentId).eq("user_id", user.id);
+      refetch();
+      return;
+    }
     const { error } = await supabase.from("squad_likes").upsert({
       squad_id: id,
       apartment_id: apartmentId,
@@ -655,7 +662,7 @@ export default function SquadHub() {
                                 myVote?.liked ? "gradient-primary ring-2 ring-primary" : "bg-secondary hover:bg-primary/10"
                               }`}
                             >
-                              <Heart className={`w-4 h-4 ${myVote?.liked ? "text-primary-foreground fill-current" : "text-muted-foreground"}`} />
+                              <ThumbsUp className={`w-4 h-4 ${myVote?.liked ? "text-primary-foreground" : "text-muted-foreground"}`} />
                             </button>
                           </div>
                         </div>
