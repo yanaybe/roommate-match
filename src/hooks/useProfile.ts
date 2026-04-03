@@ -14,6 +14,7 @@ export function useProfile() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<FullProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -23,45 +24,54 @@ export function useProfile() {
     }
 
     const load = async () => {
-      const { data } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      setProfile(data as FullProfile | null);
+      if (fetchError) {
+        setError(fetchError.message);
+      } else {
+        setProfile(data as FullProfile | null);
+      }
       setLoading(false);
     };
 
     load();
   }, [user]);
 
-  return { profile, loading, refetch: async () => {
+  return { profile, loading, error, refetch: async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data, error: fetchError } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
-    setProfile(data as FullProfile | null);
+    if (!fetchError) setProfile(data as FullProfile | null);
   }};
 }
 
 export function useAllProfiles() {
   const [profiles, setProfiles] = useState<FullProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("profiles")
         .select("*")
         .eq("onboarding_complete", true);
-      setProfiles((data as FullProfile[]) ?? []);
+      if (fetchError) {
+        setError(fetchError.message);
+      } else {
+        setProfiles((data as FullProfile[]) ?? []);
+      }
       setLoading(false);
     };
     load();
   }, []);
 
-  return { profiles, loading };
+  return { profiles, loading, error };
 }

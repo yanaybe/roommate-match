@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ export default function VerifyEmail() {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resending, setResending] = useState(false);
   const [verified, setVerified] = useState(false);
+  const redirectingRef = useRef(false);
 
   // If already verified, check onboarding and redirect
   useEffect(() => {
@@ -25,15 +26,17 @@ export default function VerifyEmail() {
   }, [user, loading, navigate]);
 
   const handleVerifiedRedirect = async () => {
+    // Guard against multiple concurrent calls
+    if (redirectingRef.current) return;
+    redirectingRef.current = true;
     setVerified(true);
-    // Check onboarding status
+
     const { data } = await supabase
       .from("profiles")
       .select("onboarding_complete")
       .eq("user_id", user!.id)
       .maybeSingle();
 
-    // Brief success animation before redirect
     setTimeout(() => {
       if (data?.onboarding_complete) {
         navigate("/", { replace: true });
@@ -48,7 +51,8 @@ export default function VerifyEmail() {
     if (!user || user.email_confirmed_at || verified) return;
     const interval = setInterval(async () => {
       const { data } = await supabase.auth.getUser();
-      if (data.user?.email_confirmed_at) {
+      if (data.user?.email_confirmed_at && !redirectingRef.current) {
+        clearInterval(interval);
         toast.success("Email verified! 🎉");
         await supabase.auth.refreshSession();
         handleVerifiedRedirect();

@@ -107,20 +107,28 @@ export default function SquadHub() {
     const current = remainingDiscover[0];
     if (!current) return;
 
+    // Verify the current user is an active squad member before sending invites
+    const isMember = members.some((m) => m.user_id === user.id);
+    if (!isMember) {
+      toast.error("You must be a squad member to send invites");
+      return;
+    }
+
     setSwiped((prev) => [...prev, current.user.id]);
 
     if (direction === "right") {
-      // Send invite
       const { error } = await supabase.from("squad_invites").insert({
         squad_id: id,
         inviter_id: user.id,
         invitee_id: current.profile.user_id,
       });
-      if (!error) {
+      if (error) {
+        toast.error("Failed to send invite");
+      } else {
         toast.success(`Invited ${current.profile.name} to join!`);
       }
     }
-  }, [user, id, remainingDiscover]);
+  }, [user, id, remainingDiscover, members]);
 
   // Fetch compatible apartments based on squad filters
   useEffect(() => {

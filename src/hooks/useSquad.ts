@@ -54,16 +54,22 @@ export function useMySquads() {
   const { user } = useAuth();
   const [squads, setSquads] = useState<Squad[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) { setLoading(false); return; }
 
-    // Get squads where user is a member
-    const { data: memberships } = await supabase
+    const { data: memberships, error: membErr } = await supabase
       .from("squad_members")
       .select("squad_id")
       .eq("user_id", user.id)
       .eq("status", "joined");
+
+    if (membErr) {
+      setError(membErr.message);
+      setLoading(false);
+      return;
+    }
 
     if (!memberships?.length) {
       setSquads([]);
@@ -72,18 +78,22 @@ export function useMySquads() {
     }
 
     const squadIds = memberships.map((m) => m.squad_id);
-    const { data } = await supabase
+    const { data, error: squadErr } = await supabase
       .from("squads")
       .select("*")
       .in("id", squadIds);
 
-    setSquads((data as Squad[]) ?? []);
+    if (squadErr) {
+      setError(squadErr.message);
+    } else {
+      setSquads((data as Squad[]) ?? []);
+    }
     setLoading(false);
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
 
-  return { squads, loading, refetch: load };
+  return { squads, loading, error, refetch: load };
 }
 
 export function useSquadDetail(squadId: string | null) {
@@ -92,6 +102,7 @@ export function useSquadDetail(squadId: string | null) {
   const [members, setMembers] = useState<SquadMember[]>([]);
   const [likes, setLikes] = useState<SquadLike[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!squadId) { setLoading(false); return; }
@@ -102,16 +113,28 @@ export function useSquadDetail(squadId: string | null) {
       supabase.from("squad_likes").select("*").eq("squad_id", squadId),
     ]);
 
+    const firstError = squadRes.error ?? membersRes.error ?? likesRes.error;
+    if (firstError) {
+      setError(firstError.message);
+      setLoading(false);
+      return;
+    }
+
     setSquad(squadRes.data as Squad | null);
 
-    // Fetch profiles for members
     const rawMembers = (membersRes.data ?? []) as SquadMember[];
     if (rawMembers.length > 0) {
       const userIds = rawMembers.map((m) => m.user_id);
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesErr } = await supabase
         .from("profiles")
         .select("*")
         .in("user_id", userIds);
+
+      if (profilesErr) {
+        setError(profilesErr.message);
+        setLoading(false);
+        return;
+      }
 
       const profileMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
       rawMembers.forEach((m) => { m.profile = profileMap.get(m.user_id) as FullProfile | undefined; });
@@ -137,26 +160,32 @@ export function useSquadDetail(squadId: string | null) {
     return () => { supabase.removeChannel(channel); };
   }, [squadId, load]);
 
-  return { squad, members, likes, loading, refetch: load };
+  return { squad, members, likes, loading, error, refetch: load };
 }
 
 export function useMyInvites() {
   const { user } = useAuth();
   const [invites, setInvites] = useState<SquadInvite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) { setLoading(false); return; }
 
-    const { data } = await supabase
+    const { data, error: invitesErr } = await supabase
       .from("squad_invites")
       .select("*")
       .eq("invitee_id", user.id)
       .eq("status", "pending");
 
+    if (invitesErr) {
+      setError(invitesErr.message);
+      setLoading(false);
+      return;
+    }
+
     const rawInvites = (data ?? []) as SquadInvite[];
 
-    // Fetch squad and inviter details
     if (rawInvites.length > 0) {
       const squadIds = [...new Set(rawInvites.map((i) => i.squad_id))];
       const inviterIds = [...new Set(rawInvites.map((i) => i.inviter_id))];
@@ -165,6 +194,13 @@ export function useMyInvites() {
         supabase.from("squads").select("*").in("id", squadIds),
         supabase.from("profiles").select("*").in("user_id", inviterIds),
       ]);
+
+      const fetchError = squadsRes.error ?? profilesRes.error;
+      if (fetchError) {
+        setError(fetchError.message);
+        setLoading(false);
+        return;
+      }
 
       const squadMap = new Map((squadsRes.data ?? []).map((s: any) => [s.id, s]));
       const profileMap = new Map((profilesRes.data ?? []).map((p: any) => [p.user_id, p]));
@@ -191,7 +227,7 @@ export function useMyInvites() {
     return () => { supabase.removeChannel(channel); };
   }, [user, load]);
 
-  return { invites, loading, refetch: load };
+  return { invites, loading, error, refetch: load };
 }
 
 export interface DiscoverableSquad extends Squad {
@@ -206,14 +242,21 @@ export function useDiscoverSquads() {
   const { profile: myProfile } = useProfile();
   const [squads, setSquads] = useState<DiscoverableSquad[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) { setLoading(false); return; }
 
-    const { data: allSquads } = await supabase
+    const { data: allSquads, error: squadsErr } = await supabase
       .from("squads")
       .select("*")
       .in("status", ["draft", "forming"]);
+
+    if (squadsErr) {
+      setError(squadsErr.message);
+      setLoading(false);
+      return;
+    }
 
     if (!allSquads?.length) {
       setSquads([]);
@@ -223,11 +266,17 @@ export function useDiscoverSquads() {
 
     const squadIds = allSquads.map((s: any) => s.id);
 
-    const { data: allMembers } = await supabase
+    const { data: allMembers, error: membersErr } = await supabase
       .from("squad_members")
       .select("*")
       .in("squad_id", squadIds)
       .eq("status", "joined");
+
+    if (membersErr) {
+      setError(membersErr.message);
+      setLoading(false);
+      return;
+    }
 
     const membersBySquad = new Map<string, SquadMember[]>();
     (allMembers ?? []).forEach((m: any) => {
@@ -291,5 +340,5 @@ export function useDiscoverSquads() {
 
   useEffect(() => { load(); }, [load]);
 
-  return { squads, loading, refetch: load };
+  return { squads, loading, error, refetch: load };
 }
