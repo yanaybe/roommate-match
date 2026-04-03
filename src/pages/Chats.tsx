@@ -40,10 +40,11 @@ export default function Chats() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Load conversations
+  // Load conversations — batched to avoid N+1 queries
   const loadConversations = useCallback(async () => {
     if (!user) return;
 
+    // 1. Get all conversation IDs for this user
     const { data: participations } = await supabase
       .from("conversation_participants")
       .select("conversation_id")
@@ -57,62 +58,72 @@ export default function Chats() {
 
     const convIds = participations.map((p) => p.conversation_id);
 
-    // Deduplicate: group by other_user_id and keep most recent
-    const convMap = new Map<string, Conversation>();
+    // 2. Batch: get all other participants across all conversations
+    const { data: allParticipants } = await supabase
+      .from("conversation_participants")
+      .select("conversation_id, user_id")
+      .in("conversation_id", convIds)
+      .neq("user_id", user.id);
 
-    for (const convId of convIds) {
-      const { data: others } = await supabase
-        .from("conversation_participants")
-        .select("user_id")
-        .eq("conversation_id", convId)
-        .neq("user_id", user.id);
+    // 3. Batch: get all profiles for other users
+    const otherUserIds = [...new Set((allParticipants ?? []).map((p) => p.user_id))];
+    const { data: profiles } = otherUserIds.length > 0
+      ? await supabase.from("profiles").select("user_id, name, avatar_url").in("user_id", otherUserIds)
+      : { data: [] };
+    const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
 
-      const otherUserId = others?.[0]?.user_id ?? "";
+    // 4. Batch: get all messages for all conversations (for last message + unread counts)
+    const { data: allMessages } = await supabase
+      .from("messages")
+      .select("id, conversation_id, content, sender_id, created_at")
+      .in("conversation_id", convIds)
+      .order("created_at", { ascending: false });
 
-      let otherName = otherUserId.slice(0, 8) + "...";
-      let otherAvatar: string | null = null;
-      if (otherUserId) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("name, avatar_url")
-          .eq("user_id", otherUserId)
-          .maybeSingle();
-        if (profileData?.name) otherName = profileData.name;
-        otherAvatar = profileData?.avatar_url ?? null;
+    // 5. Batch: get all read receipts for this user in one query
+    const allMsgIds = (allMessages ?? []).map((m) => m.id);
+    const { data: readReceipts } = allMsgIds.length > 0
+      ? await supabase.from("message_read_receipts").select("message_id").eq("user_id", user.id).in("message_id", allMsgIds)
+      : { data: [] };
+    const readIds = new Set((readReceipts ?? []).map((r) => r.message_id));
+
+    // Build lookup: convId -> first other participant
+    const otherByConv = new Map<string, string>();
+    (allParticipants ?? []).forEach((p) => {
+      if (!otherByConv.has(p.conversation_id)) {
+        otherByConv.set(p.conversation_id, p.user_id);
       }
+    });
 
-      const { data: lastMsg } = await supabase
-        .from("messages")
-        .select("content, created_at")
-        .eq("conversation_id", convId)
-        .order("created_at", { ascending: false })
-        .limit(1);
+    // Group messages by conversation (already sorted desc, first = latest)
+    const msgsByConv = new Map<string, (typeof allMessages & object[])>();
+    (allMessages ?? []).forEach((m) => {
+      const list = msgsByConv.get(m.conversation_id) ?? [];
+      list.push(m);
+      msgsByConv.set(m.conversation_id, list);
+    });
 
-      const { data: allMsgs } = await supabase
-        .from("messages")
-        .select("id")
-        .eq("conversation_id", convId)
-        .neq("sender_id", user.id);
+    // Assemble conversations, deduplicating by other_user_id
+    const convMap = new Map<string, Conversation>();
+    for (const convId of convIds) {
+      const otherUserId = otherByConv.get(convId) ?? "";
+      const profile = profileMap.get(otherUserId) as { name?: string; avatar_url?: string } | undefined;
+      const otherName = profile?.name ?? otherUserId.slice(0, 8) + "...";
+      const otherAvatar = profile?.avatar_url ?? null;
 
-      const { data: readReceipts } = await supabase
-        .from("message_read_receipts")
-        .select("message_id")
-        .eq("user_id", user.id);
-
-      const readIds = new Set(readReceipts?.map((r) => r.message_id) ?? []);
-      const unreadCount = allMsgs?.filter((m) => !readIds.has(m.id)).length ?? 0;
+      const msgs = msgsByConv.get(convId) ?? [];
+      const lastMsg = msgs[0] ?? null;
+      const unreadCount = msgs.filter((m) => m.sender_id !== user.id && !readIds.has(m.id)).length;
 
       const conv: Conversation = {
         id: convId,
         other_user_id: otherUserId,
         other_name: otherName,
         other_avatar: otherAvatar,
-        last_message: lastMsg?.[0]?.content ?? null,
-        last_message_at: lastMsg?.[0]?.created_at ?? null,
+        last_message: lastMsg?.content ?? null,
+        last_message_at: lastMsg?.created_at ?? null,
         unread_count: unreadCount,
       };
 
-      // Only keep the most recent conversation per user
       const existing = convMap.get(otherUserId);
       if (!existing || (conv.last_message_at && (!existing.last_message_at || conv.last_message_at > existing.last_message_at))) {
         convMap.set(otherUserId, conv);

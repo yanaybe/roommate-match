@@ -186,6 +186,29 @@ export default function Onboarding() {
 
   const handleSubmit = async () => {
     if (!user) return;
+
+    const ageNum = parseInt(form.age);
+    const budgetNum = parseInt(form.budget);
+    const minAge = parseInt(form.preferred_age_min);
+    const maxAge = parseInt(form.preferred_age_max);
+
+    if (form.name.trim().length < 2) {
+      toast.error("Name must be at least 2 characters");
+      return;
+    }
+    if (isNaN(ageNum) || ageNum < 16 || ageNum > 120) {
+      toast.error("Please enter a valid age (16–120)");
+      return;
+    }
+    if (isNaN(budgetNum) || budgetNum < 100) {
+      toast.error("Please enter a valid budget (minimum ₪100)");
+      return;
+    }
+    if (!isNaN(minAge) && !isNaN(maxAge) && minAge >= maxAge) {
+      toast.error("Minimum preferred age must be less than maximum");
+      return;
+    }
+
     setSaving(true);
     const payload = {
       user_id: user.id,

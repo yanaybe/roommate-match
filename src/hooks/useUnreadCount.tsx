@@ -16,6 +16,7 @@ export function UnreadCountProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     if (!user) { setTotalUnread(0); return; }
 
+    // 1. Get all conversation IDs for this user
     const { data: participations } = await supabase
       .from("conversation_participants")
       .select("conversation_id")
@@ -23,26 +24,26 @@ export function UnreadCountProvider({ children }: { children: ReactNode }) {
 
     if (!participations?.length) { setTotalUnread(0); return; }
 
-    let total = 0;
-    for (const p of participations) {
-      const { data: msgs } = await supabase
-        .from("messages")
-        .select("id")
-        .eq("conversation_id", p.conversation_id)
-        .neq("sender_id", user.id);
+    const convIds = participations.map(p => p.conversation_id);
 
-      if (!msgs?.length) continue;
+    // 2. Batch: get all incoming messages across all conversations
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("id")
+      .in("conversation_id", convIds)
+      .neq("sender_id", user.id);
 
-      const { data: receipts } = await supabase
-        .from("message_read_receipts")
-        .select("message_id")
-        .eq("user_id", user.id)
-        .in("message_id", msgs.map(m => m.id));
+    if (!msgs?.length) { setTotalUnread(0); return; }
 
-      const readSet = new Set(receipts?.map(r => r.message_id) ?? []);
-      total += msgs.filter(m => !readSet.has(m.id)).length;
-    }
-    setTotalUnread(total);
+    // 3. Batch: get all read receipts for those messages in one query
+    const { data: receipts } = await supabase
+      .from("message_read_receipts")
+      .select("message_id")
+      .eq("user_id", user.id)
+      .in("message_id", msgs.map(m => m.id));
+
+    const readSet = new Set(receipts?.map(r => r.message_id) ?? []);
+    setTotalUnread(msgs.filter(m => !readSet.has(m.id)).length);
   }, [user]);
 
   useEffect(() => { refresh(); }, [refresh]);

@@ -16,6 +16,15 @@ const STEPS = ["Photos", "Location", "Details", "Room", "Amenities", "Review"];
 
 const CITIES = ["Tel Aviv", "Jerusalem", "Haifa", "Beer Sheva", "Netanya", "Herzliya", "Ramat Gan", "Rishon LeZion", "Petah Tikva", "Ashdod"];
 
+const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+
 export default function PostApartment() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -58,8 +67,24 @@ export default function PostApartment() {
 
   const handleImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+
+    const invalidType = files.find(f => !ALLOWED_MIME_TYPES.has(f.type));
+    if (invalidType) {
+      toast.error("Only JPG, PNG, WebP, and GIF images are allowed");
+      e.target.value = "";
+      return;
+    }
+
+    const tooBig = files.find(f => f.size > MAX_FILE_SIZE);
+    if (tooBig) {
+      toast.error("Each image must be under 10MB");
+      e.target.value = "";
+      return;
+    }
+
     if (images.length + files.length > 8) {
       toast.error("Maximum 8 photos allowed");
+      e.target.value = "";
       return;
     }
     setImages(prev => [...prev, ...files]);
@@ -94,7 +119,7 @@ export default function PostApartment() {
       // Upload images
       const imageUrls: string[] = [];
       for (const file of images) {
-        const ext = file.name.split(".").pop();
+        const ext = MIME_TO_EXT[file.type] ?? "jpg";
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error } = await supabase.storage.from("apartment-images").upload(path, file);
         if (error) throw error;
