@@ -209,11 +209,11 @@ export default function ApartmentDetail() {
               <Share2 className="w-4 h-4 text-foreground" />
             </button>
             <button
-              onClick={() => requireAuth(() => setLiked(!liked))}
+              onClick={() => requireAuth(() => toggleSave())}
               className="bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg"
             >
-              <Heart
-                className={`w-4 h-4 ${liked ? "fill-primary text-primary" : "text-foreground"}`}
+              <Bookmark
+                className={`w-4 h-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`}
               />
             </button>
           </div>
