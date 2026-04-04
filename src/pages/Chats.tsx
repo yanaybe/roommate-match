@@ -276,6 +276,25 @@ export default function Chats() {
     return d.toLocaleDateString();
   };
 
+  const deleteConversation = async (convId: string) => {
+    if (!user) return;
+    // Delete read receipts, messages, participation, then conversation
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("id")
+      .eq("conversation_id", convId);
+    const msgIds = (msgs ?? []).map((m) => m.id);
+    if (msgIds.length > 0) {
+      await supabase.from("message_read_receipts").delete().in("message_id", msgIds);
+      await supabase.from("messages").delete().eq("conversation_id", convId);
+    }
+    await supabase.from("conversation_participants").delete().eq("conversation_id", convId).eq("user_id", user.id);
+    await supabase.from("conversations").delete().eq("id", convId);
+    setConversations((prev) => prev.filter((c) => c.id !== convId));
+    setDeleteTarget(null);
+    refreshUnread();
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pb-20">
