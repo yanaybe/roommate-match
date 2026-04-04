@@ -3,8 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Trash2 } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Conversation {
   id: string;
