@@ -3,8 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Trash2 } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Conversation {
   id: string;
@@ -33,6 +43,7 @@ export default function Chats() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -265,6 +276,25 @@ export default function Chats() {
     return d.toLocaleDateString();
   };
 
+  const deleteConversation = async (convId: string) => {
+    if (!user) return;
+    // Delete read receipts, messages, participation, then conversation
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("id")
+      .eq("conversation_id", convId);
+    const msgIds = (msgs ?? []).map((m) => m.id);
+    if (msgIds.length > 0) {
+      await supabase.from("message_read_receipts").delete().in("message_id", msgIds);
+      await supabase.from("messages").delete().eq("conversation_id", convId);
+    }
+    await supabase.from("conversation_participants").delete().eq("conversation_id", convId).eq("user_id", user.id);
+    await supabase.from("conversations").delete().eq("id", convId);
+    setConversations((prev) => prev.filter((c) => c.id !== convId));
+    setDeleteTarget(null);
+    refreshUnread();
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pb-20">
@@ -394,46 +424,77 @@ export default function Chats() {
         ) : (
           <AnimatePresence>
             {conversations.map((conv, i) => (
-              <motion.button
+              <motion.div
                 key={conv.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20, height: 0 }}
                 transition={{ delay: i * 0.05 }}
-                onClick={() => setActiveConv(conv.id)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors border-b border-border/50 text-left"
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors border-b border-border/50"
               >
-                {conv.other_avatar ? (
-                  <img src={conv.other_avatar} alt={conv.other_name} className="w-12 h-12 rounded-full object-cover shrink-0" />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                    <span className="text-primary font-bold">
-                      {conv.other_name.charAt(0).toUpperCase()}
-                    </span>
+                <button
+                  onClick={() => setActiveConv(conv.id)}
+                  className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                >
+                  {conv.other_avatar ? (
+                    <img src={conv.other_avatar} alt={conv.other_name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                      <span className="text-primary font-bold">
+                        {conv.other_name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-card-foreground text-sm">
+                        {conv.other_name}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {formatDate(conv.last_message_at)}
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground text-sm truncate">
+                      {conv.last_message ?? t("startChatting")}
+                    </p>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-card-foreground text-sm">
-                      {conv.other_name}
+                  {conv.unread_count > 0 && (
+                    <span className="gradient-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">
+                      {conv.unread_count}
                     </span>
-                    <span className="text-muted-foreground text-xs">
-                      {formatDate(conv.last_message_at)}
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground text-sm truncate">
-                    {conv.last_message ?? t("startChatting")}
-                  </p>
-                </div>
-                {conv.unread_count > 0 && (
-                  <span className="gradient-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">
-                    {conv.unread_count}
-                  </span>
-                )}
-              </motion.button>
+                  )}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(conv.id); }}
+                  className="p-2 text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </motion.div>
             ))}
           </AnimatePresence>
         )}
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this conversation and all its messages. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTarget && deleteConversation(deleteTarget)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
