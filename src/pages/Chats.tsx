@@ -424,42 +424,53 @@ export default function Chats() {
         ) : (
           <AnimatePresence>
             {conversations.map((conv, i) => (
-              <motion.button
+              <motion.div
                 key={conv.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20, height: 0 }}
                 transition={{ delay: i * 0.05 }}
-                onClick={() => setActiveConv(conv.id)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors border-b border-border/50 text-left"
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors border-b border-border/50"
               >
-                {conv.other_avatar ? (
-                  <img src={conv.other_avatar} alt={conv.other_name} className="w-12 h-12 rounded-full object-cover shrink-0" />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                    <span className="text-primary font-bold">
-                      {conv.other_name.charAt(0).toUpperCase()}
-                    </span>
+                <button
+                  onClick={() => setActiveConv(conv.id)}
+                  className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                >
+                  {conv.other_avatar ? (
+                    <img src={conv.other_avatar} alt={conv.other_name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                      <span className="text-primary font-bold">
+                        {conv.other_name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-card-foreground text-sm">
+                        {conv.other_name}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {formatDate(conv.last_message_at)}
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground text-sm truncate">
+                      {conv.last_message ?? t("startChatting")}
+                    </p>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-card-foreground text-sm">
-                      {conv.other_name}
+                  {conv.unread_count > 0 && (
+                    <span className="gradient-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">
+                      {conv.unread_count}
                     </span>
-                    <span className="text-muted-foreground text-xs">
-                      {formatDate(conv.last_message_at)}
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground text-sm truncate">
-                    {conv.last_message ?? t("startChatting")}
-                  </p>
-                </div>
-                {conv.unread_count > 0 && (
-                  <span className="gradient-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">
-                    {conv.unread_count}
-                  </span>
-                )}
-              </motion.button>
+                  )}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(conv.id); }}
+                  className="p-2 text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </motion.div>
             ))}
           </AnimatePresence>
         )}
