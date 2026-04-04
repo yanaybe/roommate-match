@@ -67,6 +67,11 @@ export default function Index() {
     if (filters.smoking !== "any") c++;
     if (filters.pets !== "any") c++;
     if (filters.roomType !== "any") c++;
+    if (filters.religiousLevel !== "any") c++;
+    if (filters.sleepSchedule !== "any") c++;
+    if (filters.cleanlinessMin > 1) c++;
+    if (filters.wfh !== "any") c++;
+    if (filters.furnished !== "any") c++;
     return c;
   })();
 
