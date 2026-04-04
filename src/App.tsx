@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import { UnreadCountProvider } from "@/hooks/useUnreadCount";
+import { DailyLimitsProvider } from "@/hooks/useDailyLimits";
 import BottomNav from "@/components/BottomNav";
 import Index from "./pages/Index";
 import Roommates from "./pages/Roommates";
@@ -36,6 +37,7 @@ const App = () => (
       <AuthProvider>
         <LanguageProvider>
         <UnreadCountProvider>
+        <DailyLimitsProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -63,6 +65,7 @@ const App = () => (
             </Routes>
             <BottomNav />
           </BrowserRouter>
+        </DailyLimitsProvider>
         </UnreadCountProvider>
         </LanguageProvider>
       </AuthProvider>

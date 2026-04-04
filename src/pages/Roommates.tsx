@@ -8,6 +8,7 @@ import { mockUsers, type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useDailyLimits } from "@/hooks/useDailyLimits";
 import { calculateUserMatch } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -72,6 +73,7 @@ export default function Roommates() {
   const [swiped, setSwiped] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
+  const { canLike, likesUsed, likesLimit, recordLike, openPremiumSheet } = useDailyLimits();
 
   // Load recently swiped IDs (within 7 days) from localStorage + DB liked_profiles
   useEffect(() => {
@@ -145,6 +147,12 @@ export default function Roommates() {
       }
 
       if (direction === "right" && user) {
+        if (!canLike) {
+          toast.error(`You've reached your ${likesLimit} daily likes. Upgrade to like more.`);
+          openPremiumSheet();
+          return;
+        }
+
         if (isUUID(current.user.id)) {
           await supabase.from("liked_profiles").upsert(
             {
@@ -156,6 +164,8 @@ export default function Roommates() {
         } else {
           localStorage.setItem(getMockLikedProfileKey(user.id, current.user.id), "true");
         }
+
+        recordLike();
 
         // Simulate match for demo
         if (Math.random() > 0.5) {

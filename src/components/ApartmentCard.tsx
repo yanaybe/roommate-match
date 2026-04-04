@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useDailyLimits } from "@/hooks/useDailyLimits";
 
 const getMockSavedApartmentKey = (userId: string, apartmentId: string) => `saved_apartment:${userId}:${apartmentId}`;
 
@@ -21,6 +22,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const { requireAuth } = useRequireAuth();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { canSave, savesLimit, recordSave, openPremiumSheet } = useDailyLimits();
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(apartment.id);
 
@@ -63,6 +65,13 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const toggleSave = async () => {
     if (!user) return;
     const newSaved = !saved;
+
+    if (newSaved && !canSave) {
+      toast.error(`You've reached your ${savesLimit} daily saves. Upgrade to save more.`);
+      openPremiumSheet();
+      return;
+    }
+
     setSaved(newSaved);
     if (!isUuid) {
       localStorage.setItem(getMockSavedApartmentKey(user.id, apartment.id), String(newSaved));
@@ -73,6 +82,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
         user_id: user.id,
         apartment_id: apartment.id,
       }, { onConflict: "user_id,apartment_id" });
+      recordSave();
     } else {
       await supabase.from("saved_apartments")
         .delete()
