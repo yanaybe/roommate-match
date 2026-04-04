@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
-  Heart,
+  Bookmark,
   Share2,
   MapPin,
   Bed,
@@ -18,6 +18,9 @@ import {
 import { mockApartments, mockUsers, type UserProfile, getMatchColor, getMatchTextColor } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { isUUID, getMockSavedApartmentKey } from "@/lib/profileUtils";
 
 function RoommateProfileModal({
   user,
