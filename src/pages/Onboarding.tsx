@@ -23,6 +23,8 @@ const vibeOptions = ["Chill & quiet", "Balanced", "Social & active", "Party love
 const genderPrefOptions = ["No preference", "Male", "Female", "Mixed"];
 const similarityOptions = ["Very similar", "Somewhat similar", "No preference"];
 const activityOptions = ["Morning (6-12)", "Afternoon (12-18)", "Evening (18-24)", "Night (24-6)", "Flexible"];
+const smokingPrefOptions = ["I smoke", "Non-smoker, okay with smokers", "Non-smoker, prefer no smoking"];
+const petPrefOptions = ["I have pets", "No pets, but okay with them", "Prefer no pets"];
 
 interface FormData {
   name: string;
@@ -36,9 +38,11 @@ interface FormData {
   cooking_habits: string;
   shared_space_org: string;
   smoking: boolean;
+  smoking_preference: string;
   religious_level: string;
   alcohol: string;
   pets: boolean;
+  pet_preference: string;
   fitness: string;
   wfh: boolean;
   guests: string;
@@ -59,7 +63,9 @@ interface FormData {
 const initial: FormData = {
   name: "", age: "", city: "", occupation: "", budget: "", desired_room_type: "Private",
   sleep_schedule: "Flexible", cleanliness: 3, cooking_habits: "Sometimes", shared_space_org: "Moderate",
-  smoking: false, religious_level: "Not religious", alcohol: "Socially", pets: false,
+  smoking: false, smoking_preference: "Non-smoker, okay with smokers",
+  religious_level: "Not religious", alcohol: "Socially",
+  pets: false, pet_preference: "No pets, but okay with them",
   fitness: "Sometimes", wfh: false, guests: "Occasionally",
   social_level: 3, noise_level: 3, partying: "Occasionally", lifestyle_vibe: "Balanced",
   preferred_age_min: "18", preferred_age_max: "40", gender_preference: "No preference",
@@ -153,9 +159,11 @@ export default function Onboarding() {
         cooking_habits: profile.cooking_habits || "Sometimes",
         shared_space_org: profile.shared_space_org || "Moderate",
         smoking: profile.smoking ?? false,
+        smoking_preference: (profile as any).smoking_preference || "Non-smoker, okay with smokers",
         religious_level: profile.religious_level || "Not religious",
         alcohol: profile.alcohol || "Socially",
         pets: profile.pets ?? false,
+        pet_preference: (profile as any).pet_preference || "No pets, but okay with them",
         fitness: profile.fitness || "Sometimes",
         wfh: profile.wfh ?? false,
         guests: profile.guests || "Occasionally",
@@ -222,10 +230,12 @@ export default function Onboarding() {
       cleanliness: form.cleanliness,
       cooking_habits: form.cooking_habits,
       shared_space_org: form.shared_space_org,
-      smoking: form.smoking,
+      smoking: form.smoking_preference === "I smoke",
+      smoking_preference: form.smoking_preference,
       religious_level: form.religious_level,
       alcohol: form.alcohol,
-      pets: form.pets,
+      pets: form.pet_preference === "I have pets",
+      pet_preference: form.pet_preference,
       fitness: form.fitness,
       wfh: form.wfh,
       guests: form.guests,
@@ -350,9 +360,23 @@ export default function Onboarding() {
       case 3:
         return (
           <div className="space-y-5">
+            <div>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">🚬 Smoking</label>
+              <div className="flex flex-wrap gap-2">
+                {smokingPrefOptions.map((o) => (
+                  <OptionButton key={o} label={o} selected={form.smoking_preference === o} onClick={() => update("smoking_preference", o)} />
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">🐾 Pets</label>
+              <div className="flex flex-wrap gap-2">
+                {petPrefOptions.map((o) => (
+                  <OptionButton key={o} label={o} selected={form.pet_preference === o} onClick={() => update("pet_preference", o)} />
+                ))}
+              </div>
+            </div>
             <div className="flex flex-wrap gap-2">
-              <Toggle label="🚬 Smoking" value={form.smoking} onChange={(v) => update("smoking", v)} />
-              <Toggle label="🐾 Pets" value={form.pets} onChange={(v) => update("pets", v)} />
               <Toggle label="🏠 Work from home" value={form.wfh} onChange={(v) => update("wfh", v)} />
             </div>
             <div>

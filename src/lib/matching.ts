@@ -12,9 +12,11 @@ export interface ProfileData {
   cooking_habits: string;
   shared_space_org: string;
   smoking: boolean;
+  smoking_preference: string; // "I smoke" | "Non-smoker, okay with smokers" | "Non-smoker, prefer no smoking"
   religious_level: string;
   alcohol: string;
   pets: boolean;
+  pet_preference: string; // "I have pets" | "No pets, but okay with them" | "Prefer no pets"
   fitness: string;
   wfh: boolean;
   guests: string;
@@ -50,69 +52,138 @@ const frequencyScale = ["Never", "Rarely", "Sometimes", "Occasionally", "Often",
 const religiousScale = ["Not religious", "Somewhat", "Traditional", "Very religious"];
 const alcoholScale = ["Never", "Socially", "Often"];
 const orgScale = ["Relaxed", "Moderate", "Very organized"];
+const sleepScale = ["Early bird", "Flexible", "Night owl"];
 
 /**
- * Calculate match percentage between two user profiles (0-100)
+ * Calculate match percentage between two user profiles (0-100).
+ *
+ * Architecture: penalty-first.
+ *   finalScore = max(5, baseCompatibility - dealBreakerPenalties)
+ *
+ * Deal-breakers are computed first and can tank the score regardless of how
+ * well everything else aligns. Base compatibility covers lifestyle factors.
  */
 export function calculateUserMatch(a: ProfileData, b: ProfileData): number {
+  // ─── Layer 1: Deal-breaker penalties ──────────────────────────────────────
+
+  let penalties = 0;
+
+  // Smoking: penalty only when someone smokes AND the other explicitly minds.
+  // "Non-smoker, okay with smokers" → no conflict even if partner smokes.
+  const aSmokes = a.smoking_preference === "I smoke";
+  const bSmokes = b.smoking_preference === "I smoke";
+  const aMindsSmoking = a.smoking_preference === "Non-smoker, prefer no smoking";
+  const bMindsSmoking = b.smoking_preference === "Non-smoker, prefer no smoking";
+  if ((aSmokes && bMindsSmoking) || (bSmokes && aMindsSmoking)) {
+    penalties += 35;
+  }
+
+  // Pets: same logic — only penalise when pets are present AND partner minds.
+  const aHasPets = a.pet_preference === "I have pets";
+  const bHasPets = b.pet_preference === "I have pets";
+  const aMindsPets = a.pet_preference === "Prefer no pets";
+  const bMindsPets = b.pet_preference === "Prefer no pets";
+  if ((aHasPets && bMindsPets) || (bHasPets && aMindsPets)) {
+    penalties += 20;
+  }
+
+  // Religious compatibility: asymmetric — the more religious person's comfort
+  // drives the penalty. A Very religious person has a much harder time with
+  // a 3-step gap than a Not religious person does.
+  const aRelIdx = religiousScale.indexOf(a.religious_level);
+  const bRelIdx = religiousScale.indexOf(b.religious_level);
+  if (aRelIdx !== -1 && bRelIdx !== -1) {
+    const gap = Math.abs(aRelIdx - bRelIdx);
+    if (gap > 0) {
+      const moreReligiousIdx = Math.max(aRelIdx, bRelIdx);
+      const basePenalty = gap === 1 ? 8 : gap === 2 ? 20 : 35;
+      // amplifier: 0.5 (least religious) → 1.0 (very religious)
+      const amplifier = 0.5 + 0.5 * (moreReligiousIdx / (religiousScale.length - 1));
+      penalties += Math.round(basePenalty * amplifier);
+    }
+  }
+
+  // Cleanliness: asymmetric — what matters is how much a person's actual
+  // cleanliness falls short of the partner's expectations, in both directions.
+  const cleanConflict =
+    Math.max(0, a.cleanliness_expectations - b.cleanliness) +
+    Math.max(0, b.cleanliness_expectations - a.cleanliness);
+  if (cleanConflict >= 5) penalties += 22;
+  else if (cleanConflict >= 3) penalties += 14;
+  else if (cleanConflict >= 2) penalties += 8;
+  else if (cleanConflict >= 1) penalties += 3;
+
+  // Sleep schedule: Early bird vs Night owl is a concrete daily conflict.
+  const aSleepIdx = sleepScale.indexOf(a.sleep_schedule);
+  const bSleepIdx = sleepScale.indexOf(b.sleep_schedule);
+  if (aSleepIdx !== -1 && bSleepIdx !== -1) {
+    const sleepGap = Math.abs(aSleepIdx - bSleepIdx);
+    if (sleepGap === 2) penalties += 18; // Early bird ↔ Night owl
+    else if (sleepGap === 1) penalties += 5;
+  }
+
+  // Budget: extreme gap means they won't realistically target the same flat.
+  if (a.budget > 0 && b.budget > 0) {
+    const avg = (a.budget + b.budget) / 2;
+    const ratio = Math.abs(a.budget - b.budget) / avg;
+    if (ratio > 0.6) penalties += 12;
+    else if (ratio > 0.4) penalties += 7;
+    else if (ratio > 0.25) penalties += 3;
+  }
+
+  // ─── Layer 2: Base compatibility score ────────────────────────────────────
+  // Smoking and religion are excluded here — they're handled as deal-breakers.
+
   const scores: { weight: number; score: number }[] = [];
 
-  // Sleep schedule (important) 
-  scores.push({ weight: 12, score: exactMatch(a.sleep_schedule, b.sleep_schedule) });
+  // Social level (15%)
+  scores.push({ weight: 15, score: numericSimilarity(a.social_level, b.social_level, 4) });
 
-  // Cleanliness (very important)
-  scores.push({ weight: 15, score: numericSimilarity(a.cleanliness, b.cleanliness, 4) });
+  // Noise level (13%)
+  scores.push({ weight: 13, score: numericSimilarity(a.noise_level, b.noise_level, 4) });
 
-  // Social level
-  scores.push({ weight: 10, score: numericSimilarity(a.social_level, b.social_level, 4) });
+  // Lifestyle vibe (10%)
+  scores.push({ weight: 10, score: exactMatch(a.lifestyle_vibe, b.lifestyle_vibe) });
 
-  // Noise level
-  scores.push({ weight: 10, score: numericSimilarity(a.noise_level, b.noise_level, 4) });
+  // Guests frequency (8%)
+  scores.push({ weight: 8, score: ordinalMatch(a.guests, b.guests, frequencyScale) });
 
-  // Smoking (deal-breaker weight)
-  scores.push({ weight: 15, score: a.smoking === b.smoking ? 1 : 0.1 });
+  // Partying (8%)
+  scores.push({ weight: 8, score: ordinalMatch(a.partying, b.partying, frequencyScale) });
 
-  // Pets 
-  scores.push({ weight: 8, score: a.pets === b.pets ? 1 : 0.5 });
+  // WFH (7%) — both WFH means shared kitchen/space during the day, relevant
+  scores.push({ weight: 7, score: a.wfh === b.wfh ? 1 : 0.6 });
 
-  // WFH compatibility
-  scores.push({ weight: 5, score: a.wfh === b.wfh ? 1 : 0.7 });
+  // Cooking habits (6%)
+  scores.push({ weight: 6, score: ordinalMatch(a.cooking_habits, b.cooking_habits, frequencyScale) });
 
-  // Budget similarity
-  scores.push({ weight: 8, score: numericSimilarity(a.budget, b.budget, 5000) });
+  // Activity hours (5%) — both Flexible = perfect, one Flexible = good, mismatch = low
+  const aFlex = a.activity_hours === "Flexible";
+  const bFlex = b.activity_hours === "Flexible";
+  const actScore =
+    aFlex && bFlex ? 1 :
+    aFlex || bFlex ? 0.8 :
+    a.activity_hours === b.activity_hours ? 1 : 0.3;
+  scores.push({ weight: 5, score: actScore });
 
-  // Cooking habits
-  scores.push({ weight: 3, score: ordinalMatch(a.cooking_habits, b.cooking_habits, frequencyScale) });
+  // Shared space org (4%)
+  scores.push({ weight: 4, score: ordinalMatch(a.shared_space_org, b.shared_space_org, orgScale) });
 
-  // Shared space org
-  scores.push({ weight: 5, score: ordinalMatch(a.shared_space_org, b.shared_space_org, orgScale) });
+  // Alcohol (4%)
+  scores.push({ weight: 4, score: ordinalMatch(a.alcohol, b.alcohol, alcoholScale) });
 
-  // Religious level
-  scores.push({ weight: 4, score: ordinalMatch(a.religious_level, b.religious_level, religiousScale) });
-
-  // Alcohol
-  scores.push({ weight: 3, score: ordinalMatch(a.alcohol, b.alcohol, alcoholScale) });
-
-  // Partying
-  scores.push({ weight: 5, score: ordinalMatch(a.partying, b.partying, frequencyScale) });
-
-  // Guests
-  scores.push({ weight: 3, score: ordinalMatch(a.guests, b.guests, frequencyScale) });
-
-  // Lifestyle vibe
-  scores.push({ weight: 7, score: exactMatch(a.lifestyle_vibe, b.lifestyle_vibe) });
-
-  // Age preference check (bonus/penalty)
+  // Age range mutual fit (3%)
   if (a.age && b.age) {
     const aInRange = b.age >= a.preferred_age_min && b.age <= a.preferred_age_max;
     const bInRange = a.age >= b.preferred_age_min && a.age <= b.preferred_age_max;
-    scores.push({ weight: 5, score: (aInRange ? 0.5 : 0) + (bInRange ? 0.5 : 0) });
+    scores.push({ weight: 3, score: (aInRange ? 0.5 : 0) + (bInRange ? 0.5 : 0) });
   }
 
   const totalWeight = scores.reduce((sum, s) => sum + s.weight, 0);
   const weightedSum = scores.reduce((sum, s) => sum + s.weight * s.score, 0);
+  const baseScore = (weightedSum / totalWeight) * 100;
 
-  return Math.round((weightedSum / totalWeight) * 100);
+  return Math.max(5, Math.round(baseScore - penalties));
 }
 
 /**
@@ -123,7 +194,6 @@ export function calculateRoomMatch(
   roomPrice: number,
   roommateProfiles: ProfileData[]
 ): number {
-  // Room compatibility (budget match)
   const budgetDiff = Math.abs(userProfile.budget - roomPrice);
   const budgetScore = Math.max(0, 1 - budgetDiff / 3000);
 
@@ -131,7 +201,6 @@ export function calculateRoomMatch(
     return Math.round(budgetScore * 100);
   }
 
-  // Average roommate compatibility
   const roommateScores = roommateProfiles.map((rm) => calculateUserMatch(userProfile, rm));
   const avgRoommateMatch = roommateScores.reduce((a, b) => a + b, 0) / roommateScores.length;
 
@@ -157,10 +226,10 @@ export function calculateSquadMatch(
     Math.abs(userProfile.budget - squad.budget_max)
   ) / 2000);
 
-  // 2. Preference alignment (20%) — deal-breakers
+  // 2. Preference alignment (20%) — squad hard rules
   let prefScore = 1;
-  if (squad.no_smoking && userProfile.smoking) prefScore -= 0.4;
-  if (!squad.pet_friendly && userProfile.pets) prefScore -= 0.2;
+  if (squad.no_smoking && userProfile.smoking_preference === "I smoke") prefScore -= 0.4;
+  if (!squad.pet_friendly && userProfile.pet_preference === "I have pets") prefScore -= 0.2;
   if (userProfile.cleanliness < squad.min_cleanliness) {
     prefScore -= 0.3 * (squad.min_cleanliness - userProfile.cleanliness) / 4;
   }
@@ -173,7 +242,7 @@ export function calculateSquadMatch(
   prefScore = Math.max(0, prefScore);
 
   // 3. Member compatibility (60%)
-  let memberScore = 0.75; // default when no members to compare
+  let memberScore = 0.75;
   if (memberProfiles.length > 0) {
     const scores = memberProfiles.map((m) => calculateUserMatch(userProfile, m));
     memberScore = scores.reduce((a, b) => a + b, 0) / scores.length / 100;
