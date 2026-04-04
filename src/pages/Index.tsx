@@ -41,6 +41,18 @@ export default function Index() {
         if (filters.pets === "no" && hasPetRoommate) return false;
         if (filters.pets === "yes" && !hasPetRoommate) return false;
       }
+      if (filters.sleepSchedule !== "any" && apt.roommates.length > 0) {
+        const scheduleMap: Record<string, string> = { early: "Early bird", night: "Night owl", flexible: "Flexible" };
+        const target = scheduleMap[filters.sleepSchedule];
+        if (!apt.roommates.some((r) => r.sleepSchedule === target)) return false;
+      }
+      if (filters.cleanlinessMin > 1 && apt.roommates.length > 0) {
+        if (!apt.roommates.every((r) => r.cleanliness >= filters.cleanlinessMin)) return false;
+      }
+      if (filters.wfh !== "any" && apt.roommates.length > 0) {
+        if (filters.wfh === "yes" && !apt.roommates.some((r) => r.wfh)) return false;
+        if (filters.wfh === "no" && apt.roommates.some((r) => r.wfh)) return false;
+      }
       return true;
     });
   }, [search, filters]);
