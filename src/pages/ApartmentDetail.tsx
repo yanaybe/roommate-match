@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
-  Heart,
+  Bookmark,
   Share2,
   MapPin,
   Bed,
@@ -18,6 +18,9 @@ import {
 import { mockApartments, mockUsers, type UserProfile, getMatchColor, getMatchTextColor } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { isUUID, getMockSavedApartmentKey } from "@/lib/profileUtils";
 
 function RoommateProfileModal({
   user,
@@ -116,9 +119,35 @@ export default function ApartmentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { requireAuth } = useRequireAuth();
+  const { user } = useAuth();
   const [imgIndex, setImgIndex] = useState(0);
-  const [liked, setLiked] = useState(false);
+  const apartmentIsUuid = id ? isUUID(id) : false;
+  const [saved, setSaved] = useState(false);
   const [selectedRoommate, setSelectedRoommate] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    if (!user || !id) { setSaved(false); return; }
+    if (!apartmentIsUuid) {
+      try { setSaved(localStorage.getItem(getMockSavedApartmentKey(user.id, id)) === "true"); } catch { setSaved(false); }
+      return;
+    }
+    supabase.from("saved_apartments").select("id").eq("user_id", user.id).eq("apartment_id", id).maybeSingle().then(({ data }) => setSaved(Boolean(data)));
+  }, [user, id, apartmentIsUuid]);
+
+  const toggleSave = async () => {
+    if (!user || !id) return;
+    const newSaved = !saved;
+    setSaved(newSaved);
+    if (!apartmentIsUuid) {
+      localStorage.setItem(getMockSavedApartmentKey(user.id, id), String(newSaved));
+      return;
+    }
+    if (newSaved) {
+      await supabase.from("saved_apartments").upsert({ user_id: user.id, apartment_id: id }, { onConflict: "user_id,apartment_id" });
+    } else {
+      await supabase.from("saved_apartments").delete().eq("user_id", user.id).eq("apartment_id", id);
+    }
+  };
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -180,11 +209,11 @@ export default function ApartmentDetail() {
               <Share2 className="w-4 h-4 text-foreground" />
             </button>
             <button
-              onClick={() => requireAuth(() => setLiked(!liked))}
+              onClick={() => requireAuth(() => toggleSave())}
               className="bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg"
             >
-              <Heart
-                className={`w-4 h-4 ${liked ? "fill-primary text-primary" : "text-foreground"}`}
+              <Bookmark
+                className={`w-4 h-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`}
               />
             </button>
           </div>
