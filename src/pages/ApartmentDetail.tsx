@@ -148,7 +148,6 @@ export default function ApartmentDetail() {
       await supabase.from("saved_apartments").delete().eq("user_id", user.id).eq("apartment_id", id);
     }
   };
-  const [selectedRoommate, setSelectedRoommate] = useState<UserProfile | null>(null);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
