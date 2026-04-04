@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, SlidersHorizontal } from "lucide-react";
+import { X } from "lucide-react";
 
 export interface Filters {
   budgetMin: number;
@@ -13,6 +13,11 @@ export interface Filters {
   smoking: "any" | "no" | "yes";
   pets: "any" | "no" | "yes";
   roomType: "any" | "private" | "shared";
+  religiousLevel: "any" | "secular" | "traditional" | "religious";
+  sleepSchedule: "any" | "early" | "night" | "flexible";
+  cleanlinessMin: number;
+  wfh: "any" | "yes" | "no";
+  furnished: "any" | "yes" | "no";
 }
 
 export const defaultFilters: Filters = {
@@ -26,6 +31,11 @@ export const defaultFilters: Filters = {
   smoking: "any",
   pets: "any",
   roomType: "any",
+  religiousLevel: "any",
+  sleepSchedule: "any",
+  cleanlinessMin: 1,
+  wfh: "any",
+  furnished: "any",
 };
 
 const allAmenities = ["Balcony", "AC", "Laundry", "WiFi", "Rooftop", "Parking", "Gym", "Elevator", "Security", "Garden"];
@@ -36,6 +46,32 @@ interface FilterModalProps {
   filters: Filters;
   onApply: (f: Filters) => void;
 }
+
+const TriButton = ({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) => (
+  <div className="flex gap-1">
+    {options.map((opt) => (
+      <button
+        key={opt.value}
+        onClick={() => onChange(opt.value)}
+        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          value === opt.value
+            ? "gradient-primary text-primary-foreground"
+            : "bg-secondary text-secondary-foreground"
+        }`}
+      >
+        {opt.label}
+      </button>
+    ))}
+  </div>
+);
 
 export default function FilterModal({ open, onClose, filters, onApply }: FilterModalProps) {
   const [local, setLocal] = useState<Filters>(filters);
@@ -70,6 +106,11 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
     if (local.smoking !== "any") c++;
     if (local.pets !== "any") c++;
     if (local.roomType !== "any") c++;
+    if (local.religiousLevel !== "any") c++;
+    if (local.sleepSchedule !== "any") c++;
+    if (local.cleanlinessMin > 1) c++;
+    if (local.wfh !== "any") c++;
+    if (local.furnished !== "any") c++;
     return c;
   })();
 
@@ -204,48 +245,128 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                 </div>
               </div>
 
+              {/* Furnished */}
+              <div>
+                <label className="text-sm font-semibold text-foreground block mb-2">
+                  Apartment Preferences
+                </label>
+                <div>
+                  <span className="text-xs text-muted-foreground mb-1 block">Furnished</span>
+                  <TriButton
+                    options={[
+                      { value: "any", label: "Any" },
+                      { value: "yes", label: "Yes" },
+                      { value: "no", label: "No" },
+                    ]}
+                    value={local.furnished}
+                    onChange={(v) => update("furnished", v as Filters["furnished"])}
+                  />
+                </div>
+              </div>
+
               {/* Lifestyle */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
                   Lifestyle Preferences
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <span className="text-xs text-muted-foreground mb-1 block">Smoking</span>
-                    <div className="flex gap-1">
-                      {(["any", "no", "yes"] as const).map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => update("smoking", opt)}
-                          className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                            local.smoking === opt
-                              ? "gradient-primary text-primary-foreground"
-                              : "bg-secondary text-secondary-foreground"
-                          }`}
-                        >
-                          {opt === "any" ? "Any" : opt === "no" ? "No" : "Yes"}
-                        </button>
-                      ))}
-                    </div>
+                    <TriButton
+                      options={[
+                        { value: "any", label: "Any" },
+                        { value: "no", label: "No" },
+                        { value: "yes", label: "Yes" },
+                      ]}
+                      value={local.smoking}
+                      onChange={(v) => update("smoking", v as Filters["smoking"])}
+                    />
                   </div>
                   <div>
                     <span className="text-xs text-muted-foreground mb-1 block">Pets</span>
-                    <div className="flex gap-1">
-                      {(["any", "no", "yes"] as const).map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => update("pets", opt)}
-                          className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                            local.pets === opt
-                              ? "gradient-primary text-primary-foreground"
-                              : "bg-secondary text-secondary-foreground"
-                          }`}
-                        >
-                          {opt === "any" ? "Any" : opt === "no" ? "No" : "Yes"}
-                        </button>
-                      ))}
-                    </div>
+                    <TriButton
+                      options={[
+                        { value: "any", label: "Any" },
+                        { value: "no", label: "No" },
+                        { value: "yes", label: "Yes" },
+                      ]}
+                      value={local.pets}
+                      onChange={(v) => update("pets", v as Filters["pets"])}
+                    />
                   </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground mb-1 block">Work from Home</span>
+                    <TriButton
+                      options={[
+                        { value: "any", label: "Any" },
+                        { value: "yes", label: "Yes" },
+                        { value: "no", label: "No" },
+                      ]}
+                      value={local.wfh}
+                      onChange={(v) => update("wfh", v as Filters["wfh"])}
+                    />
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground mb-1 block">Religious Level</span>
+                    <TriButton
+                      options={[
+                        { value: "any", label: "Any" },
+                        { value: "secular", label: "Secular" },
+                        { value: "traditional", label: "Trad." },
+                        { value: "religious", label: "Religious" },
+                      ]}
+                      value={local.religiousLevel}
+                      onChange={(v) => update("religiousLevel", v as Filters["religiousLevel"])}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sleep Schedule */}
+              <div>
+                <label className="text-sm font-semibold text-foreground block mb-2">
+                  Sleep Schedule
+                </label>
+                <div className="flex gap-2">
+                  {([
+                    { value: "any", label: "Any" },
+                    { value: "early", label: "Early Bird" },
+                    { value: "night", label: "Night Owl" },
+                    { value: "flexible", label: "Flexible" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => update("sleepSchedule", opt.value)}
+                      className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${
+                        local.sleepSchedule === opt.value
+                          ? "gradient-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Min Cleanliness */}
+              <div>
+                <label className="text-sm font-semibold text-foreground block mb-2">
+                  Min. Roommate Cleanliness
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={1}
+                    max={5}
+                    step={1}
+                    value={local.cleanlinessMin}
+                    onChange={(e) => update("cleanlinessMin", Number(e.target.value))}
+                    className="flex-1 accent-primary"
+                  />
+                  <span className="text-sm font-bold text-primary w-8 text-right">
+                    {local.cleanlinessMin}/5
+                  </span>
                 </div>
               </div>
 
