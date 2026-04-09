@@ -140,6 +140,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               </button>
             </div>
 
+            <div className="flex-1 overflow-y-auto">
             <div className="px-5 py-4 space-y-6">
               {/* Budget Range */}
               <div>
