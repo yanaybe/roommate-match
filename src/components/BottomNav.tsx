@@ -33,7 +33,7 @@ export default function BottomNav() {
             <button
               key={tab.path}
               onClick={() => navigate(tab.path)}
-              className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full"
+              className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full cursor-pointer"
             >
               {isCreate ? (
                 <div className="gradient-primary rounded-2xl p-2.5 -mt-4 shadow-elevated">
