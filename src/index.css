@@ -93,6 +93,9 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+  button, a, [role="button"], input[type="submit"], input[type="button"], summary {
+    cursor: pointer;
+  }
 }
 
 @layer utilities {
