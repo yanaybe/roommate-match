@@ -393,9 +393,10 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                 </div>
               </div>
             </div>
+            </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-card border-t border-border px-5 py-4 flex gap-3 z-20">
+            <div className="bg-card border-t border-border px-5 py-4 flex gap-3 shrink-0">
               <button
                 onClick={handleReset}
                 className="flex-1 py-3.5 rounded-xl text-sm font-bold bg-secondary text-secondary-foreground active:scale-95 transition-transform"
