@@ -73,7 +73,7 @@ export function useAllProfiles() {
     if (fetchError) {
       setError(fetchError.message);
     } else {
-      const batch = (data as FullProfile[]) ?? [];
+      const batch = (data as unknown as FullProfile[]) ?? [];
       setProfiles((prev) => (pageNum === 0 ? batch : [...prev, ...batch]));
       setHasMore(batch.length === PAGE_SIZE);
     }

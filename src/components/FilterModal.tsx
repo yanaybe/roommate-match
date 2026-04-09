@@ -129,7 +129,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl max-h-[85vh] overflow-y-auto pb-24"
+            className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -140,6 +140,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               </button>
             </div>
 
+            <div className="flex-1 overflow-y-auto">
             <div className="px-5 py-4 space-y-6">
               {/* Budget Range */}
               <div>
@@ -392,9 +393,10 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                 </div>
               </div>
             </div>
+            </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-card border-t border-border px-5 py-4 flex gap-3 z-20">
+            <div className="bg-card border-t border-border px-5 py-4 flex gap-3 shrink-0">
               <button
                 onClick={handleReset}
                 className="flex-1 py-3.5 rounded-xl text-sm font-bold bg-secondary text-secondary-foreground active:scale-95 transition-transform"
