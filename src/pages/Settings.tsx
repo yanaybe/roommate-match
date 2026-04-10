@@ -208,7 +208,7 @@ export default function Settings() {
               icon={Receipt}
               label={t("billingHistory")}
               desc={t("billingHistoryDesc")}
-              onClick={() => {}}
+              onClick={() => navigate("/billing-history")}
             />
           </div>
         </section>
