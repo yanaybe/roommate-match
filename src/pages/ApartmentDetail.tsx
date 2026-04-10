@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageCircle,
+  MoreVertical,
+  Flag,
 } from "lucide-react";
 import { mockApartments, mockUsers, type UserProfile, getMatchColor, getMatchTextColor } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
@@ -22,6 +24,8 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { isUUID, getMockSavedApartmentKey } from "@/lib/profileUtils";
+import { useBlockReport } from "@/hooks/useBlockReport";
+import ReportSheet from "@/components/ReportSheet";
 
 function RoommateProfileModal({
   user,
@@ -122,7 +126,10 @@ export default function ApartmentDetail() {
   const { requireAuth } = useRequireAuth();
   const { user } = useAuth();
   const { canSave, savesLimit, recordSave, openPremiumSheet } = useDailyLimits();
+  const { reportListing } = useBlockReport();
   const [imgIndex, setImgIndex] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const apartmentIsUuid = id ? isUUID(id) : false;
   const [saved, setSaved] = useState(false);
   const [selectedRoommate, setSelectedRoommate] = useState<UserProfile | null>(null);
@@ -226,6 +233,25 @@ export default function ApartmentDetail() {
                 className={`w-4 h-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`}
               />
             </button>
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen((v) => !v)}
+                className="bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg"
+              >
+                <MoreVertical className="w-4 h-4 text-foreground" />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-11 w-44 bg-card rounded-2xl shadow-elevated border border-border/50 overflow-hidden z-50">
+                  <button
+                    onClick={() => { setMenuOpen(false); setReportOpen(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                  >
+                    <Flag size={15} className="text-destructive shrink-0" />
+                    <span className="text-foreground">Report listing</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Image arrows */}
@@ -416,6 +442,13 @@ export default function ApartmentDetail() {
           onClose={() => setSelectedRoommate(null)}
         />
       )}
+
+      <ReportSheet
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        targetName="this listing"
+        onSubmit={(reason, details) => reportListing(id!, reason, details)}
+      />
     </div>
   );
 }

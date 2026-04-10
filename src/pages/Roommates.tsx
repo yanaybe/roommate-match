@@ -7,6 +7,7 @@ import MatchModal from "@/components/MatchModal";
 import { mockUsers, type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
+import { fetchBlockedIds } from "@/hooks/useBlockReport";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useDailyLimits } from "@/hooks/useDailyLimits";
 import { calculateUserMatch } from "@/lib/matching";
@@ -71,9 +72,15 @@ export default function Roommates() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [swiped, setSwiped] = useState<string[]>([]);
+  const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
   const { canLike, likesUsed, likesLimit, recordLike, openPremiumSheet } = useDailyLimits();
+
+  useEffect(() => {
+    if (!user?.id) return;
+    fetchBlockedIds(user.id).then(setBlockedIds);
+  }, [user?.id]);
 
   // Load recently swiped IDs (within 7 days) from localStorage + DB liked_profiles
   useEffect(() => {
@@ -115,7 +122,9 @@ export default function Roommates() {
     ? mockUsers.map((u, i) => ({ user: u, matchPercent: mockMatchPercents[i] ?? 75 }))
     : otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent }));
 
-  const remaining = items.filter((item) => !swiped.includes(item.user.id));
+  const remaining = items.filter(
+    (item) => !swiped.includes(item.user.id) && !blockedIds.includes(item.user.id)
+  );
 
   const requireAuth = useCallback(() => {
     if (!user) {

@@ -3,8 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Check, CheckCheck, Trash2 } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Trash2, MoreVertical, Ban, Flag } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useBlockReport } from "@/hooks/useBlockReport";
+import ReportSheet from "@/components/ReportSheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +46,11 @@ export default function Chats() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [chatMenuOpen, setChatMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+
+  const activeConvData = conversations.find((c) => c.id === activeConv);
+  const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(activeConvData?.other_user_id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -324,11 +331,55 @@ export default function Chats() {
                 </span>
               </div>
             )}
-            <div>
+            <div className="flex-1">
               <h2 className="font-bold text-foreground text-sm">
                 {conv?.other_name}
               </h2>
               <p className="text-muted-foreground text-xs">{t("online")}</p>
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setChatMenuOpen((v) => !v)}
+                className="p-2 rounded-full hover:bg-muted/50 transition-colors"
+              >
+                <MoreVertical className="w-5 h-5 text-muted-foreground" />
+              </button>
+              {chatMenuOpen && (
+                <div className="absolute right-0 top-10 w-48 bg-card rounded-2xl shadow-elevated border border-border/50 overflow-hidden z-50">
+                  <button
+                    onClick={() => {
+                      setChatMenuOpen(false);
+                      if (isBlocked) {
+                        unblockUser();
+                      } else {
+                        blockUser().then((ok) => {
+                          if (ok) { setActiveConv(null); loadConversations(); }
+                        });
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                  >
+                    <Ban size={15} className="text-destructive shrink-0" />
+                    <span className="text-foreground">{isBlocked ? "Unblock user" : "Block user"}</span>
+                  </button>
+                  <div className="border-t border-border/40" />
+                  <button
+                    onClick={() => { setChatMenuOpen(false); setReportOpen(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                  >
+                    <Flag size={15} className="text-destructive shrink-0" />
+                    <span className="text-foreground">Report user</span>
+                  </button>
+                  <div className="border-t border-border/40" />
+                  <button
+                    onClick={() => { setChatMenuOpen(false); setDeleteTarget(activeConv); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                  >
+                    <Trash2 size={15} className="text-destructive shrink-0" />
+                    <span className="text-foreground">Delete chat</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -394,6 +445,13 @@ export default function Chats() {
             </button>
           </div>
         </div>
+
+        <ReportSheet
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          targetName={activeConvData?.other_name ?? "this user"}
+          onSubmit={(reason, details) => reportUser(reason, details)}
+        />
       </div>
     );
   }

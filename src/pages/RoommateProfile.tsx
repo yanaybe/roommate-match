@@ -5,7 +5,8 @@ import {
   ArrowLeft, MapPin, Briefcase, Moon, Sun, Sparkles, Heart,
   MessageCircle, DollarSign, Home, Users, Volume2, Cigarette,
   Dog, Wifi, ChevronLeft, ChevronRight, UtensilsCrossed, Dumbbell,
-  Wine, PartyPopper, Bed, Clock, BookOpen, Smile
+  Wine, PartyPopper, Bed, Clock, BookOpen, Smile,
+  MoreVertical, Ban, Flag
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import MatchBadge from "@/components/MatchBadge";
@@ -15,6 +16,8 @@ import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile
 import { calculateUserMatch } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useBlockReport } from "@/hooks/useBlockReport";
+import ReportSheet from "@/components/ReportSheet";
 
 function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
   const photos = (p as any).photos as string[] | undefined;
@@ -56,6 +59,9 @@ export default function RoommateProfile() {
   const { profile: myProfile } = useProfile();
   const { profiles: allProfiles } = useAllProfiles();
   const [imgIndex, setImgIndex] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(id);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -165,7 +171,38 @@ export default function RoommateProfile() {
           >
             <ArrowLeft size={20} className="text-foreground" />
           </button>
-          <MatchBadge percent={matchPercent} size="lg" />
+          <div className="flex items-center gap-2">
+            <MatchBadge percent={matchPercent} size="lg" />
+            {authUser && userData.id !== authUser.id && (
+              <div className="relative">
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center"
+                >
+                  <MoreVertical size={18} className="text-foreground" />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-12 w-44 bg-card rounded-2xl shadow-elevated border border-border/50 overflow-hidden z-50">
+                    <button
+                      onClick={() => { setMenuOpen(false); isBlocked ? unblockUser() : blockUser().then((ok) => ok && navigate(-1)); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                    >
+                      <Ban size={15} className="text-destructive shrink-0" />
+                      <span className="text-foreground">{isBlocked ? "Unblock user" : "Block user"}</span>
+                    </button>
+                    <div className="border-t border-border/40" />
+                    <button
+                      onClick={() => { setMenuOpen(false); setReportOpen(true); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                    >
+                      <Flag size={15} className="text-destructive shrink-0" />
+                      <span className="text-foreground">Report user</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Photo nav */}
@@ -342,6 +379,12 @@ export default function RoommateProfile() {
         </motion.div>
       </div>
 
+      <ReportSheet
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        targetName={userData.name}
+        onSubmit={(reason, details) => reportUser(reason, details)}
+      />
     </div>
   );
 }
