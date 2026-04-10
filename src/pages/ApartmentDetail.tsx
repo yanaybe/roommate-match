@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDailyLimits } from "@/hooks/useDailyLimits";
 import {
   ArrowLeft,
   Bookmark,
@@ -120,6 +121,7 @@ export default function ApartmentDetail() {
   const navigate = useNavigate();
   const { requireAuth } = useRequireAuth();
   const { user } = useAuth();
+  const { canSave, savesLimit, recordSave, openPremiumSheet } = useDailyLimits();
   const [imgIndex, setImgIndex] = useState(0);
   const apartmentIsUuid = id ? isUUID(id) : false;
   const [saved, setSaved] = useState(false);
@@ -137,6 +139,13 @@ export default function ApartmentDetail() {
   const toggleSave = async () => {
     if (!user || !id) return;
     const newSaved = !saved;
+
+    if (newSaved && !canSave) {
+      toast.error(`You've reached your ${savesLimit} daily saves. Upgrade to save more.`);
+      openPremiumSheet();
+      return;
+    }
+
     setSaved(newSaved);
     if (!apartmentIsUuid) {
       localStorage.setItem(getMockSavedApartmentKey(user.id, id), String(newSaved));
@@ -144,6 +153,7 @@ export default function ApartmentDetail() {
     }
     if (newSaved) {
       await supabase.from("saved_apartments").upsert({ user_id: user.id, apartment_id: id }, { onConflict: "user_id,apartment_id" });
+      recordSave();
     } else {
       await supabase.from("saved_apartments").delete().eq("user_id", user.id).eq("apartment_id", id);
     }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Crown, CreditCard, Receipt, ChevronRight, TrendingUp,
@@ -10,8 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Switch } from "@/components/ui/switch";
 import PremiumSheet from "@/components/PremiumSheet";
 import { useLanguage, languages } from "@/hooks/useLanguage";
-
-const currentPlan = "Free"; // Will be dynamic once Stripe is integrated
+import { supabase } from "@/integrations/supabase/client";
 
 function SectionHeader({ title }: { title: string }) {
   return (
@@ -122,7 +121,21 @@ export default function Settings() {
   const [darkMode, setDarkMode] = useState(() =>
     document.documentElement.classList.contains("dark")
   );
+  const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
 
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setSubscriptionTier((data as any).subscription_tier ?? "free");
+      });
+  }, [user]);
+
+  const currentPlan = subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1);
   const PlanIcon = planIcons[currentPlan] || Zap;
 
   const toggleDarkMode = (enabled: boolean) => {

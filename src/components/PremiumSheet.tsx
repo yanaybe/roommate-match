@@ -1,17 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown, Star, Gem, Zap, Check, Lock, Heart, MessageCircle,
-  Eye, Undo2, Filter, TrendingUp, BadgeCheck, Rocket, ChevronRight
+  Eye, Undo2, Filter, TrendingUp, BadgeCheck, Rocket, ChevronRight, Loader2
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { initializePaddle, type Paddle } from "@paddle/paddle-js";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface PremiumSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+// ---------------------------------------------------------------------------
+// Paddle config — set these in your .env file:
+//   VITE_PADDLE_CLIENT_TOKEN=live_xxxxxxxxxxxx  (or test_xxx for sandbox)
+//   VITE_PADDLE_ENV=production                  (or "sandbox")
+//   VITE_PADDLE_PRICE_PLUS=pri_xxxx
+//   VITE_PADDLE_PRICE_GOLD=pri_xxxx
+//   VITE_PADDLE_PRICE_PLATINUM=pri_xxxx
+// ---------------------------------------------------------------------------
+const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN as string;
+const PADDLE_ENV = (import.meta.env.VITE_PADDLE_ENV ?? "sandbox") as "sandbox" | "production";
+
+const PRICE_IDS: Record<string, string> = {
+  plus: import.meta.env.VITE_PADDLE_PRICE_PLUS as string,
+  gold: import.meta.env.VITE_PADDLE_PRICE_GOLD as string,
+  platinum: import.meta.env.VITE_PADDLE_PRICE_PLATINUM as string,
+};
 
 const plans = [
   {
@@ -69,14 +89,14 @@ const plans = [
 ];
 
 const boosts = [
-  { label: "1 Day Boost", price: 10, desc: "Profile/listing boost for 24h" },
-  { label: "1 Week Boost", price: 50, desc: "7 days of higher visibility" },
-  { label: "1 Month Boost", price: 150, desc: "30 days at the top" },
+  { label: "1 Day Boost", priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_DAY as string, price: 10, desc: "Profile/listing boost for 24h" },
+  { label: "1 Week Boost", priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_WEEK as string, price: 50, desc: "7 days of higher visibility" },
+  { label: "1 Month Boost", priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_MONTH as string, price: 150, desc: "30 days at the top" },
 ];
 
 const extras = [
-  { label: "Instant Message", price: 5, desc: "Message without matching", icon: MessageCircle },
-  { label: "Profile Highlight", price: 7, desc: "Stand out in search", icon: Star },
+  { label: "Instant Message", priceId: import.meta.env.VITE_PADDLE_PRICE_INSTANT_MSG as string, price: 5, desc: "Message without matching", icon: MessageCircle },
+  { label: "Profile Highlight", priceId: import.meta.env.VITE_PADDLE_PRICE_HIGHLIGHT as string, price: 7, desc: "Stand out in search", icon: Star },
 ];
 
 const freeFeatures = [
@@ -96,7 +116,62 @@ const freeLimitations = [
 ];
 
 export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) {
+  const { user } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<string>("gold");
+  const [paddle, setPaddle] = useState<Paddle | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!PADDLE_CLIENT_TOKEN) return;
+    initializePaddle({
+      environment: PADDLE_ENV,
+      token: PADDLE_CLIENT_TOKEN,
+    }).then((p) => {
+      if (p) setPaddle(p);
+    });
+  }, []);
+
+  const openCheckout = useCallback(
+    async (priceId: string) => {
+      if (!paddle) {
+        toast.error("Payment system not ready. Please try again.");
+        return;
+      }
+      if (!priceId) {
+        toast.error("This plan is not available yet.");
+        return;
+      }
+      if (!user) {
+        toast.error("Please sign in first.");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        paddle.Checkout.open({
+          items: [{ priceId, quantity: 1 }],
+          customer: { email: user.email! },
+          customData: { user_id: user.id },
+          settings: {
+            displayMode: "overlay",
+            theme: "dark",
+            locale: "en",
+          },
+        });
+        onOpenChange(false);
+      } catch (err) {
+        console.error("Paddle checkout error:", err);
+        toast.error("Could not open checkout. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [paddle, user, onOpenChange]
+  );
+
+  const handleSubscribe = () => {
+    openCheckout(PRICE_IDS[selectedPlan]);
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -259,10 +334,16 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
               {/* Subscribe CTA */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                className="w-full mt-4 py-3.5 rounded-xl font-bold text-sm text-primary-foreground flex items-center justify-center gap-2 shadow-lg"
+                onClick={handleSubscribe}
+                disabled={loading}
+                className="w-full mt-4 py-3.5 rounded-xl font-bold text-sm text-primary-foreground flex items-center justify-center gap-2 shadow-lg disabled:opacity-70"
                 style={{ background: "var(--gradient-primary)" }}
               >
-                <Crown className="w-4 h-4" />
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Crown className="w-4 h-4" />
+                )}
                 Get {plans.find((p) => p.id === selectedPlan)?.name} — ₪
                 {plans.find((p) => p.id === selectedPlan)?.price}/mo
               </motion.button>
@@ -283,6 +364,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                   {boosts.map((b) => (
                     <button
                       key={b.label}
+                      onClick={() => b.priceId && openCheckout(b.priceId)}
                       className="bg-card border border-border rounded-xl p-3 text-center hover:border-primary/50 transition-colors shadow-card"
                     >
                       <Rocket className="w-4 h-4 text-primary mx-auto mb-1" />
@@ -299,6 +381,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                   return (
                     <button
                       key={e.label}
+                      onClick={() => e.priceId && openCheckout(e.priceId)}
                       className="w-full flex items-center gap-3 bg-card border border-border rounded-xl p-3 hover:border-primary/50 transition-colors shadow-card"
                     >
                       <div className="p-2 rounded-lg bg-primary/10">

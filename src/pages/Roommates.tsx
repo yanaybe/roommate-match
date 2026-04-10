@@ -137,6 +137,13 @@ export default function Roommates() {
       const current = remaining[0];
       if (!current) return;
 
+      // Check limit before consuming the card so the user doesn't lose their swipe
+      if (direction === "right" && user && !canLike) {
+        toast.error(`You've reached your ${likesLimit} daily likes. Upgrade to like more.`);
+        openPremiumSheet();
+        return;
+      }
+
       setSwiped((prev) => [...prev, current.user.id]);
 
       // Persist swipe timestamp for 7-day cooldown
@@ -147,11 +154,6 @@ export default function Roommates() {
       }
 
       if (direction === "right" && user) {
-        if (!canLike) {
-          toast.error(`You've reached your ${likesLimit} daily likes. Upgrade to like more.`);
-          openPremiumSheet();
-          return;
-        }
 
         if (isUUID(current.user.id)) {
           await supabase.from("liked_profiles").upsert(
