@@ -7,6 +7,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import { UnreadCountProvider } from "@/hooks/useUnreadCount";
 import { DailyLimitsProvider } from "@/hooks/useDailyLimits";
+import { NotificationsProvider } from "@/hooks/useNotifications";
+import NotificationToaster from "@/components/NotificationToaster";
 import BottomNav from "@/components/BottomNav";
 import Index from "./pages/Index";
 import Roommates from "./pages/Roommates";
@@ -38,10 +40,12 @@ const App = () => (
       <AuthProvider>
         <LanguageProvider>
         <UnreadCountProvider>
+        <NotificationsProvider>
         <DailyLimitsProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <NotificationToaster />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/apartment/:id" element={<ApartmentDetail />} />
@@ -68,6 +72,7 @@ const App = () => (
             <BottomNav />
           </BrowserRouter>
         </DailyLimitsProvider>
+        </NotificationsProvider>
         </UnreadCountProvider>
         </LanguageProvider>
       </AuthProvider>

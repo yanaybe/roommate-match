@@ -2,12 +2,14 @@ import { Home, Users, Plus, MessageCircle, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { totalUnread } = useUnreadCount();
+  const { unreadCount: unreadNotifs } = useNotifications();
   const { t } = useLanguage();
 
   const tabs = [
@@ -27,7 +29,10 @@ export default function BottomNav() {
           const isActive = location.pathname === tab.path;
           const Icon = tab.icon;
           const isCreate = tab.path === "/create";
-          const badge = tab.path === "/chats" ? totalUnread : 0;
+          const badge =
+            tab.path === "/chats" ? totalUnread :
+            tab.path === "/profile" ? unreadNotifs :
+            0;
 
           return (
             <button
