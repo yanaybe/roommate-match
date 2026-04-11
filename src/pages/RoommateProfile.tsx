@@ -14,6 +14,7 @@ import { mockUsers, type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
 import { calculateUserMatch, calculateUserMatchBreakdown, type MatchFactor } from "@/lib/matching";
+import VerificationBadges from "@/components/VerificationBadges";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useBlockReport } from "@/hooks/useBlockReport";
@@ -250,6 +251,18 @@ export default function RoommateProfile() {
             <Briefcase size={14} />
             {userData.occupation}
           </div>
+          {fullProfile && (
+            <div className="mt-2">
+              <VerificationBadges
+                status={{
+                  emailVerified: true,
+                  phoneVerified: (fullProfile as any).phone_verified ?? false,
+                  hasPhotos: !!fullProfile.avatar_url,
+                }}
+                size="sm"
+              />
+            </div>
+          )}
         </div>
       </div>
 

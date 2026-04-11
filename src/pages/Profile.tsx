@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck } from "lucide-react";
 import PremiumSheet from "@/components/PremiumSheet";
 import PreferencesSheet from "@/components/profile/PreferencesSheet";
 import ActivitySheet from "@/components/profile/ActivitySheet";
 import NotificationsSheet from "@/components/profile/NotificationsSheet";
+import VerificationBadges from "@/components/VerificationBadges";
+import PhoneVerifySheet from "@/components/PhoneVerifySheet";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const getMenuItems = (t: (key: string) => string) => [
   { icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" },
+  { icon: ShieldCheck, label: "Get Verified", desc: "Add phone badge to your profile", accent: false, action: "verify" },
   { icon: Bookmark, label: t("myActivity"), desc: t("myActivityDesc"), accent: false, action: "activity" },
   { icon: Sparkles, label: t("preferences"), desc: t("preferencesDesc"), accent: false, action: "preferences" },
   { icon: Bell, label: t("notifications"), desc: t("notificationsDesc"), action: "notifications" },
@@ -28,6 +31,7 @@ export default function Profile() {
   const [activityOpen, setActivityOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [premiumOpen, setPremiumOpen] = useState(false);
+  const [phoneVerifyOpen, setPhoneVerifyOpen] = useState(false);
 
   if (!user) {
     return (
@@ -82,6 +86,13 @@ export default function Profile() {
     if (action === "notifications") setNotificationsOpen(true);
     if (action === "premium") setPremiumOpen(true);
     if (action === "settings") navigate("/settings");
+    if (action === "verify") setPhoneVerifyOpen(true);
+  };
+
+  const verificationStatus = {
+    emailVerified: true, // enforced by Supabase before onboarding
+    phoneVerified: (profile as any)?.phone_verified ?? false,
+    hasPhotos: !!(profile?.avatar_url),
   };
 
   return (
@@ -110,6 +121,9 @@ export default function Profile() {
           {profile.bio && (
             <p className="text-muted-foreground text-sm mt-1 italic">"{profile.bio}"</p>
           )}
+          <div className="mt-3">
+            <VerificationBadges status={verificationStatus} />
+          </div>
         </motion.div>
 
         <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-4">
@@ -150,6 +164,7 @@ export default function Profile() {
       <ActivitySheet open={activityOpen} onOpenChange={setActivityOpen} user={user} t={t} />
       <NotificationsSheet open={notificationsOpen} onOpenChange={setNotificationsOpen} user={user} profile={profile} t={t} />
       <PremiumSheet open={premiumOpen} onOpenChange={setPremiumOpen} />
+      <PhoneVerifySheet open={phoneVerifyOpen} onOpenChange={setPhoneVerifyOpen} onVerified={() => window.location.reload()} />
     </div>
   );
 }

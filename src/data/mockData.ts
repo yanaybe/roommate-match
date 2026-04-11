@@ -15,6 +15,7 @@ export interface UserProfile {
   noise: number;
   wfh: boolean;
   bio: string;
+  phoneVerified?: boolean;
 }
 
 export interface Apartment {

@@ -62,6 +62,7 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
     wfh: p.wfh,
     bio: p.bio,
     photos: photos?.length ? photos : undefined,
+    phoneVerified: (p as any).phone_verified ?? false,
   };
 }
 
