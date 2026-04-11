@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ThumbsUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ThumbsUp, ChevronLeft, ChevronRight, Share2, UserPlus, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSquadDetail } from "@/hooks/useSquad";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
@@ -57,6 +57,39 @@ export default function SquadHub() {
 
   // Discover state
   const [swiped, setSwiped] = useState<string[]>([]);
+
+  // Share + join state
+  const [requesting, setRequesting] = useState(false);
+
+  const isMember = user ? members.some((m) => m.user_id === user.id) : false;
+
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success("Squad link copied! Share it with friends 🔗");
+    }).catch(() => {
+      toast.info(`Share this link: ${url}`);
+    });
+  };
+
+  const handleRequestJoin = async () => {
+    if (!user || !id || !squad) return;
+    setRequesting(true);
+    try {
+      const { error } = await supabase.from("squad_invites").upsert({
+        squad_id: id,
+        inviter_id: user.id,
+        invitee_id: squad.creator_id,
+        status: "pending",
+      }, { onConflict: "squad_id,invitee_id" });
+      if (error) throw error;
+      toast.success("Join request sent to the squad owner! 🙌");
+    } catch {
+      toast.error("Failed to send request");
+    } finally {
+      setRequesting(false);
+    }
+  };
 
   const isActive = squad?.status === "active";
   const isFull = members.length >= (squad?.target_size ?? 3);
@@ -430,7 +463,16 @@ export default function SquadHub() {
                 <span className="text-muted-foreground text-xs">{members.length}/{squad.target_size} members</span>
               </div>
             </div>
-            {groupCompatibility > 0 && <MatchBadge percent={groupCompatibility} size="lg" />}
+            <div className="flex items-center gap-2">
+              {groupCompatibility > 0 && <MatchBadge percent={groupCompatibility} size="lg" />}
+              <button
+                onClick={handleShare}
+                className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center"
+                title="Share squad link"
+              >
+                <Share2 className="w-4 h-4 text-secondary-foreground" />
+              </button>
+            </div>
           </div>
 
           {/* Tab bar */}
@@ -454,6 +496,27 @@ export default function SquadHub() {
           </div>
         </div>
       </div>
+
+      {/* Non-member join prompt */}
+      {user && !isMember && !isFull && (
+        <div className="max-w-lg mx-auto w-full px-4 pt-3">
+          <div className="flex items-center gap-3 p-4 bg-primary/10 border border-primary/20 rounded-2xl">
+            <span className="text-2xl">👥</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Want to join this squad?</p>
+              <p className="text-xs text-muted-foreground">{members.length}/{squad.target_size} members · {squad.preferred_locations.join(", ") || "Any location"}</p>
+            </div>
+            <button
+              onClick={handleRequestJoin}
+              disabled={requesting}
+              className="flex items-center gap-1.5 px-3 py-2 gradient-primary text-primary-foreground rounded-xl text-xs font-bold disabled:opacity-60 shrink-0"
+            >
+              {requesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
+              {requesting ? "Sending…" : "Ask to Join"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 max-w-lg mx-auto w-full px-4 pt-4">
         {/* MEMBERS TAB */}

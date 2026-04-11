@@ -8,6 +8,7 @@ import type { Apartment } from "@/data/mockData";
 import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useMySquads } from "@/hooks/useSquad";
 
 const ApartmentMap = lazy(() => import("@/components/ApartmentMap"));
 
@@ -72,6 +73,7 @@ export default function Index() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { squads } = useMySquads();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -183,6 +185,22 @@ export default function Index() {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-primary">Complete your profile</p>
               <p className="text-xs text-muted-foreground">Unlock match % and get discovered by roommates</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
+          </button>
+        </div>
+      )}
+
+      {user && profile?.onboarding_complete && squads.length === 0 && (
+        <div className="max-w-lg mx-auto px-4 pt-3">
+          <button
+            onClick={() => navigate("/create-squad")}
+            className="w-full flex items-center gap-3 p-3.5 bg-gradient-to-r from-violet-500/10 to-pink-500/10 border border-primary/20 rounded-2xl text-left"
+          >
+            <span className="text-2xl">👥</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-primary">Searching with friends?</p>
+              <p className="text-xs text-muted-foreground">Create a Squad — find apartments together and vote as a group</p>
             </div>
             <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
           </button>
