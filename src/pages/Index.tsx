@@ -60,7 +60,7 @@ function dbRowToApartment(row: any): Apartment {
     matchPercent: 0,
     amenities,
     available: row.available_date,
-    isBoosted: (row.is_featured && (!row.featured_until || new Date(row.featured_until) > new Date())) ?? false,
+    isBoosted: (row.is_featured === true && (!row.featured_until || new Date(row.featured_until) > new Date())) ?? false,
   };
 }
 
@@ -80,7 +80,6 @@ export default function Index() {
     supabase
       .from("apartments")
       .select("*")
-      .order("is_featured", { ascending: false })
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (error) { console.error("Failed to load apartments:", error); return; }
