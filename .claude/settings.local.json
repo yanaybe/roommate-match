@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /Users/yanayberdah/roommate-match/src/**/*.tsx)",
+      "Bash(git config:*)",
+      "Bash(curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh)",
+      "Bash(bash)",
+      "Bash(sudo cat:*)",
+      "Bash(brew install:*)",
+      "Bash(export PATH=\"$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin\")",
+      "Bash(code --version)",
+      "Bash(npm install:*)",
+      "Bash(/opt/anaconda3/bin/pip install:*)",
+      "Bash(docker --version)",
+      "Bash(wait)",
+      "Bash(code --install-extension mattpocock.ts-error-translator)",
+      "Bash(sort -k9)",
+      "Bash(rm ~/Downloads/*.mp3)",
+      "Bash(rm ~/Downloads/*.mp4)",
+      "Bash(brew cleanup:*)",
+      "Bash(npm cache:*)",
+      "Bash(rm ~/Desktop/'~$הערכה חלופית בגמרא נהוראי ברדה 2024-2.pptx')",
+      "Bash(rm ~/Desktop/'~$הערכה חלופית בגמרא נהוראי ברדה 2024.pptx')",
+      "Bash(code --install-extension catppuccin.catppuccin-vsc --force)",
+      "Bash(code --install-extension catppuccin.catppuccin-vsc-icons --force)",
+      "Bash(defaults write:*)",
+      "Bash(killall Dock)"
+    ]
+  }
+}
