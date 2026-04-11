@@ -1,10 +1,13 @@
-import { Search, SlidersHorizontal, Map, List } from "lucide-react";
+import { Search, SlidersHorizontal, Map, List, ArrowRight } from "lucide-react";
 import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
 import FilterModal, { defaultFilters, type Filters } from "@/components/FilterModal";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import type { Apartment } from "@/data/mockData";
+import { useProfile } from "@/hooks/useProfile";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const ApartmentMap = lazy(() => import("@/components/ApartmentMap"));
 
@@ -67,6 +70,9 @@ export default function Index() {
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase
@@ -166,6 +172,22 @@ export default function Index() {
           </div>
         </div>
       </div>
+
+      {user && profile && !profile.onboarding_complete && (
+        <div className="max-w-lg mx-auto px-4 pt-3">
+          <button
+            onClick={() => navigate("/onboarding")}
+            className="w-full flex items-center gap-3 p-3.5 bg-primary/10 border border-primary/20 rounded-2xl text-left"
+          >
+            <span className="text-2xl">👤</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-primary">Complete your profile</p>
+              <p className="text-xs text-muted-foreground">Unlock match % and get discovered by roommates</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
+          </button>
+        </div>
+      )}
 
       <div className="max-w-lg mx-auto px-4 pt-4">
         {view === "list" ? (

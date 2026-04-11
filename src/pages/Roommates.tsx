@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { X, Heart, RotateCcw, Users, Plus } from "lucide-react";
+import { X, Heart, RotateCcw, Users, Plus, ArrowRight } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
@@ -222,6 +222,22 @@ export default function Roommates() {
           </div>
         </div>
       </div>
+
+      {user && myProfile && !myProfile.onboarding_complete && (
+        <div className="max-w-lg mx-auto w-full px-4 pt-3">
+          <button
+            onClick={() => navigate("/onboarding")}
+            className="w-full flex items-center gap-3 p-3.5 bg-primary/10 border border-primary/20 rounded-2xl text-left"
+          >
+            <span className="text-2xl">👤</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-primary">Complete your profile</p>
+              <p className="text-xs text-muted-foreground">You need a profile to swipe and match</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 max-w-lg mx-auto w-full px-4 pt-4">
         {profilesLoading ? (

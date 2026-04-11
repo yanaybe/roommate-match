@@ -146,7 +146,7 @@ export default function Onboarding() {
   }, [user, authLoading, navigate, isEdit]);
 
   useEffect(() => {
-    if (isEdit && profile) {
+    if (profile) {
       setForm({
         name: profile.name || "",
         age: profile.age?.toString() || "",
@@ -181,7 +181,7 @@ export default function Onboarding() {
         photos: (profile as any).photos || [],
       });
     }
-  }, [isEdit, profile]);
+  }, [profile]);
 
   const update = <K extends keyof FormData>(key: K, val: FormData[K]) =>
     setForm((p) => ({ ...p, [key]: val }));
@@ -190,6 +190,46 @@ export default function Onboarding() {
     if (step === 0) return form.photos.length >= 1;
     if (step === 1) return form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget;
     return true;
+  };
+
+  // Save partial progress so users can resume after leaving mid-flow
+  const saveProgress = async (currentForm: FormData) => {
+    if (!user) return;
+    const payload = {
+      user_id: user.id,
+      name: currentForm.name.trim() || null,
+      age: parseInt(currentForm.age) || null,
+      city: currentForm.city.trim() || null,
+      occupation: currentForm.occupation.trim() || null,
+      budget: parseInt(currentForm.budget) || 0,
+      desired_room_type: currentForm.desired_room_type,
+      sleep_schedule: currentForm.sleep_schedule,
+      cleanliness: currentForm.cleanliness,
+      cooking_habits: currentForm.cooking_habits,
+      shared_space_org: currentForm.shared_space_org,
+      smoking: currentForm.smoking_preference === "I smoke",
+      religious_level: currentForm.religious_level,
+      alcohol: currentForm.alcohol,
+      pets: currentForm.pet_preference === "I have pets",
+      fitness: currentForm.fitness,
+      wfh: currentForm.wfh,
+      guests: currentForm.guests,
+      social_level: currentForm.social_level,
+      noise_level: currentForm.noise_level,
+      partying: currentForm.partying,
+      lifestyle_vibe: currentForm.lifestyle_vibe,
+      preferred_age_min: parseInt(currentForm.preferred_age_min) || 18,
+      preferred_age_max: parseInt(currentForm.preferred_age_max) || 40,
+      gender_preference: currentForm.gender_preference,
+      lifestyle_similarity: currentForm.lifestyle_similarity,
+      cleanliness_expectations: currentForm.cleanliness_expectations,
+      activity_hours: currentForm.activity_hours,
+      bio: currentForm.bio.trim(),
+      avatar_url: currentForm.photos[0] || null,
+      photos: currentForm.photos,
+      onboarding_complete: false,
+    };
+    await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
   };
 
   const handleSubmit = async () => {
@@ -253,14 +293,9 @@ export default function Onboarding() {
       photos: form.photos,
     };
 
-    let error;
-    if (isEdit) {
-      const res = await supabase.from("profiles").update(payload).eq("user_id", user.id);
-      error = res.error;
-    } else {
-      const res = await supabase.from("profiles").insert(payload);
-      error = res.error;
-    }
+    const { error } = await supabase
+      .from("profiles")
+      .upsert(payload, { onConflict: "user_id" });
     setSaving(false);
     if (error) {
       toast.error("Failed to save profile: " + error.message);
@@ -514,9 +549,13 @@ export default function Onboarding() {
             </button>
           )}
           <button
-            onClick={() => {
-              if (step < STEPS.length - 1) setStep(step + 1);
-              else handleSubmit();
+            onClick={async () => {
+              if (step < STEPS.length - 1) {
+                saveProgress(form);
+                setStep(step + 1);
+              } else {
+                handleSubmit();
+              }
             }}
             disabled={!canProceed() || saving}
             className="flex-1 flex items-center justify-center gap-1 py-3 gradient-primary text-primary-foreground rounded-xl font-bold text-sm disabled:opacity-40"
