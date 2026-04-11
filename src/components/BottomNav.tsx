@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function BottomNav() {
   const location = useLocation();
@@ -11,6 +12,7 @@ export default function BottomNav() {
   const { totalUnread } = useUnreadCount();
   const { unreadCount: unreadNotifs } = useNotifications();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const tabs = [
     { path: "/", icon: Home, label: t("navRooms") },
@@ -21,6 +23,7 @@ export default function BottomNav() {
   ];
 
   if (location.pathname === "/auth") return null;
+  if (location.pathname === "/" && !user) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom">

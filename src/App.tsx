@@ -31,8 +31,16 @@ import ContactSupport from "./pages/ContactSupport";
 import HelpCenter from "./pages/HelpCenter";
 import RoommateProfile from "./pages/RoommateProfile";
 import BillingHistory from "./pages/BillingHistory";
+import Landing from "./pages/Landing";
+import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient();
+
+function HomeRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return user ? <Index /> : <Landing />;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -47,7 +55,7 @@ const App = () => (
           <BrowserRouter>
             <NotificationToaster />
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<HomeRoute />} />
               <Route path="/apartment/:id" element={<ApartmentDetail />} />
               <Route path="/roommates" element={<Roommates />} />
               <Route path="/roommate/:id" element={<RoommateProfile />} />
