@@ -1,7 +1,7 @@
 // Matching algorithm based on user profiles
 
 export interface ProfileData {
-  name: string;
+  name?: string;
   age: number | null;
   city: string;
   occupation: string;
@@ -184,6 +184,144 @@ export function calculateUserMatch(a: ProfileData, b: ProfileData): number {
   const baseScore = (weightedSum / totalWeight) * 100;
 
   return Math.max(5, Math.round(baseScore - penalties));
+}
+
+export interface MatchFactor {
+  label: string;
+  emoji: string;
+  score: number; // 0–100
+  detail: string; // e.g. "You're both early birds"
+  isConflict: boolean;
+}
+
+/**
+ * Returns the top driving factors behind a match score so the UI can
+ * explain *why* two users are (or aren't) compatible.
+ */
+export function calculateUserMatchBreakdown(a: ProfileData, b: ProfileData): MatchFactor[] {
+  const factors: MatchFactor[] = [];
+  const aName = a.name ?? "You";
+  const bName = b.name ?? "Them";
+
+  // ── Deal-breakers ──────────────────────────────────────────────────────────
+  const aSmokes = a.smoking_preference === "I smoke";
+  const bSmokes = b.smoking_preference === "I smoke";
+  const aMindsSmoking = a.smoking_preference === "Non-smoker, prefer no smoking";
+  const bMindsSmoking = b.smoking_preference === "Non-smoker, prefer no smoking";
+  const smokingConflict = (aSmokes && bMindsSmoking) || (bSmokes && aMindsSmoking);
+  factors.push({
+    label: "Smoking",
+    emoji: smokingConflict ? "🚬" : "🚭",
+    score: smokingConflict ? 0 : 100,
+    detail: smokingConflict
+      ? `${aSmokes ? aName : bName} smokes but ${bMindsSmoking ? bName : aName} prefers no smoking`
+      : "Compatible smoking preferences",
+    isConflict: smokingConflict,
+  });
+
+  const aHasPets = a.pet_preference === "I have pets";
+  const bHasPets = b.pet_preference === "I have pets";
+  const aMindsPets = a.pet_preference === "Prefer no pets";
+  const bMindsPets = b.pet_preference === "Prefer no pets";
+  const petConflict = (aHasPets && bMindsPets) || (bHasPets && aMindsPets);
+  factors.push({
+    label: "Pets",
+    emoji: "🐾",
+    score: petConflict ? 10 : 100,
+    detail: petConflict
+      ? `${aHasPets ? aName : bName} has pets but ${bMindsPets ? bName : aName} prefers none`
+      : "Compatible pet preferences",
+    isConflict: petConflict,
+  });
+
+  // Sleep schedule
+  const sleepGap = Math.abs(sleepScale.indexOf(a.sleep_schedule) - sleepScale.indexOf(b.sleep_schedule));
+  const sleepScore = sleepGap === 0 ? 100 : sleepGap === 1 ? 65 : 20;
+  factors.push({
+    label: "Sleep Schedule",
+    emoji: "🌙",
+    score: sleepScore,
+    detail: a.sleep_schedule === b.sleep_schedule
+      ? `You're both ${a.sleep_schedule.toLowerCase()}s`
+      : `${a.sleep_schedule} vs ${b.sleep_schedule}`,
+    isConflict: sleepGap === 2,
+  });
+
+  // Cleanliness
+  const cleanConflict =
+    Math.max(0, a.cleanliness_expectations - b.cleanliness) +
+    Math.max(0, b.cleanliness_expectations - a.cleanliness);
+  const cleanScore = cleanConflict >= 5 ? 10 : cleanConflict >= 3 ? 35 : cleanConflict >= 2 ? 60 : cleanConflict >= 1 ? 80 : 100;
+  factors.push({
+    label: "Cleanliness",
+    emoji: "✨",
+    score: cleanScore,
+    detail: cleanConflict === 0
+      ? "Cleanliness levels align"
+      : `Cleanliness mismatch — ${aName} ${a.cleanliness}/5, ${bName} ${b.cleanliness}/5`,
+    isConflict: cleanConflict >= 3,
+  });
+
+  // Social level
+  const socialSim = numericSimilarity(a.social_level, b.social_level, 4);
+  factors.push({
+    label: "Social Life",
+    emoji: "🎉",
+    score: Math.round(socialSim * 100),
+    detail: Math.abs(a.social_level - b.social_level) <= 1
+      ? "Similar social energy"
+      : `${aName} (${a.social_level}/5) vs ${bName} (${b.social_level}/5)`,
+    isConflict: Math.abs(a.social_level - b.social_level) >= 3,
+  });
+
+  // Noise level
+  const noiseSim = numericSimilarity(a.noise_level, b.noise_level, 4);
+  factors.push({
+    label: "Noise Level",
+    emoji: "🔊",
+    score: Math.round(noiseSim * 100),
+    detail: Math.abs(a.noise_level - b.noise_level) <= 1
+      ? "Similar noise tolerance"
+      : `${aName} prefers ${a.noise_level}/5, ${bName} ${b.noise_level}/5`,
+    isConflict: Math.abs(a.noise_level - b.noise_level) >= 3,
+  });
+
+  // Lifestyle vibe
+  const vibeMatch = a.lifestyle_vibe === b.lifestyle_vibe;
+  factors.push({
+    label: "Lifestyle Vibe",
+    emoji: "🌟",
+    score: vibeMatch ? 100 : 45,
+    detail: vibeMatch
+      ? `You're both "${a.lifestyle_vibe}"`
+      : `${aName}: "${a.lifestyle_vibe}" · ${bName}: "${b.lifestyle_vibe}"`,
+    isConflict: false,
+  });
+
+  // Budget
+  let budgetScore = 100;
+  let budgetDetail = "Budgets align well";
+  if (a.budget > 0 && b.budget > 0) {
+    const avg = (a.budget + b.budget) / 2;
+    const ratio = Math.abs(a.budget - b.budget) / avg;
+    if (ratio > 0.6) { budgetScore = 25; budgetDetail = `Large budget gap — ₪${a.budget.toLocaleString()} vs ₪${b.budget.toLocaleString()}`; }
+    else if (ratio > 0.4) { budgetScore = 50; budgetDetail = `Budget gap — ₪${a.budget.toLocaleString()} vs ₪${b.budget.toLocaleString()}`; }
+    else if (ratio > 0.25) { budgetScore = 75; budgetDetail = `Slight budget difference`; }
+    else { budgetDetail = `₪${a.budget.toLocaleString()} · ₪${b.budget.toLocaleString()}`; }
+  }
+  factors.push({
+    label: "Budget",
+    emoji: "💰",
+    score: budgetScore,
+    detail: budgetDetail,
+    isConflict: budgetScore < 40,
+  });
+
+  // Sort: conflicts first, then by score ascending so worst issues surface
+  return factors.sort((x, y) => {
+    if (x.isConflict !== y.isConflict) return x.isConflict ? -1 : 1;
+    return x.score - y.score;
+  });
 }
 
 /**

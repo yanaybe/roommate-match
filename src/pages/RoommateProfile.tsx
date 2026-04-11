@@ -13,7 +13,7 @@ import MatchBadge from "@/components/MatchBadge";
 import { mockUsers, type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
-import { calculateUserMatch } from "@/lib/matching";
+import { calculateUserMatch, calculateUserMatchBreakdown, type MatchFactor } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useBlockReport } from "@/hooks/useBlockReport";
@@ -68,18 +68,19 @@ export default function RoommateProfile() {
   }, []);
 
   // Find from DB profiles first, then mock
-  const { userData, fullProfile, matchPercent } = useMemo(() => {
+  const { userData, fullProfile, matchPercent, breakdown } = useMemo(() => {
     const dbProfile = allProfiles.find((p) => p.user_id === id);
     if (dbProfile) {
       const u = profileToUser(dbProfile);
       const match = myProfile ? calculateUserMatch(myProfile, dbProfile) : 75;
-      return { userData: u, fullProfile: dbProfile, matchPercent: match };
+      const bd = myProfile ? calculateUserMatchBreakdown(myProfile, dbProfile) : [];
+      return { userData: u, fullProfile: dbProfile, matchPercent: match, breakdown: bd };
     }
     const mockUser = mockUsers.find((u) => u.id === id);
     if (mockUser) {
-      return { userData: mockUser, fullProfile: null, matchPercent: 80 };
+      return { userData: mockUser, fullProfile: null, matchPercent: 80, breakdown: [] };
     }
-    return { userData: null, fullProfile: null, matchPercent: 0 };
+    return { userData: null, fullProfile: null, matchPercent: 0, breakdown: [] };
   }, [id, allProfiles, myProfile]);
 
   if (!userData) {
@@ -336,46 +337,74 @@ export default function RoommateProfile() {
           </motion.div>
         )}
 
-        {/* Match breakdown */}
+        {/* Compatibility breakdown */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="bg-card rounded-2xl shadow-card p-5"
         >
-          <h2 className="text-sm font-bold text-foreground mb-3">Compatibility</h2>
-          <div className="flex items-center gap-4">
-            <div className="relative w-16 h-16">
-              <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
-                <path
-                  className="text-secondary"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                />
-                <path
-                  className="text-primary"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeDasharray={`${matchPercent}, 100`}
-                />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-foreground">
-                {matchPercent}%
-              </span>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">
-                {matchPercent >= 80 ? "Great Match! 🎉" : matchPercent >= 60 ? "Good Match 👍" : "Fair Match"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Based on your living preferences, lifestyle, and habits
-              </p>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold text-foreground">Compatibility</h2>
+            <div className="flex items-center gap-2">
+              <div className="relative w-12 h-12">
+                <svg className="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none" stroke="currentColor" strokeWidth="3" className="text-secondary"
+                  />
+                  <path
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none" stroke="currentColor" strokeWidth="3"
+                    className={matchPercent >= 75 ? "text-green-500" : matchPercent >= 50 ? "text-yellow-500" : "text-red-500"}
+                    strokeDasharray={`${matchPercent}, 100`}
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
+                  {matchPercent}%
+                </span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {matchPercent >= 80 ? "Great Match! 🎉" : matchPercent >= 60 ? "Good Match 👍" : "Fair Match"}
+                </p>
+                <p className="text-[11px] text-muted-foreground">Based on your profiles</p>
+              </div>
             </div>
           </div>
+
+          {breakdown.length > 0 ? (
+            <div className="space-y-2.5">
+              {breakdown.map((factor: MatchFactor) => {
+                const barColor =
+                  factor.score >= 75 ? "bg-green-500" :
+                  factor.score >= 45 ? "bg-yellow-500" : "bg-red-500";
+                const bgColor =
+                  factor.score >= 75 ? "bg-green-500/10" :
+                  factor.score >= 45 ? "bg-yellow-500/10" : "bg-red-500/10";
+                const textColor =
+                  factor.score >= 75 ? "text-green-600" :
+                  factor.score >= 45 ? "text-yellow-600" : "text-red-600";
+                return (
+                  <div key={factor.label} className={`rounded-xl p-3 ${bgColor}`}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{factor.emoji}</span>
+                        <span className="text-xs font-semibold text-foreground">{factor.label}</span>
+                      </div>
+                      <span className={`text-xs font-bold ${textColor}`}>{factor.score}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-black/10 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full ${barColor}`} style={{ width: `${factor.score}%` }} />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1.5">{factor.detail}</p>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">Complete your profile to see a detailed breakdown</p>
+          )}
         </motion.div>
       </div>
 
