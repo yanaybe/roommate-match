@@ -112,10 +112,26 @@ export default function PostApartment() {
     }
   };
 
+  const geocodeAddress = async (address: string, neighborhood: string, city: string): Promise<[number, number] | null> => {
+    const query = encodeURIComponent(`${address}, ${neighborhood}, ${city}, Israel`);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
+        { headers: { "User-Agent": "RoomMatch-App/1.0" } }
+      );
+      const data = await res.json();
+      if (data.length > 0) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    } catch {}
+    return null;
+  };
+
   const handleSubmit = async () => {
     if (!user) { toast.error("Please sign in first"); return; }
     setSubmitting(true);
     try {
+      // Geocode address
+      const coords = await geocodeAddress(form.address, form.neighborhood, form.city);
+
       // Upload images
       const imageUrls: string[] = [];
       for (const file of images) {
@@ -155,6 +171,7 @@ export default function PostApartment() {
         has_garden: form.hasGarden,
         pet_friendly: form.petFriendly,
         images: imageUrls,
+        coordinates: coords ?? undefined,
       } as any);
 
       if (error) throw error;

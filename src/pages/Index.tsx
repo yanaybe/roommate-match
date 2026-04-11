@@ -1,21 +1,86 @@
 import { Search, SlidersHorizontal, Map, List } from "lucide-react";
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
 import FilterModal, { defaultFilters, type Filters } from "@/components/FilterModal";
-import { mockApartments } from "@/data/mockData";
 import { useLanguage } from "@/hooks/useLanguage";
+import { supabase } from "@/integrations/supabase/client";
+import type { Apartment } from "@/data/mockData";
 
 const ApartmentMap = lazy(() => import("@/components/ApartmentMap"));
+
+// Fallback coordinates when a listing hasn't been geocoded yet
+const CITY_COORDS: Record<string, [number, number]> = {
+  "Tel Aviv": [32.0853, 34.7818],
+  "Jerusalem": [31.7683, 35.2137],
+  "Haifa": [32.7940, 34.9896],
+  "Beer Sheva": [31.2520, 34.7915],
+  "Netanya": [32.3226, 34.8533],
+  "Herzliya": [32.1663, 34.8434],
+  "Ramat Gan": [32.0826, 34.8127],
+  "Rishon LeZion": [31.9730, 34.7925],
+  "Petah Tikva": [32.0842, 34.8841],
+  "Ashdod": [31.8010, 34.6550],
+};
+
+function dbRowToApartment(row: any): Apartment {
+  const amenities: string[] = [];
+  if (row.has_balcony) amenities.push("Balcony");
+  if (row.has_parking) amenities.push("Parking");
+  if (row.has_elevator) amenities.push("Elevator");
+  if (row.has_ac) amenities.push("AC");
+  if (row.has_laundry) amenities.push("Laundry");
+  if (row.has_wifi) amenities.push("WiFi");
+  if (row.has_gym) amenities.push("Gym");
+  if (row.has_security) amenities.push("Security");
+  if (row.has_rooftop) amenities.push("Rooftop");
+  if (row.has_garden) amenities.push("Garden");
+  if (row.pet_friendly) amenities.push("Pet Friendly");
+  if (row.is_furnished) amenities.push("Furnished");
+
+  const coords: [number, number] =
+    Array.isArray(row.coordinates) && row.coordinates.length === 2
+      ? [row.coordinates[0], row.coordinates[1]]
+      : CITY_COORDS[row.city] ?? [32.0853, 34.7818];
+
+  return {
+    id: row.id,
+    title: row.title,
+    price: row.price,
+    location: `${row.neighborhood}, ${row.city}`,
+    coordinates: coords,
+    images: row.images?.length ? row.images : ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800"],
+    rooms: row.rooms,
+    bathrooms: row.bathrooms,
+    size: row.size,
+    roommates: [],
+    matchPercent: 0,
+    amenities,
+    available: row.available_date,
+    isBoosted: row.is_boosted ?? false,
+  };
+}
 
 export default function Index() {
   const [view, setView] = useState<"list" | "map">("list");
   const [search, setSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const [apartments, setApartments] = useState<Apartment[]>([]);
   const { t } = useLanguage();
 
+  useEffect(() => {
+    supabase
+      .from("apartments")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) { console.error("Failed to load apartments:", error); return; }
+        setApartments((data ?? []).map(dbRowToApartment));
+      });
+  }, []);
+
   const filtered = useMemo(() => {
-    return mockApartments.filter((apt) => {
+    return apartments.filter((apt) => {
       if (search.trim()) {
         const q = search.toLowerCase();
         if (
@@ -27,35 +92,12 @@ export default function Index() {
       if (apt.price < filters.budgetMin || apt.price > filters.budgetMax) return false;
       if (apt.rooms < filters.roomsMin || apt.rooms > filters.roomsMax) return false;
       if (apt.size < filters.sizeMin) return false;
-      if (apt.matchPercent < filters.matchMin) return false;
       if (filters.amenities.length > 0) {
         if (!filters.amenities.every((a) => apt.amenities.includes(a))) return false;
       }
-      if (filters.smoking !== "any") {
-        const hasSmokingRoommate = apt.roommates.some((r) => r.smoking);
-        if (filters.smoking === "no" && hasSmokingRoommate) return false;
-        if (filters.smoking === "yes" && !hasSmokingRoommate) return false;
-      }
-      if (filters.pets !== "any") {
-        const hasPetRoommate = apt.roommates.some((r) => r.pets);
-        if (filters.pets === "no" && hasPetRoommate) return false;
-        if (filters.pets === "yes" && !hasPetRoommate) return false;
-      }
-      if (filters.sleepSchedule !== "any" && apt.roommates.length > 0) {
-        const scheduleMap: Record<string, string> = { early: "Early bird", night: "Night owl", flexible: "Flexible" };
-        const target = scheduleMap[filters.sleepSchedule];
-        if (!apt.roommates.some((r) => r.sleepSchedule === target)) return false;
-      }
-      if (filters.cleanlinessMin > 1 && apt.roommates.length > 0) {
-        if (!apt.roommates.every((r) => r.cleanliness >= filters.cleanlinessMin)) return false;
-      }
-      if (filters.wfh !== "any" && apt.roommates.length > 0) {
-        if (filters.wfh === "yes" && !apt.roommates.some((r) => r.wfh)) return false;
-        if (filters.wfh === "no" && apt.roommates.some((r) => r.wfh)) return false;
-      }
       return true;
     });
-  }, [search, filters]);
+  }, [search, filters, apartments]);
 
   const activeFilterCount = (() => {
     let c = 0;
