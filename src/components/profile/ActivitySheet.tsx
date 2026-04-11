@@ -5,8 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { mockApartments, mockUsers } from "@/data/mockData";
-import { getMockLikedProfileKey, getMockSavedApartmentKey } from "@/lib/profileUtils";
 import type { User } from "@supabase/supabase-js";
 
 interface Props {
@@ -32,55 +30,23 @@ export default function ActivitySheet({ open, onOpenChange, user, t }: Props) {
       const { data: saves } = await supabase
         .from("saved_apartments")
         .select("*, apartments(*)")
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-      const mockSaved = mockApartments
-        .filter((apt) => {
-          try { return localStorage.getItem(getMockSavedApartmentKey(user.id, apt.id)) === "true"; }
-          catch { return false; }
-        })
-        .map((apt) => ({
-          id: `mock-save-${apt.id}`,
-          apartment_id: apt.id,
-          apartments: {
-            id: apt.id,
-            title: apt.title,
-            neighborhood: apt.location.split(",")[0] ?? apt.location,
-            city: apt.location.split(",")[1]?.trim() ?? apt.location,
-            price: apt.price,
-            images: apt.images,
-          },
-        }));
-
-      setSavedApartments([...(saves || []), ...mockSaved]);
+      setSavedApartments(saves || []);
 
       const { data: likes } = await supabase
         .from("liked_profiles")
         .select("*")
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
       const likedUserIds = (likes || []).map((l: any) => l.liked_user_id);
       const dbProfiles = likedUserIds.length > 0
         ? (await supabase.from("profiles").select("*").in("user_id", likedUserIds)).data ?? []
         : [];
 
-      const mockLiked = mockUsers
-        .filter((u) => {
-          try { return localStorage.getItem(getMockLikedProfileKey(user.id, u.id)) === "true"; }
-          catch { return false; }
-        })
-        .map((u) => ({
-          id: `mock-liked-${u.id}`,
-          user_id: u.id,
-          name: u.name,
-          age: u.age,
-          occupation: u.occupation,
-          city: u.city,
-          bio: u.bio,
-          avatar_url: u.avatar,
-        }));
-
-      setLikedProfiles([...dbProfiles, ...mockLiked]);
+      setLikedProfiles(dbProfiles);
 
       const { data: invites } = await supabase
         .from("squad_invites")
