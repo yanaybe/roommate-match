@@ -164,6 +164,32 @@ Deno.serve(async (req) => {
       break;
     }
 
+    // One-time purchase completed — handle listing boosts
+    case "transaction.completed": {
+      const apartmentId: string = data.custom_data?.apartment_id ?? "";
+      const boostDays: number = parseInt(data.custom_data?.boost_days ?? "0");
+
+      if (apartmentId && boostDays > 0) {
+        const featuredUntil = new Date();
+        featuredUntil.setDate(featuredUntil.getDate() + boostDays);
+
+        const { error } = await supabase
+          .from("apartments")
+          .update({
+            is_featured: true,
+            featured_until: featuredUntil.toISOString(),
+          })
+          .eq("id", apartmentId);
+
+        if (error) {
+          console.error("Failed to boost apartment:", error);
+        } else {
+          console.log(`Boosted apartment ${apartmentId} for ${boostDays} days`);
+        }
+      }
+      break;
+    }
+
     default:
       console.log("Unhandled event type:", eventType);
   }

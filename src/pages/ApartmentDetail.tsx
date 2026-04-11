@@ -19,7 +19,7 @@ import {
   MoreVertical,
   Flag,
 } from "lucide-react";
-import { mockApartments, mockUsers, type UserProfile, getMatchColor, getMatchTextColor } from "@/data/mockData";
+import { mockApartments, mockUsers, type UserProfile, type Apartment, getMatchColor, getMatchTextColor } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +27,47 @@ import { supabase } from "@/integrations/supabase/client";
 import { isUUID, getMockSavedApartmentKey } from "@/lib/profileUtils";
 import { useBlockReport } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
+import BoostListingSheet from "@/components/BoostListingSheet";
+import { Zap } from "lucide-react";
+
+const CITY_COORDS: Record<string, [number, number]> = {
+  "Tel Aviv": [32.0853, 34.7818], "Jerusalem": [31.7683, 35.2137],
+  "Haifa": [32.7940, 34.9896], "Beer Sheva": [31.2520, 34.7915],
+  "Netanya": [32.3226, 34.8533], "Herzliya": [32.1663, 34.8434],
+  "Ramat Gan": [32.0826, 34.8127], "Rishon LeZion": [31.9730, 34.7925],
+  "Petah Tikva": [32.0842, 34.8841], "Ashdod": [31.8010, 34.6550],
+};
+
+function dbRowToApartment(row: any): Apartment & { ownerId: string } {
+  const amenities: string[] = [];
+  if (row.has_balcony) amenities.push("Balcony");
+  if (row.has_parking) amenities.push("Parking");
+  if (row.has_elevator) amenities.push("Elevator");
+  if (row.has_ac) amenities.push("AC");
+  if (row.has_laundry) amenities.push("Laundry");
+  if (row.has_wifi) amenities.push("WiFi");
+  if (row.has_gym) amenities.push("Gym");
+  if (row.has_security) amenities.push("Security");
+  if (row.has_rooftop) amenities.push("Rooftop");
+  if (row.has_garden) amenities.push("Garden");
+  if (row.pet_friendly) amenities.push("Pet Friendly");
+  if (row.is_furnished) amenities.push("Furnished");
+  const coords: [number, number] =
+    Array.isArray(row.coordinates) && row.coordinates.length === 2
+      ? [row.coordinates[0], row.coordinates[1]]
+      : CITY_COORDS[row.city] ?? [32.0853, 34.7818];
+  return {
+    id: row.id, title: row.title, price: row.price,
+    location: `${row.neighborhood}, ${row.city}`,
+    coordinates: coords,
+    images: row.images?.length ? row.images : ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800"],
+    rooms: row.rooms, bathrooms: row.bathrooms, size: row.size,
+    roommates: [], matchPercent: 0, amenities,
+    available: row.available_date,
+    isBoosted: row.is_featured && (!row.featured_until || new Date(row.featured_until) > new Date()),
+    ownerId: row.user_id,
+  };
+}
 
 function RoommateProfileModal({
   user,
@@ -131,9 +172,18 @@ export default function ApartmentDetail() {
   const [imgIndex, setImgIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [boostOpen, setBoostOpen] = useState(false);
   const apartmentIsUuid = id ? isUUID(id) : false;
   const [saved, setSaved] = useState(false);
   const [selectedRoommate, setSelectedRoommate] = useState<UserProfile | null>(null);
+  const [dbApartment, setDbApartment] = useState<(Apartment & { ownerId: string }) | null>(null);
+
+  useEffect(() => {
+    if (!apartmentIsUuid || !id) return;
+    supabase.from("apartments").select("*").eq("id", id).maybeSingle().then(({ data }) => {
+      if (data) setDbApartment(dbRowToApartment(data));
+    });
+  }, [id, apartmentIsUuid]);
 
   useEffect(() => {
     if (!user || !id) { setSaved(false); return; }
@@ -170,7 +220,9 @@ export default function ApartmentDetail() {
     window.scrollTo(0, 0);
   }, []);
 
-  const apartment = mockApartments.find((a) => a.id === id);
+  const apartment: (Apartment & { ownerId?: string }) | undefined =
+    dbApartment ?? mockApartments.find((a) => a.id === id);
+  const isOwner = user && apartment?.ownerId === user.id;
 
   if (!apartment) {
     return (
@@ -242,7 +294,19 @@ export default function ApartmentDetail() {
                 <MoreVertical className="w-4 h-4 text-foreground" />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-11 w-44 bg-card rounded-2xl shadow-elevated border border-border/50 overflow-hidden z-50">
+                <div className="absolute right-0 top-11 w-48 bg-card rounded-2xl shadow-elevated border border-border/50 overflow-hidden z-50">
+                  {isOwner && (
+                    <>
+                      <button
+                        onClick={() => { setMenuOpen(false); setBoostOpen(true); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                      >
+                        <Zap size={15} className="text-primary shrink-0" />
+                        <span className="text-foreground font-medium">Boost listing</span>
+                      </button>
+                      <div className="border-t border-border/40" />
+                    </>
+                  )}
                   <button
                     onClick={() => { setMenuOpen(false); setReportOpen(true); }}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
@@ -450,6 +514,15 @@ export default function ApartmentDetail() {
         targetName="this listing"
         onSubmit={(reason, details) => reportListing(id!, reason, details)}
       />
+
+      {isOwner && apartment && (
+        <BoostListingSheet
+          open={boostOpen}
+          onOpenChange={setBoostOpen}
+          apartmentId={apartment.id}
+          apartmentTitle={apartment.title}
+        />
+      )}
     </div>
   );
 }
