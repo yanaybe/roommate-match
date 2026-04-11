@@ -1,12 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
+import { useProfile } from "@/hooks/useProfile";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Check, CheckCheck, Trash2, MoreVertical, Ban, Flag } from "lucide-react";
+import { ArrowLeft, Send, CheckCheck, Trash2, MoreVertical, Ban, Flag, ChevronDown, Sparkles } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useBlockReport } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
+import { calculateUserMatch } from "@/lib/matching";
+import MatchBadge from "@/components/MatchBadge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,9 +39,49 @@ interface Message {
   is_read: boolean;
 }
 
+function getSharedTraits(a: any, b: any): string[] {
+  const traits: string[] = [];
+  if (a?.sleep_schedule && a.sleep_schedule === b?.sleep_schedule)
+    traits.push(`🌙 Both ${a.sleep_schedule.toLowerCase()}s`);
+  if (a?.lifestyle_vibe && a.lifestyle_vibe === b?.lifestyle_vibe)
+    traits.push(`🌟 Both "${a.lifestyle_vibe}"`);
+  if (a?.wfh && b?.wfh)
+    traits.push("🏠 Both work from home");
+  if (a?.city && a.city === b?.city)
+    traits.push(`📍 Both in ${a.city}`);
+  if (!a?.smoking && !b?.smoking)
+    traits.push("🚭 Both non-smokers");
+  if (!a?.pets && !b?.pets)
+    traits.push("🐾 Neither has pets");
+  if (a?.budget && b?.budget) {
+    const diff = Math.abs(a.budget - b.budget) / ((a.budget + b.budget) / 2);
+    if (diff <= 0.2) traits.push("💰 Similar budgets");
+  }
+  return traits.slice(0, 3);
+}
+
+function generateIcebreakers(me: any, other: any, otherName: string): string[] {
+  const starters: string[] = [];
+  if (me?.sleep_schedule && me.sleep_schedule === other?.sleep_schedule)
+    starters.push(`Hey! I saw we're both ${me.sleep_schedule.toLowerCase()}s 🌅`);
+  if (me?.lifestyle_vibe && me.lifestyle_vibe === other?.lifestyle_vibe)
+    starters.push(`Seems like we have the same vibe — "${me.lifestyle_vibe}"! 🌟`);
+  if (me?.city && me.city === other?.city)
+    starters.push(`You're looking in ${me.city} too? Where specifically?`);
+  if (me?.wfh && other?.wfh)
+    starters.push("Fellow WFH person here! Do you mind noise during calls? 🏠");
+  if (me?.desired_room_type && me.desired_room_type === other?.desired_room_type)
+    starters.push(`We both want a ${me.desired_room_type.toLowerCase()} room — good start!`);
+  starters.push(`Hey ${otherName}! Excited to connect 👋`);
+  starters.push("What kind of apartment vibe are you looking for?");
+  starters.push("Do you have any must-haves for your next place?");
+  return starters.slice(0, 4);
+}
+
 export default function Chats() {
   const { user } = useAuth();
   const { refresh: refreshUnread } = useUnreadCount();
+  const { profile: myProfile } = useProfile();
   const { t } = useLanguage();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<string | null>(null);
@@ -48,9 +91,30 @@ export default function Chats() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [otherProfile, setOtherProfile] = useState<any>(null);
+  const [contextDismissed, setContextDismissed] = useState(false);
 
   const activeConvData = conversations.find((c) => c.id === activeConv);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(activeConvData?.other_user_id);
+
+  // Fetch other user's profile for context card
+  useEffect(() => {
+    if (!activeConvData?.other_user_id) { setOtherProfile(null); return; }
+    supabase.from("profiles").select("*").eq("user_id", activeConvData.other_user_id).maybeSingle()
+      .then(({ data }) => setOtherProfile(data));
+    setContextDismissed(false);
+  }, [activeConvData?.other_user_id]);
+
+  const matchPercent = useMemo(() => {
+    if (!myProfile || !otherProfile) return 0;
+    return calculateUserMatch(myProfile, otherProfile);
+  }, [myProfile, otherProfile]);
+
+  const sharedTraits = useMemo(() => getSharedTraits(myProfile, otherProfile), [myProfile, otherProfile]);
+  const icebreakers = useMemo(
+    () => generateIcebreakers(myProfile, otherProfile, activeConvData?.other_name ?? "there"),
+    [myProfile, otherProfile, activeConvData?.other_name]
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -385,6 +449,40 @@ export default function Chats() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 max-w-lg mx-auto w-full">
+          {/* Context card — shown until dismissed or chat has many messages */}
+          <AnimatePresence>
+            {!contextDismissed && otherProfile && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10, height: 0 }}
+                className="mb-4 bg-card border border-border rounded-2xl overflow-hidden shadow-sm"
+              >
+                <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-bold text-foreground">Why you matched</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {matchPercent > 0 && <MatchBadge percent={matchPercent} size="sm" />}
+                    <button onClick={() => setContextDismissed(true)} className="text-muted-foreground hover:text-foreground">
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                {sharedTraits.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+                    {sharedTraits.map((trait) => (
+                      <span key={trait} className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
+                        {trait}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="space-y-2">
             {messages.map((msg) => {
               const isMine = msg.sender_id === user.id;
@@ -424,6 +522,24 @@ export default function Chats() {
             <div ref={messagesEndRef} />
           </div>
         </div>
+
+        {/* Icebreaker chips — only when no messages yet */}
+        {messages.length === 0 && icebreakers.length > 0 && (
+          <div className="px-4 pb-2 max-w-lg mx-auto w-full">
+            <p className="text-xs text-muted-foreground mb-2 font-medium">💬 Tap to start the conversation</p>
+            <div className="flex flex-wrap gap-2">
+              {icebreakers.map((starter) => (
+                <button
+                  key={starter}
+                  onClick={() => setNewMessage(starter)}
+                  className="text-xs bg-secondary hover:bg-primary/10 hover:text-primary border border-border hover:border-primary/30 text-secondary-foreground px-3 py-1.5 rounded-full transition-all text-left"
+                >
+                  {starter}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="sticky bottom-20 bg-background border-t border-border">
           <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-2">
