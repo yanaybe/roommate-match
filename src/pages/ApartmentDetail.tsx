@@ -374,48 +374,57 @@ export default function ApartmentDetail() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
-        {/* Title & Price */}
+        {/* Title */}
         <div>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-xl font-extrabold text-foreground">{apartment.title}</h1>
-              <div className="flex items-center gap-1 text-muted-foreground text-sm mt-0.5">
-                <MapPin className="w-3.5 h-3.5" />
-                {apartment.location}
-              </div>
-            </div>
-            <div className="text-right shrink-0">
-              <span className="text-2xl font-extrabold text-primary">
-                ₪{apartment.price.toLocaleString()}
-              </span>
-              <span className="text-muted-foreground text-xs block">/month</span>
-            </div>
+          <h1 className="text-xl font-extrabold text-foreground">{apartment.title}</h1>
+          <div className="flex items-center gap-1 text-muted-foreground text-sm mt-0.5">
+            <MapPin className="w-3.5 h-3.5" />
+            {apartment.location}
           </div>
         </div>
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-4 gap-2">
-          <div className="bg-card rounded-xl p-3 text-center shadow-card">
-            <Bed className="w-4 h-4 mx-auto text-primary mb-1" />
-            <span className="text-foreground text-sm font-bold block">{apartment.rooms}</span>
-            <span className="text-muted-foreground text-[10px]">Rooms</span>
+        {/* Room details */}
+        <div className="space-y-3">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-primary">Your Room</span>
+              <div className="flex-1 h-px bg-primary/20" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center">
+                <span className="text-primary text-[10px] font-semibold uppercase tracking-wide block mb-0.5">Monthly Rent</span>
+                <span className="text-foreground text-lg font-extrabold">₪{apartment.price.toLocaleString()}</span>
+              </div>
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center">
+                <Calendar className="w-4 h-4 mx-auto text-primary mb-1" />
+                <span className="text-foreground text-xs font-bold block leading-tight">{apartment.available}</span>
+                <span className="text-muted-foreground text-[10px]">Available</span>
+              </div>
+            </div>
           </div>
-          <div className="bg-card rounded-xl p-3 text-center shadow-card">
-            <Bath className="w-4 h-4 mx-auto text-primary mb-1" />
-            <span className="text-foreground text-sm font-bold block">{apartment.bathrooms}</span>
-            <span className="text-muted-foreground text-[10px]">Baths</span>
-          </div>
-          <div className="bg-card rounded-xl p-3 text-center shadow-card">
-            <Maximize className="w-4 h-4 mx-auto text-primary mb-1" />
-            <span className="text-foreground text-sm font-bold block">{apartment.size}</span>
-            <span className="text-muted-foreground text-[10px]">m²</span>
-          </div>
-          <div className="bg-card rounded-xl p-3 text-center shadow-card">
-            <Calendar className="w-4 h-4 mx-auto text-primary mb-1" />
-            <span className="text-foreground text-xs font-bold block leading-tight">
-              {apartment.available}
-            </span>
-            <span className="text-muted-foreground text-[10px]">Available</span>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">The Apartment</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-card rounded-xl p-3 text-center shadow-card">
+                <Bed className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
+                <span className="text-foreground text-sm font-bold block">{apartment.rooms}</span>
+                <span className="text-muted-foreground text-[10px]">Bedrooms</span>
+              </div>
+              <div className="bg-card rounded-xl p-3 text-center shadow-card">
+                <Bath className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
+                <span className="text-foreground text-sm font-bold block">{apartment.bathrooms}</span>
+                <span className="text-muted-foreground text-[10px]">Bathrooms</span>
+              </div>
+              <div className="bg-card rounded-xl p-3 text-center shadow-card">
+                <Maximize className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
+                <span className="text-foreground text-sm font-bold block">{apartment.size}</span>
+                <span className="text-muted-foreground text-[10px]">m² total</span>
+              </div>
+            </div>
           </div>
         </div>
 

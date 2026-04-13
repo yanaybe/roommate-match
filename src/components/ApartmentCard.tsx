@@ -1,4 +1,4 @@
-import { MessageCircle, Bookmark, MapPin, Bed, Bath, Maximize } from "lucide-react";
+import { MessageCircle, Bookmark, MapPin, Bed, Bath, Maximize, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -154,13 +154,19 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             </div>
           </div>
           <div className="text-right">
+            <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Room / month</div>
             <span className="text-lg font-extrabold text-primary">₪{apartment.price.toLocaleString()}</span>
-            <span className="text-muted-foreground text-xs block">/month</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-muted-foreground text-xs pt-1">
-          <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" /> {apartment.rooms} rooms</span>
+        <div className="flex items-center gap-1 text-muted-foreground text-xs">
+          <Calendar className="w-3 h-3" />
+          <span>Available {apartment.available}</span>
+        </div>
+
+        <div className="flex items-center gap-3 text-muted-foreground text-xs border-t border-border/40 pt-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">Apt:</span>
+          <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" /> {apartment.rooms} bed</span>
           <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" /> {apartment.bathrooms} bath</span>
           <span className="flex items-center gap-1"><Maximize className="w-3.5 h-3.5" /> {apartment.size}m²</span>
         </div>
