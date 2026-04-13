@@ -4,7 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
 import MatchModal from "@/components/MatchModal";
-import { mockUsers, type UserProfile } from "@/data/mockData";
+import { type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
 import { fetchBlockedIds } from "@/hooks/useBlockReport";
@@ -115,13 +115,7 @@ export default function Roommates() {
       }));
   }, [allProfiles, myProfile, user?.id]);
 
-  // Fall back to mock data when no real profiles exist
-  const useMockData = otherProfiles.length === 0 && !profilesLoading;
-  const mockMatchPercents = [92, 87, 78, 85, 71, 64];
-
-  const items = useMockData
-    ? mockUsers.map((u, i) => ({ user: u, matchPercent: mockMatchPercents[i] ?? 75 }))
-    : otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent }));
+  const items = otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent }));
 
   const remaining = items.filter(
     (item) => !swiped.includes(item.user.id) && !blockedIds.includes(item.user.id)

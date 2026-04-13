@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import MatchBadge from "@/components/MatchBadge";
 import SwipeCard from "@/components/SwipeCard";
-import { mockUsers, type UserProfile } from "@/data/mockData";
+import { type UserProfile } from "@/data/mockData";
 
 type Tab = "members" | "discover" | "apartments" | "chat";
 

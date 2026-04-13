@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import MatchBadge from "@/components/MatchBadge";
-import { mockUsers, type UserProfile } from "@/data/mockData";
+import { type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
 import { calculateUserMatch, calculateUserMatchBreakdown, type MatchFactor } from "@/lib/matching";
@@ -76,10 +76,6 @@ export default function RoommateProfile() {
       const match = myProfile ? calculateUserMatch(myProfile, dbProfile) : 75;
       const bd = myProfile ? calculateUserMatchBreakdown(myProfile, dbProfile) : [];
       return { userData: u, fullProfile: dbProfile, matchPercent: match, breakdown: bd };
-    }
-    const mockUser = mockUsers.find((u) => u.id === id);
-    if (mockUser) {
-      return { userData: mockUser, fullProfile: null, matchPercent: 80, breakdown: [] };
     }
     return { userData: null, fullProfile: null, matchPercent: 0, breakdown: [] };
   }, [id, allProfiles, myProfile]);

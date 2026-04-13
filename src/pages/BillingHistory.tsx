@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Receipt, Download, Filter, CheckCircle2, XCircle, Clock, CreditCard, Crown, Zap, Star } from "lucide-react";
+import { ArrowLeft, Receipt, CheckCircle2, XCircle, Clock, CreditCard, Crown, Zap, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Badge } from "@/components/ui/badge";
@@ -17,71 +17,7 @@ interface Transaction {
   icon: React.ElementType;
 }
 
-const mockTransactions: Transaction[] = [
-  {
-    id: "txn_001",
-    date: "2026-04-08",
-    description: "Gold Plan – Monthly",
-    amount: "₪29.00",
-    status: "completed",
-    type: "subscription",
-    icon: Crown,
-  },
-  {
-    id: "txn_002",
-    date: "2026-04-05",
-    description: "Profile Boost × 3",
-    amount: "₪30.00",
-    status: "completed",
-    type: "boost",
-    icon: Zap,
-  },
-  {
-    id: "txn_003",
-    date: "2026-03-08",
-    description: "Gold Plan – Monthly",
-    amount: "₪29.00",
-    status: "completed",
-    type: "subscription",
-    icon: Crown,
-  },
-  {
-    id: "txn_004",
-    date: "2026-03-01",
-    description: "Instant Message",
-    amount: "₪5.00",
-    status: "refunded",
-    type: "extra",
-    icon: Star,
-  },
-  {
-    id: "txn_005",
-    date: "2026-02-08",
-    description: "Gold Plan – Monthly",
-    amount: "₪29.00",
-    status: "completed",
-    type: "subscription",
-    icon: Crown,
-  },
-  {
-    id: "txn_006",
-    date: "2026-02-02",
-    description: "Listing Boost",
-    amount: "₪10.00",
-    status: "failed",
-    type: "boost",
-    icon: Zap,
-  },
-  {
-    id: "txn_007",
-    date: "2026-01-08",
-    description: "Gold Plan – Monthly",
-    amount: "₪29.00",
-    status: "completed",
-    type: "subscription",
-    icon: Crown,
-  },
-];
+const mockTransactions: Transaction[] = [];
 
 const statusConfig: Record<TransactionStatus, { label: string; icon: React.ElementType; color: string }> = {
   completed: { label: "Completed", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40" },

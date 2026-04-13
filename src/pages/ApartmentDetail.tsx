@@ -19,7 +19,7 @@ import {
   MoreVertical,
   Flag,
 } from "lucide-react";
-import { mockApartments, mockUsers, type UserProfile, type Apartment, getMatchColor, getMatchTextColor } from "@/data/mockData";
+import { type UserProfile, type Apartment } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/hooks/useAuth";
@@ -220,8 +220,7 @@ export default function ApartmentDetail() {
     window.scrollTo(0, 0);
   }, []);
 
-  const apartment: (Apartment & { ownerId?: string }) | undefined =
-    dbApartment ?? mockApartments.find((a) => a.id === id);
+  const apartment: (Apartment & { ownerId?: string }) | undefined = dbApartment ?? undefined;
   const isOwner = user && apartment?.ownerId === user.id;
 
   if (!apartment) {
