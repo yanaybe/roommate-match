@@ -133,12 +133,18 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
         </div>
         <div className="absolute bottom-3 right-3 flex -space-x-2">
           {apartment.roommates.map((rm) => (
-            <img
+            <button
               key={rm.id}
-              src={rm.avatar}
-              alt={rm.name}
-              className="w-8 h-8 rounded-full border-2 border-card object-cover"
-            />
+              onClick={(e) => { e.stopPropagation(); navigate(`/roommate/${rm.id}`); }}
+              title={rm.name}
+              className="focus:outline-none"
+            >
+              <img
+                src={rm.avatar}
+                alt={rm.name}
+                className="w-8 h-8 rounded-full border-2 border-card object-cover hover:scale-110 transition-transform"
+              />
+            </button>
           ))}
         </div>
       </div>

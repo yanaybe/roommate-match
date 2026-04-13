@@ -553,7 +553,7 @@ export default function SquadHub() {
                     : null;
 
                   return (
-                    <motion.div key={m.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 p-3 bg-card rounded-2xl shadow-card">
+                    <motion.div key={m.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 p-3 bg-card rounded-2xl shadow-card cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/roommate/${m.user_id}`)}>
                       <div className="w-11 h-11 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                         {p?.avatar_url ? (
                           <img src={p.avatar_url} alt={p.name} className="w-full h-full rounded-full object-cover" />
