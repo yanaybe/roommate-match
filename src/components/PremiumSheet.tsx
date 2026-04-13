@@ -2,11 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown, Star, Gem, Zap, Check, Lock, Heart, MessageCircle,
-  Eye, Undo2, Filter, TrendingUp, BadgeCheck, Rocket, ChevronRight, Loader2
+  Eye, Undo2, TrendingUp, BadgeCheck, Rocket, X, Loader2, Sparkles, Users, Shield
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -16,14 +15,6 @@ interface PremiumSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// ---------------------------------------------------------------------------
-// Paddle config — set these in your .env file:
-//   VITE_PADDLE_CLIENT_TOKEN=live_xxxxxxxxxxxx  (or test_xxx for sandbox)
-//   VITE_PADDLE_ENV=production                  (or "sandbox")
-//   VITE_PADDLE_PRICE_PLUS=pri_xxxx
-//   VITE_PADDLE_PRICE_GOLD=pri_xxxx
-//   VITE_PADDLE_PRICE_PLATINUM=pri_xxxx
-// ---------------------------------------------------------------------------
 const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN as string;
 const PADDLE_ENV = (import.meta.env.VITE_PADDLE_ENV ?? "sandbox") as "sandbox" | "production";
 
@@ -37,61 +28,69 @@ const plans = [
   {
     id: "plus",
     name: "Plus",
-    emoji: "🥉",
     price: 19,
-    tagline: "Remove Limits",
+    tagline: "Remove limits",
     popular: false,
-    color: "hsl(var(--accent))",
+    icon: Zap,
+    color: "from-emerald-500 to-teal-500",
+    lightColor: "from-emerald-500/15 to-teal-500/10",
+    textColor: "text-emerald-500",
+    borderColor: "border-emerald-500",
+    ringColor: "ring-emerald-500",
     features: [
       { icon: Heart, text: "Unlimited likes" },
-      { icon: Undo2, text: "Undo last swipe (Rewind)" },
-      { icon: Eye, text: "Control visibility — only people you liked see you" },
-      { icon: Filter, text: "Access to basic filters" },
-      { icon: Zap, text: "Hide ads" },
+      { icon: Undo2, text: "Rewind last swipe" },
+      { icon: Eye, text: "Control who sees you" },
+      { icon: Zap, text: "Ad-free experience" },
     ],
   },
   {
     id: "gold",
     name: "Gold",
-    emoji: "🥈",
     price: 29,
-    tagline: "Most Popular",
+    tagline: "Most popular",
     popular: true,
-    color: "hsl(var(--match-medium))",
+    icon: Crown,
+    color: "from-amber-400 to-orange-500",
+    lightColor: "from-amber-400/20 to-orange-500/10",
+    textColor: "text-amber-500",
+    borderColor: "border-amber-400",
+    ringColor: "ring-amber-400",
     features: [
       { icon: Check, text: "Everything in Plus" },
-      { icon: Eye, text: "See who liked you (users & apartments)" },
+      { icon: Eye, text: "See everyone who liked you" },
       { icon: MessageCircle, text: "Unlimited chats" },
-      { icon: Star, text: "Daily \"Top Matches\" suggestions" },
-      { icon: Rocket, text: "1 boost per week" },
-      { icon: TrendingUp, text: "Higher visibility in search" },
+      { icon: Star, text: "Daily top matches" },
+      { icon: Rocket, text: "1 free boost per week" },
+      { icon: TrendingUp, text: "Higher search visibility" },
     ],
   },
   {
     id: "platinum",
     name: "Platinum",
-    emoji: "🥇",
     price: 39,
-    tagline: "Power Users",
+    tagline: "For serious searchers",
     popular: false,
-    color: "hsl(var(--primary))",
+    icon: Gem,
+    color: "from-violet-500 to-purple-600",
+    lightColor: "from-violet-500/15 to-purple-600/10",
+    textColor: "text-violet-500",
+    borderColor: "border-violet-500",
+    ringColor: "ring-violet-500",
     features: [
       { icon: Check, text: "Everything in Gold" },
-      { icon: Rocket, text: "Priority likes — shown before free users" },
-      { icon: MessageCircle, text: "Message users before matching" },
-      { icon: TrendingUp, text: "Your likes appear first in feeds" },
-      { icon: Eye, text: "See all likes you sent" },
-      { icon: Zap, text: "3 boosts per week" },
-      { icon: BadgeCheck, text: "\"Top Match\" badge on profile" },
-      { icon: Crown, text: "Priority placement in listings & map" },
+      { icon: MessageCircle, text: "Message before matching" },
+      { icon: Rocket, text: "3 boosts per week" },
+      { icon: BadgeCheck, text: "\"Top Match\" profile badge" },
+      { icon: Crown, text: "Priority in all listings" },
     ],
   },
 ];
 
 const boosts = [
-  { label: "1 Day Boost", priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_DAY as string, price: 10, desc: "Profile/listing boost for 24h" },
-  { label: "1 Week Boost", priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_WEEK as string, price: 50, desc: "7 days of higher visibility" },
-  { label: "1 Month Boost", priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_MONTH as string, price: 150, desc: "30 days at the top" },
+  { label: "1 Day", priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_DAY as string, price: 10, desc: "24h boost" },
+  { label: "1 Week", priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_WEEK as string, price: 50, desc: "7-day boost" },
+  { label: "1 Month", priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_MONTH as string, price: 150, desc: "30-day boost" },
 ];
 
 const extras = [
@@ -99,21 +98,8 @@ const extras = [
   { label: "Profile Highlight", priceId: import.meta.env.VITE_PADDLE_PRICE_HIGHLIGHT as string, price: 7, desc: "Stand out in search", icon: Star },
 ];
 
-const freeFeatures = [
-  "Browse apartment listings & roommate profiles",
-  "Save up to 3 apartments/day",
-  "Like up to 8 roommates/day",
-  "Match when both sides like each other",
-  "Send messages only after matching",
-  "View match percentage",
-];
-
-const freeLimitations = [
-  "Cannot see who liked you",
-  "Limited daily likes — 8",
-  "Limited daily messages — 20",
-  "No boosts or priority visibility",
-];
+// Fake blurred avatar colors for the teaser
+const avatarColors = ["bg-pink-400", "bg-violet-400", "bg-sky-400", "bg-amber-400", "bg-emerald-400"];
 
 export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) {
   const { user } = useAuth();
@@ -123,282 +109,312 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
 
   useEffect(() => {
     if (!PADDLE_CLIENT_TOKEN) return;
-    initializePaddle({
-      environment: PADDLE_ENV,
-      token: PADDLE_CLIENT_TOKEN,
-    }).then((p) => {
+    initializePaddle({ environment: PADDLE_ENV, token: PADDLE_CLIENT_TOKEN }).then((p) => {
       if (p) setPaddle(p);
     });
   }, []);
 
-  const openCheckout = useCallback(
-    async (priceId: string) => {
-      if (!paddle) {
-        toast.error("Payment system not ready. Please try again.");
-        return;
-      }
-      if (!priceId) {
-        toast.error("This plan is not available yet.");
-        return;
-      }
-      if (!user) {
-        toast.error("Please sign in first.");
-        return;
-      }
+  const openCheckout = useCallback(async (priceId: string) => {
+    if (!paddle) { toast.error("Payment system not ready. Please try again."); return; }
+    if (!priceId) { toast.error("This plan is not available yet."); return; }
+    if (!user) { toast.error("Please sign in first."); return; }
+    setLoading(true);
+    try {
+      paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customer: { email: user.email! },
+        customData: { user_id: user.id },
+        settings: { displayMode: "overlay", theme: "dark", locale: "en" },
+      });
+      onOpenChange(false);
+    } catch (err) {
+      console.error("Paddle checkout error:", err);
+      toast.error("Could not open checkout. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [paddle, user, onOpenChange]);
 
-      setLoading(true);
-      try {
-        paddle.Checkout.open({
-          items: [{ priceId, quantity: 1 }],
-          customer: { email: user.email! },
-          customData: { user_id: user.id },
-          settings: {
-            displayMode: "overlay",
-            theme: "dark",
-            locale: "en",
-          },
-        });
-        onOpenChange(false);
-      } catch (err) {
-        console.error("Paddle checkout error:", err);
-        toast.error("Could not open checkout. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [paddle, user, onOpenChange]
-  );
-
-  const handleSubscribe = () => {
-    openCheckout(PRICE_IDS[selectedPlan]);
-  };
+  const handleSubscribe = () => openCheckout(PRICE_IDS[selectedPlan]);
+  const activePlan = plans.find((p) => p.id === selectedPlan)!;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[92vh] rounded-t-3xl p-0">
-        <SheetHeader className="px-5 pt-5 pb-3 border-b border-border">
-          <SheetTitle className="text-lg font-extrabold text-foreground flex items-center gap-2">
-            <Gem className="w-5 h-5 text-primary" />
-            Go Premium
-          </SheetTitle>
-        </SheetHeader>
+      <SheetContent side="bottom" className="h-[94vh] rounded-t-3xl p-0 overflow-hidden border-0">
 
-        <ScrollArea className="h-[calc(92vh-70px)]">
-          <div className="px-5 py-4 space-y-6">
+        {/* Hero header */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary via-violet-600 to-amber-500 px-5 pt-8 pb-6">
+          {/* Close button */}
+          <button
+            onClick={() => onOpenChange(false)}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
 
-            {/* Teaser: blurred likes */}
+          {/* Decorative circles */}
+          <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full bg-white/10 blur-xl" />
+          <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full bg-white/10 blur-lg" />
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Crown className="w-5 h-5 text-amber-300" />
+              </div>
+              <span className="text-white/80 text-sm font-semibold tracking-wide uppercase">Roo<span className="text-amber-300">match</span> Premium</span>
+            </div>
+            <h2 className="text-2xl font-extrabold text-white leading-tight mb-1">
+              Find your roommate<br />10× faster
+            </h2>
+            <p className="text-white/70 text-sm">Unlock every feature. No limits.</p>
+
+            {/* Social proof */}
+            <div className="flex items-center gap-2 mt-4">
+              <div className="flex -space-x-2">
+                {avatarColors.slice(0, 4).map((c, i) => (
+                  <div key={i} className={`w-7 h-7 rounded-full ${c} border-2 border-white/30 flex items-center justify-center text-white text-[10px] font-bold`}>
+                    {String.fromCharCode(65 + i)}
+                  </div>
+                ))}
+              </div>
+              <p className="text-white/80 text-xs font-medium">
+                <span className="text-white font-bold">2,400+</span> people found roommates this month
+              </p>
+            </div>
+          </motion.div>
+        </div>
+
+        <ScrollArea className="h-[calc(94vh-190px)]">
+          <div className="px-5 py-5 space-y-5">
+
+            {/* Who liked you — FOMO teaser */}
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 p-4"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="relative rounded-2xl overflow-hidden border border-amber-400/30 bg-gradient-to-br from-amber-400/10 to-orange-500/5 p-4"
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/5 to-transparent animate-pulse pointer-events-none" />
               <div className="flex items-center gap-3">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="w-10 h-10 rounded-full bg-muted blur-[3px] border-2 border-card"
-                    />
+                <div className="relative flex -space-x-2.5">
+                  {avatarColors.map((c, i) => (
+                    <div key={i} className={`w-11 h-11 rounded-full ${c} border-2 border-card blur-[5px] opacity-80`} />
                   ))}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Lock className="w-4 h-4 text-amber-500" />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-foreground flex items-center gap-1">
-                    <Lock className="w-3.5 h-3.5 text-primary" />
-                    12 people liked you
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-extrabold text-foreground">
+                    12 people liked you 👀
                   </p>
-                  <p className="text-xs text-muted-foreground">Upgrade to see who they are</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Upgrade Gold to see who they are</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                <div className="bg-amber-400/20 text-amber-600 text-[10px] font-extrabold px-2 py-1 rounded-full border border-amber-400/30">
+                  GOLD+
+                </div>
               </div>
             </motion.div>
 
-            {/* Free plan summary */}
+            {/* Plan selector */}
             <div>
-              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                👤 Your Free Plan
-              </h3>
-              <div className="bg-card rounded-2xl shadow-card p-4 space-y-2">
-                {freeFeatures.map((f, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <Check className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
-                    <span className="text-xs text-foreground">{f}</span>
-                  </div>
-                ))}
-                <div className="border-t border-border/50 pt-2 mt-2">
-                  {freeLimitations.map((l, i) => (
-                    <div key={i} className="flex items-start gap-2 py-0.5">
-                      <Lock className="w-3.5 h-3.5 text-destructive mt-0.5 shrink-0" />
-                      <span className="text-xs text-muted-foreground">{l}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-extrabold text-foreground">Choose your plan</h3>
+                <span className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">Cancel anytime</span>
               </div>
-            </div>
 
-            {/* Plan selector — side by side cards */}
-            <div>
-              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                💎 Choose Your Plan
-              </h3>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-2.5">
                 {plans.map((plan, idx) => {
                   const isSelected = selectedPlan === plan.id;
-                  const iconMap = { plus: Zap, gold: Crown, platinum: Gem };
-                  const PlanIcon = iconMap[plan.id as keyof typeof iconMap];
-                  const gradients = {
-                    plus: "from-accent/20 to-accent/5",
-                    gold: "from-[hsl(38,92%,55%)]/25 to-[hsl(38,92%,55%)]/5",
-                    platinum: "from-primary/20 to-primary/5",
-                  };
-                  const iconColors = {
-                    plus: "text-accent",
-                    gold: "text-[hsl(38,92%,55%)]",
-                    platinum: "text-primary",
-                  };
-                  const ringColors = {
-                    plus: "ring-accent",
-                    gold: "ring-[hsl(38,92%,55%)]",
-                    platinum: "ring-primary",
-                  };
+                  const Icon = plan.icon;
 
                   return (
                     <motion.button
                       key={plan.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.08 }}
-                      whileTap={{ scale: 0.95 }}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.07 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedPlan(plan.id)}
-                      className={`relative flex flex-col items-center text-center rounded-2xl p-3 pt-4 transition-all border-2 bg-gradient-to-b ${gradients[plan.id as keyof typeof gradients]} ${
+                      className={`w-full relative rounded-2xl border-2 transition-all overflow-hidden ${
                         isSelected
-                          ? `${ringColors[plan.id as keyof typeof ringColors]} border-transparent ring-2 shadow-lg scale-[1.03]`
-                          : "border-border/60 shadow-card"
+                          ? `${plan.borderColor} bg-gradient-to-r ${plan.lightColor} shadow-lg`
+                          : "border-border/60 bg-card"
                       }`}
                     >
                       {plan.popular && (
-                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold text-primary-foreground whitespace-nowrap" style={{ background: "var(--gradient-primary)" }}>
-                          ⭐ BEST VALUE
+                        <div className={`absolute top-0 right-0 bg-gradient-to-r ${plan.color} text-white text-[9px] font-extrabold px-3 py-1 rounded-bl-xl`}>
+                          ⭐ MOST POPULAR
                         </div>
                       )}
 
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 ${isSelected ? "bg-card shadow-md" : "bg-card/60"}`}>
-                        <PlanIcon className={`w-5 h-5 ${iconColors[plan.id as keyof typeof iconColors]}`} />
+                      <div className="flex items-center gap-3 p-3.5">
+                        {/* Radio indicator */}
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                          isSelected ? `${plan.borderColor} bg-gradient-to-br ${plan.color}` : "border-muted-foreground/30"
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                        </div>
+
+                        {/* Icon */}
+                        <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center shrink-0 shadow-sm`}>
+                          <Icon className="w-4.5 h-4.5 text-white" />
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 text-left min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-extrabold text-foreground">{plan.name}</span>
+                            <span className={`text-[10px] font-semibold ${plan.textColor}`}>{plan.tagline}</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {plan.features.slice(0, 2).map((f, i) => {
+                              const FIcon = f.icon;
+                              return (
+                                <span key={i} className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                  <FIcon className="w-2.5 h-2.5" />
+                                  {f.text}
+                                  {i < 1 && <span className="mx-0.5 opacity-30">·</span>}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Price */}
+                        <div className="text-right shrink-0">
+                          <span className="text-lg font-extrabold text-foreground">₪{plan.price}</span>
+                          <span className="text-[10px] text-muted-foreground block">/mo</span>
+                        </div>
                       </div>
 
-                      <span className="text-xs font-extrabold text-foreground">{plan.name}</span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{plan.tagline}</span>
-
-                      <div className="mt-2 mb-1">
-                        <span className="text-xl font-extrabold text-foreground">₪{plan.price}</span>
-                        <span className="text-[10px] text-muted-foreground">/mo</span>
-                      </div>
-
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-1 transition-colors ${
-                        isSelected ? "border-primary bg-primary" : "border-muted-foreground/30 bg-transparent"
-                      }`}>
-                        {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
-                      </div>
+                      {/* Expanded features when selected */}
+                      <AnimatePresence>
+                        {isSelected && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-3.5 pb-3.5 grid grid-cols-2 gap-1.5 border-t border-border/30 pt-3">
+                              {plan.features.map((feat, i) => {
+                                const FIcon = feat.icon;
+                                return (
+                                  <div key={i} className="flex items-center gap-1.5">
+                                    <div className={`w-4 h-4 rounded-full bg-gradient-to-br ${plan.color} flex items-center justify-center shrink-0`}>
+                                      <FIcon className="w-2 h-2 text-white" />
+                                    </div>
+                                    <span className="text-[11px] text-foreground leading-tight">{feat.text}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </motion.button>
                   );
                 })}
               </div>
 
-              {/* Expanded features for selected plan */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={selectedPlan}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
-                  className="mt-3 bg-card rounded-2xl shadow-card p-4"
-                >
-                  <p className="text-xs font-bold text-foreground mb-2">
-                    {plans.find(p => p.id === selectedPlan)?.emoji}{" "}
-                    {plans.find(p => p.id === selectedPlan)?.name} includes:
-                  </p>
-                  <div className="space-y-1.5">
-                    {plans.find(p => p.id === selectedPlan)?.features.map((feat, i) => {
-                      const Icon = feat.icon;
-                      return (
-                        <div key={i} className="flex items-start gap-2">
-                          <Icon className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                          <span className="text-xs text-foreground">{feat.text}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Subscribe CTA */}
+              {/* CTA */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={handleSubscribe}
                 disabled={loading}
-                className="w-full mt-4 py-3.5 rounded-xl font-bold text-sm text-primary-foreground flex items-center justify-center gap-2 shadow-lg disabled:opacity-70"
-                style={{ background: "var(--gradient-primary)" }}
+                className={`w-full mt-4 py-4 rounded-2xl font-extrabold text-base text-white flex items-center justify-center gap-2 shadow-xl disabled:opacity-70 relative overflow-hidden bg-gradient-to-r ${activePlan.color}`}
               >
+                <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
                 {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Crown className="w-4 h-4" />
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Get {activePlan.name} — ₪{activePlan.price}/month
+                  </>
                 )}
-                Get {plans.find((p) => p.id === selectedPlan)?.name} — ₪
-                {plans.find((p) => p.id === selectedPlan)?.price}/mo
               </motion.button>
-              <p className="text-[10px] text-muted-foreground text-center mt-1.5">
-                Cancel anytime · Billed monthly
-              </p>
-            </div>
 
-            {/* One-time purchases */}
-            <div>
-              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                💰 One-Time Purchases
-              </h3>
-
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-foreground mb-1">Boost Profile / Listing</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {boosts.map((b) => (
-                    <button
-                      key={b.label}
-                      onClick={() => b.priceId && openCheckout(b.priceId)}
-                      className="bg-card border border-border rounded-xl p-3 text-center hover:border-primary/50 transition-colors shadow-card"
-                    >
-                      <Rocket className="w-4 h-4 text-primary mx-auto mb-1" />
-                      <p className="text-[11px] font-bold text-foreground">{b.label}</p>
-                      <p className="text-xs font-extrabold text-primary mt-0.5">₪{b.price}</p>
-                    </button>
-                  ))}
+              {/* Trust signals */}
+              <div className="flex items-center justify-center gap-4 mt-3">
+                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Shield className="w-3 h-3" />
+                  Secure payment
+                </div>
+                <div className="w-px h-3 bg-border" />
+                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Check className="w-3 h-3" />
+                  Cancel anytime
+                </div>
+                <div className="w-px h-3 bg-border" />
+                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Users className="w-3 h-3" />
+                  2,400+ users
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-2 mt-4">
-                {extras.map((e) => {
-                  const Icon = e.icon;
-                  return (
-                    <button
-                      key={e.label}
-                      onClick={() => e.priceId && openCheckout(e.priceId)}
-                      className="w-full flex items-center gap-3 bg-card border border-border rounded-xl p-3 hover:border-primary/50 transition-colors shadow-card"
-                    >
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <Icon className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="text-xs font-bold text-foreground">{e.label}</p>
-                        <p className="text-[11px] text-muted-foreground">{e.desc}</p>
-                      </div>
-                      <span className="text-sm font-extrabold text-primary">₪{e.price}</span>
-                    </button>
-                  );
-                })}
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[11px] text-muted-foreground font-semibold">OR ONE-TIME</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {/* Boosts */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Rocket className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-bold text-foreground">Boost Profile / Listing</h3>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {boosts.map((b) => (
+                  <button
+                    key={b.label}
+                    onClick={() => b.priceId && openCheckout(b.priceId)}
+                    className="bg-card border border-border rounded-2xl p-3 text-center hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-95"
+                  >
+                    <Rocket className="w-5 h-5 text-primary mx-auto mb-1.5" />
+                    <p className="text-xs font-extrabold text-foreground">{b.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{b.desc}</p>
+                    <p className="text-sm font-extrabold text-primary mt-1">₪{b.price}</p>
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="pb-6" />
+            {/* Extras */}
+            <div className="space-y-2 pb-6">
+              {extras.map((e) => {
+                const Icon = e.icon;
+                return (
+                  <button
+                    key={e.label}
+                    onClick={() => e.priceId && openCheckout(e.priceId)}
+                    className="w-full flex items-center gap-3 bg-card border border-border rounded-2xl p-3.5 hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-[0.98]"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-bold text-foreground">{e.label}</p>
+                      <p className="text-xs text-muted-foreground">{e.desc}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-extrabold text-primary">₪{e.price}</span>
+                      <span className="text-xs text-muted-foreground block">one-time</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
           </div>
         </ScrollArea>
       </SheetContent>
