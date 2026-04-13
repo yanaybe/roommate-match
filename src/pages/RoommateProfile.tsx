@@ -460,7 +460,7 @@ export default function RoommateProfile() {
       {/* ── Sticky bottom action bar ── */}
       {!isOwnProfile && (
         <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-50">
-          <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
+          <div className="max-w-lg mx-auto px-4 pt-3 pb-20 flex gap-3">
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleLike}
