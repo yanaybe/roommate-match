@@ -465,7 +465,7 @@ export default function PostApartment() {
       </div>
 
       {/* Bottom buttons */}
-      <div className="fixed bottom-20 left-0 right-0 z-30 bg-background/80 backdrop-blur-lg border-t border-border">
+      <div className="fixed bottom-16 md:bottom-0 left-0 md:left-64 right-0 z-30 bg-background/80 backdrop-blur-lg border-t border-border">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           {step > 0 && (
             <Button variant="outline" onClick={() => setStep(step - 1)} className="rounded-xl flex-1">

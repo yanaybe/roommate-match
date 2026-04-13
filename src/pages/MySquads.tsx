@@ -147,7 +147,7 @@ export default function MySquads() {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-lg mx-auto px-4 pt-12 pb-3 flex items-center gap-3">
+        <div className="max-w-2xl mx-auto px-4 pt-12 md:pt-6 pb-3 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-1 -ml-1">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
@@ -160,7 +160,7 @@ export default function MySquads() {
         </div>
 
         {/* Tabs */}
-        <div className="max-w-lg mx-auto px-4 pb-2 flex gap-2">
+        <div className="max-w-2xl mx-auto px-4 pb-2 flex gap-2">
           {(["my", "discover"] as Tab[]).map((t) => (
             <button
               key={t}

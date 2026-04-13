@@ -247,7 +247,7 @@ export default function ApartmentDetail() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Image gallery */}
-      <div className="relative max-w-2xl mx-auto overflow-hidden">
+      <div className="relative max-w-3xl mx-auto overflow-hidden">
         <div className="relative aspect-[16/10] overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.img
@@ -372,7 +372,7 @@ export default function ApartmentDetail() {
         )}
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
+      <div className="max-w-3xl mx-auto px-4 pt-5 space-y-5">
         {/* Title */}
         <div>
           <h1 className="text-xl font-extrabold text-foreground">{apartment.title}</h1>
@@ -496,8 +496,8 @@ export default function ApartmentDetail() {
       </div>
 
       {/* Bottom action bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-40">
-        <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
+      <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-40">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex gap-3">
           <button
             onClick={() => requireAuth(() => navigate("/chats"))}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm gradient-primary text-primary-foreground transition-all"

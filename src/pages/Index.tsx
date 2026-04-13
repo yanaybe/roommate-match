@@ -126,9 +126,9 @@ export default function Index() {
   })();
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 md:pb-8">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-lg mx-auto px-4 pt-12 pb-3">
+        <div className="max-w-5xl mx-auto px-4 pt-12 md:pt-6 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
@@ -176,7 +176,7 @@ export default function Index() {
       </div>
 
       {user && profile && !profile.onboarding_complete && (
-        <div className="max-w-lg mx-auto px-4 pt-3">
+        <div className="max-w-5xl mx-auto px-4 pt-3">
           <button
             onClick={() => navigate("/onboarding")}
             className="w-full flex items-center gap-3 p-3.5 bg-primary/10 border border-primary/20 rounded-2xl text-left"
@@ -192,7 +192,7 @@ export default function Index() {
       )}
 
       {user && profile?.onboarding_complete && squads.length === 0 && (
-        <div className="max-w-lg mx-auto px-4 pt-3">
+        <div className="max-w-5xl mx-auto px-4 pt-3">
           <button
             onClick={() => navigate("/create-squad")}
             className="w-full flex items-center gap-3 p-3.5 bg-gradient-to-r from-violet-500/10 to-pink-500/10 border border-primary/20 rounded-2xl text-left"
@@ -207,10 +207,10 @@ export default function Index() {
         </div>
       )}
 
-      <div className="max-w-lg mx-auto px-4 pt-4">
+      <div className="max-w-5xl mx-auto px-4 pt-4">
         {view === "list" ? (
           filtered.length > 0 ? (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.map((apt, i) => (
                 <ApartmentCard key={apt.id} apartment={apt} index={i} />
               ))}

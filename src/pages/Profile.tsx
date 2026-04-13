@@ -96,8 +96,8 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="max-w-lg mx-auto px-4 pt-12">
+    <div className="min-h-screen bg-background pb-20 md:pb-8">
+      <div className="max-w-2xl mx-auto px-4 pt-12 md:pt-8">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

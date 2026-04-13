@@ -516,7 +516,7 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-lg mx-auto px-4 pt-12 pb-8">
+      <div className="max-w-lg mx-auto px-4 pt-12 md:pt-6 pb-8">
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold text-foreground">
             Set up your <span className="text-primary">profile</span>

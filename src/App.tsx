@@ -54,30 +54,32 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <NotificationToaster />
-            <Routes>
-              <Route path="/" element={<HomeRoute />} />
-              <Route path="/apartment/:id" element={<ApartmentDetail />} />
-              <Route path="/roommates" element={<Roommates />} />
-              <Route path="/roommate/:id" element={<RoommateProfile />} />
-              <Route path="/create" element={<CreateApartment />} />
-              <Route path="/post-apartment" element={<PostApartment />} />
-              <Route path="/create-squad" element={<CreateSquad />} />
-              <Route path="/squad/:id" element={<SquadHub />} />
-              <Route path="/my-squads" element={<MySquads />} />
-              <Route path="/chats" element={<Chats />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/billing-history" element={<BillingHistory />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/contact-support" element={<ContactSupport />} />
-              <Route path="/help-center" element={<HelpCenter />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
             <BottomNav />
+            <div className="md:pl-64">
+              <Routes>
+                <Route path="/" element={<HomeRoute />} />
+                <Route path="/apartment/:id" element={<ApartmentDetail />} />
+                <Route path="/roommates" element={<Roommates />} />
+                <Route path="/roommate/:id" element={<RoommateProfile />} />
+                <Route path="/create" element={<CreateApartment />} />
+                <Route path="/post-apartment" element={<PostApartment />} />
+                <Route path="/create-squad" element={<CreateSquad />} />
+                <Route path="/squad/:id" element={<SquadHub />} />
+                <Route path="/my-squads" element={<MySquads />} />
+                <Route path="/chats" element={<Chats />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/billing-history" element={<BillingHistory />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/contact-support" element={<ContactSupport />} />
+                <Route path="/help-center" element={<HelpCenter />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
           </BrowserRouter>
         </DailyLimitsProvider>
         </NotificationsProvider>

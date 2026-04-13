@@ -368,219 +368,21 @@ export default function Chats() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pb-20">
+      <div className="min-h-screen bg-background flex items-center justify-center pb-20 md:pb-8">
         <p className="text-muted-foreground">{t("signInToChat")}</p>
       </div>
     );
   }
 
-  if (activeConv) {
-    const conv = conversations.find((c) => c.id === activeConv);
-    return (
-      <div className="min-h-screen bg-background flex flex-col pb-20">
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
-          <div className="max-w-lg mx-auto px-4 pt-12 pb-3 flex items-center gap-3">
-            <button
-              onClick={() => { setActiveConv(null); loadConversations(); }}
-              className="p-1 -ml-1 text-foreground"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            {conv?.other_avatar ? (
-              <img src={conv.other_avatar} alt={conv.other_name} className="w-9 h-9 rounded-full object-cover" />
-            ) : (
-              <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">
-                  {conv?.other_name?.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-            <div className="flex-1">
-              <h2 className="font-bold text-foreground text-sm">
-                {conv?.other_name}
-              </h2>
-              <p className="text-muted-foreground text-xs">{t("online")}</p>
-            </div>
-            <div className="relative">
-              <button
-                onClick={() => setChatMenuOpen((v) => !v)}
-                className="p-2 rounded-full hover:bg-muted/50 transition-colors"
-              >
-                <MoreVertical className="w-5 h-5 text-muted-foreground" />
-              </button>
-              {chatMenuOpen && (
-                <div className="absolute right-0 top-10 w-48 bg-card rounded-2xl shadow-elevated border border-border/50 overflow-hidden z-50">
-                  <button
-                    onClick={() => {
-                      setChatMenuOpen(false);
-                      if (isBlocked) {
-                        unblockUser();
-                      } else {
-                        blockUser().then((ok) => {
-                          if (ok) { setActiveConv(null); loadConversations(); }
-                        });
-                      }
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
-                  >
-                    <Ban size={15} className="text-destructive shrink-0" />
-                    <span className="text-foreground">{isBlocked ? "Unblock user" : "Block user"}</span>
-                  </button>
-                  <div className="border-t border-border/40" />
-                  <button
-                    onClick={() => { setChatMenuOpen(false); setReportOpen(true); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
-                  >
-                    <Flag size={15} className="text-destructive shrink-0" />
-                    <span className="text-foreground">Report user</span>
-                  </button>
-                  <div className="border-t border-border/40" />
-                  <button
-                    onClick={() => { setChatMenuOpen(false); setDeleteTarget(activeConv); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
-                  >
-                    <Trash2 size={15} className="text-destructive shrink-0" />
-                    <span className="text-foreground">Delete chat</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+  const conv = conversations.find((c) => c.id === activeConv);
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 max-w-lg mx-auto w-full">
-          {/* Context card — shown until dismissed or chat has many messages */}
-          <AnimatePresence>
-            {!contextDismissed && otherProfile && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10, height: 0 }}
-                className="mb-4 bg-card border border-border rounded-2xl overflow-hidden shadow-sm"
-              >
-                <div className="flex items-center justify-between px-4 pt-3 pb-2">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-bold text-foreground">Why you matched</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {matchPercent > 0 && <MatchBadge percent={matchPercent} size="sm" />}
-                    <button onClick={() => setContextDismissed(true)} className="text-muted-foreground hover:text-foreground">
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                {sharedTraits.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 px-4 pb-3">
-                    {sharedTraits.map((trait) => (
-                      <span key={trait} className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
-                        {trait}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="space-y-2">
-            {messages.map((msg) => {
-              const isMine = msg.sender_id === user.id;
-              return (
-                <motion.div
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${isMine ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[75%] px-3.5 py-2 rounded-2xl ${
-                      isMine
-                        ? "bg-primary text-primary-foreground rounded-br-md"
-                        : "bg-secondary text-secondary-foreground rounded-bl-md"
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed">{msg.content}</p>
-                    <div
-                      className={`flex items-center justify-end gap-1 mt-0.5 ${
-                        isMine ? "text-primary-foreground/60" : "text-muted-foreground"
-                      }`}
-                    >
-                      <span className="text-[10px]">{formatTime(msg.created_at)}</span>
-                      {isMine && (
-                        msg.is_read ? (
-                          <CheckCheck className="w-3.5 h-3.5 text-blue-400" />
-                        ) : (
-                          <CheckCheck className="w-3.5 h-3.5" />
-                        )
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-
-        {/* Icebreaker chips — only when no messages yet */}
-        {messages.length === 0 && icebreakers.length > 0 && (
-          <div className="px-4 pb-2 max-w-lg mx-auto w-full">
-            <p className="text-xs text-muted-foreground mb-2 font-medium">💬 Tap to start the conversation</p>
-            <div className="flex flex-wrap gap-2">
-              {icebreakers.map((starter) => (
-                <button
-                  key={starter}
-                  onClick={() => setNewMessage(starter)}
-                  className="text-xs bg-secondary hover:bg-primary/10 hover:text-primary border border-border hover:border-primary/30 text-secondary-foreground px-3 py-1.5 rounded-full transition-all text-left"
-                >
-                  {starter}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="sticky bottom-20 bg-background border-t border-border">
-          <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder={t("typeMessage")}
-              className="flex-1 bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!newMessage.trim()}
-              className="gradient-primary p-2.5 rounded-full disabled:opacity-40"
-            >
-              <Send className="w-4 h-4 text-primary-foreground" />
-            </button>
-          </div>
-        </div>
-
-        <ReportSheet
-          open={reportOpen}
-          onOpenChange={setReportOpen}
-          targetName={activeConvData?.other_name ?? "this user"}
-          onSubmit={(reason, details) => reportUser(reason, details)}
-        />
+  // ── Conversation list panel (used in both mobile-only and desktop split) ──
+  const ConversationList = (
+    <div className="flex flex-col h-full">
+      <div className="px-4 pt-12 md:pt-6 pb-3 border-b border-border">
+        <h1 className="text-xl font-extrabold text-foreground">{t("messages")}</h1>
       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-lg mx-auto px-4 pt-12 pb-3">
-          <h1 className="text-xl font-extrabold text-foreground">{t("messages")}</h1>
-        </div>
-      </div>
-
-      <div className="max-w-lg mx-auto">
+      <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <p className="text-muted-foreground text-sm">{t("loadingChats")}</p>
@@ -591,55 +393,45 @@ export default function Chats() {
               <Send className="w-7 h-7 text-primary" />
             </div>
             <h2 className="font-bold text-foreground mb-1">{t("noConversationsYet")}</h2>
-            <p className="text-muted-foreground text-sm">
-              {t("matchToChat")}
-            </p>
+            <p className="text-muted-foreground text-sm">{t("matchToChat")}</p>
           </div>
         ) : (
           <AnimatePresence>
-            {conversations.map((conv, i) => (
+            {conversations.map((c, i) => (
               <motion.div
-                key={conv.id}
+                key={c.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20, height: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors border-b border-border/50"
+                className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors border-b border-border/50 ${activeConv === c.id ? "bg-secondary/70" : ""}`}
               >
                 <button
-                  onClick={() => setActiveConv(conv.id)}
+                  onClick={() => setActiveConv(c.id)}
                   className="flex items-center gap-3 flex-1 min-w-0 text-left"
                 >
-                  {conv.other_avatar ? (
-                    <img src={conv.other_avatar} alt={conv.other_name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                  {c.other_avatar ? (
+                    <img src={c.other_avatar} alt={c.other_name} className="w-12 h-12 rounded-full object-cover shrink-0" />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                      <span className="text-primary font-bold">
-                        {conv.other_name.charAt(0).toUpperCase()}
-                      </span>
+                      <span className="text-primary font-bold">{c.other_name.charAt(0).toUpperCase()}</span>
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-card-foreground text-sm">
-                        {conv.other_name}
-                      </span>
-                      <span className="text-muted-foreground text-xs">
-                        {formatDate(conv.last_message_at)}
-                      </span>
+                      <span className="font-semibold text-card-foreground text-sm">{c.other_name}</span>
+                      <span className="text-muted-foreground text-xs">{formatDate(c.last_message_at)}</span>
                     </div>
-                    <p className="text-muted-foreground text-sm truncate">
-                      {conv.last_message ?? t("startChatting")}
-                    </p>
+                    <p className="text-muted-foreground text-sm truncate">{c.last_message ?? t("startChatting")}</p>
                   </div>
-                  {conv.unread_count > 0 && (
+                  {c.unread_count > 0 && (
                     <span className="gradient-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">
-                      {conv.unread_count}
+                      {c.unread_count}
                     </span>
                   )}
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(conv.id); }}
+                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(c.id); }}
                   className="p-2 text-muted-foreground hover:text-destructive transition-colors shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -648,6 +440,203 @@ export default function Chats() {
             ))}
           </AnimatePresence>
         )}
+      </div>
+    </div>
+  );
+
+  // ── Active chat panel ──
+  const ChatPanel = activeConv ? (
+    <div className="flex flex-col h-full">
+      {/* Chat header */}
+      <div className="shrink-0 bg-background/95 backdrop-blur-xl border-b border-border">
+        <div className="px-4 pt-12 md:pt-4 pb-3 flex items-center gap-3">
+          <button
+            onClick={() => { setActiveConv(null); loadConversations(); }}
+            className="md:hidden p-1 -ml-1 text-foreground"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          {conv?.other_avatar ? (
+            <img src={conv.other_avatar} alt={conv.other_name} className="w-9 h-9 rounded-full object-cover" />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
+              <span className="text-primary font-bold text-sm">{conv?.other_name?.charAt(0).toUpperCase()}</span>
+            </div>
+          )}
+          <div className="flex-1">
+            <h2 className="font-bold text-foreground text-sm">{conv?.other_name}</h2>
+            <p className="text-muted-foreground text-xs">{t("online")}</p>
+          </div>
+          <div className="relative">
+            <button
+              onClick={() => setChatMenuOpen((v) => !v)}
+              className="p-2 rounded-full hover:bg-muted/50 transition-colors"
+            >
+              <MoreVertical className="w-5 h-5 text-muted-foreground" />
+            </button>
+            {chatMenuOpen && (
+              <div className="absolute right-0 top-10 w-48 bg-card rounded-2xl shadow-elevated border border-border/50 overflow-hidden z-50">
+                <button
+                  onClick={() => {
+                    setChatMenuOpen(false);
+                    if (isBlocked) { unblockUser(); }
+                    else { blockUser().then((ok) => { if (ok) { setActiveConv(null); loadConversations(); } }); }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                >
+                  <Ban size={15} className="text-destructive shrink-0" />
+                  <span className="text-foreground">{isBlocked ? "Unblock user" : "Block user"}</span>
+                </button>
+                <div className="border-t border-border/40" />
+                <button
+                  onClick={() => { setChatMenuOpen(false); setReportOpen(true); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                >
+                  <Flag size={15} className="text-destructive shrink-0" />
+                  <span className="text-foreground">Report user</span>
+                </button>
+                <div className="border-t border-border/40" />
+                <button
+                  onClick={() => { setChatMenuOpen(false); setDeleteTarget(activeConv); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                >
+                  <Trash2 size={15} className="text-destructive shrink-0" />
+                  <span className="text-foreground">Delete chat</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        <AnimatePresence>
+          {!contextDismissed && otherProfile && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10, height: 0 }}
+              className="mb-4 bg-card border border-border rounded-2xl overflow-hidden shadow-sm"
+            >
+              <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-bold text-foreground">Why you matched</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {matchPercent > 0 && <MatchBadge percent={matchPercent} size="sm" />}
+                  <button onClick={() => setContextDismissed(true)} className="text-muted-foreground hover:text-foreground">
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              {sharedTraits.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+                  {sharedTraits.map((trait) => (
+                    <span key={trait} className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
+                      {trait}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <div className="space-y-2">
+          {messages.map((msg) => {
+            const isMine = msg.sender_id === user.id;
+            return (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+              >
+                <div className={`max-w-[75%] px-3.5 py-2 rounded-2xl ${isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-secondary text-secondary-foreground rounded-bl-md"}`}>
+                  <p className="text-sm leading-relaxed">{msg.content}</p>
+                  <div className={`flex items-center justify-end gap-1 mt-0.5 ${isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                    <span className="text-[10px]">{formatTime(msg.created_at)}</span>
+                    {isMine && (msg.is_read ? <CheckCheck className="w-3.5 h-3.5 text-blue-400" /> : <CheckCheck className="w-3.5 h-3.5" />)}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      {/* Icebreakers */}
+      {messages.length === 0 && icebreakers.length > 0 && (
+        <div className="px-4 pb-2 shrink-0">
+          <p className="text-xs text-muted-foreground mb-2 font-medium">💬 Tap to start the conversation</p>
+          <div className="flex flex-wrap gap-2">
+            {icebreakers.map((starter) => (
+              <button
+                key={starter}
+                onClick={() => setNewMessage(starter)}
+                className="text-xs bg-secondary hover:bg-primary/10 hover:text-primary border border-border hover:border-primary/30 text-secondary-foreground px-3 py-1.5 rounded-full transition-all text-left"
+              >
+                {starter}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Input bar */}
+      <div className="shrink-0 bg-background border-t border-border">
+        <div className="px-4 py-3 flex items-center gap-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder={t("typeMessage")}
+            className="flex-1 bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <button onClick={sendMessage} disabled={!newMessage.trim()} className="gradient-primary p-2.5 rounded-full disabled:opacity-40">
+            <Send className="w-4 h-4 text-primary-foreground" />
+          </button>
+        </div>
+      </div>
+
+      <ReportSheet
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        targetName={activeConvData?.other_name ?? "this user"}
+        onSubmit={(reason, details) => reportUser(reason, details)}
+      />
+    </div>
+  ) : (
+    <div className="hidden md:flex flex-1 items-center justify-center text-center">
+      <div>
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
+          <Send className="w-7 h-7 text-primary" />
+        </div>
+        <p className="font-semibold text-foreground">Select a conversation</p>
+        <p className="text-muted-foreground text-sm mt-1">Choose from your messages on the left</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile: show list OR chat based on activeConv */}
+      <div className="md:hidden min-h-screen bg-background pb-20">
+        {activeConv ? ChatPanel : ConversationList}
+      </div>
+
+      {/* Desktop: side-by-side split panel */}
+      <div className="hidden md:flex h-screen bg-background">
+        <div className="w-80 shrink-0 border-r border-border overflow-hidden">
+          {ConversationList}
+        </div>
+        <div className="flex-1 overflow-hidden">
+          {ChatPanel}
+        </div>
       </div>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
@@ -669,6 +658,6 @@ export default function Chats() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

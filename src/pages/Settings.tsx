@@ -151,7 +151,7 @@ export default function Settings() {
     <div className="min-h-screen bg-background pb-28">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto">
+        <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
           <button
             onClick={() => navigate(-1)}
             className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center"
@@ -162,7 +162,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-5 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 pt-5 space-y-6">
         {/* 💎 Subscription & Payments */}
         <section>
           <SectionHeader title={t("subscriptionAndPayments")} />
