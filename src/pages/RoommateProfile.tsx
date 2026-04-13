@@ -2,11 +2,11 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, MapPin, Briefcase, Moon, Sun, Heart,
-  MessageCircle, DollarSign, Home, Users, Volume2,
-  ChevronLeft, ChevronRight, UtensilsCrossed, Dumbbell,
+  ArrowLeft, MapPin, Briefcase, Moon, Sun,
+  DollarSign, Home, Users, Volume2,
+  UtensilsCrossed, Dumbbell,
   Wine, PartyPopper, Clock, BookOpen, Smile,
-  MoreVertical, Ban, Flag, Sparkles, Phone
+  MoreVertical, Ban, Flag, Sparkles
 } from "lucide-react";
 import MatchBadge from "@/components/MatchBadge";
 import { type UserProfile } from "@/data/mockData";
@@ -67,7 +67,6 @@ export default function RoommateProfile() {
   const [imgIndex, setImgIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const [liked, setLiked] = useState(false);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(id);
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
@@ -94,30 +93,6 @@ export default function RoommateProfile() {
   const photos = (userData as any).photos?.length ? (userData as any).photos : [userData.avatar];
   const isOwnProfile = authUser?.id === userData.id;
 
-  const handleMessage = async () => {
-    if (!authUser) { toast.info("Sign in to message"); navigate("/auth"); return; }
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userData.id);
-    if (isUuid && !isOwnProfile) {
-      try {
-        await supabase.rpc("create_conversation_with_participant", { other_user_id: userData.id });
-        navigate("/chats");
-      } catch { toast.error("Could not start conversation"); }
-    } else { navigate("/chats"); }
-  };
-
-  const handleLike = async () => {
-    if (!authUser) { toast.info("Sign in to like"); navigate("/auth"); return; }
-    if (isOwnProfile) return;
-    setLiked(true);
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userData.id);
-    if (isUuid) {
-      await supabase.from("liked_profiles").upsert(
-        { user_id: authUser.id, liked_user_id: userData.id },
-        { onConflict: "user_id,liked_user_id" }
-      );
-      toast.success(`You liked ${userData.name}!`);
-    }
-  };
 
   const extraDetails = fullProfile ? [
     { icon: UtensilsCrossed, label: "Cooking", value: fullProfile.cooking_habits, color: "text-orange-500", bg: "bg-orange-500/10" },
@@ -457,32 +432,6 @@ export default function RoommateProfile() {
         <div className="h-4" />
       </div>
 
-      {/* ── Sticky bottom action bar ── */}
-      {!isOwnProfile && (
-        <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-50">
-          <div className="max-w-lg mx-auto px-4 pt-3 pb-20 flex gap-3">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLike}
-              className={`flex-none w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all ${
-                liked
-                  ? "bg-rose-500 border-rose-500 shadow-lg shadow-rose-500/30"
-                  : "bg-card border-border hover:border-rose-400"
-              }`}
-            >
-              <Heart size={22} className={liked ? "fill-white text-white" : "text-rose-500"} />
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={handleMessage}
-              className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm gradient-primary text-primary-foreground shadow-lg"
-            >
-              <MessageCircle size={18} />
-              Message {userData.name}
-            </motion.button>
-          </div>
-        </div>
-      )}
 
       <ReportSheet
         open={reportOpen}
