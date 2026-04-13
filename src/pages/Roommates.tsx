@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-import { getMockLikedProfileKey, isUUID } from "@/lib/profileUtils";
+import { isUUID } from "@/lib/profileUtils";
 const getSwipeKey = (userId: string) => `swiped_profiles:${userId}`;
 
 function getSwipedMap(userId: string): Record<string, number> {
@@ -88,17 +88,14 @@ export default function Roommates() {
     if (!user?.id) return;
     const localSwiped = getRecentlySwipedIds(user.id);
 
-    // Also fetch DB liked_profiles so right-swiped profiles stay hidden even if localStorage is cleared
+    // Fetch all-time right-swipes from DB — liked profiles never reappear
     supabase
       .from("liked_profiles")
-      .select("liked_user_id, created_at")
+      .select("liked_user_id")
       .eq("user_id", user.id)
       .then(({ data }) => {
-        const now = Date.now();
-        const dbSwipedIds = (data ?? [])
-          .filter((r) => now - new Date(r.created_at).getTime() < SEVEN_DAYS_MS)
-          .map((r) => r.liked_user_id);
-        const merged = Array.from(new Set([...localSwiped, ...dbSwipedIds]));
+        const dbLikedIds = (data ?? []).map((r) => r.liked_user_id);
+        const merged = Array.from(new Set([...localSwiped, ...dbLikedIds]));
         setSwiped(merged);
       });
   }, [user?.id]);
@@ -158,26 +155,27 @@ export default function Roommates() {
       }
 
       if (direction === "right" && user) {
-
         if (isUUID(current.user.id)) {
           await supabase.from("liked_profiles").upsert(
-            {
-              user_id: user.id,
-              liked_user_id: current.user.id,
-            },
+            { user_id: user.id, liked_user_id: current.user.id },
             { onConflict: "user_id,liked_user_id" },
           );
-        } else {
-          localStorage.setItem(getMockLikedProfileKey(user.id, current.user.id), "true");
+
+          // Check for mutual like — real match detection
+          const { data: mutualLike } = await supabase
+            .from("liked_profiles")
+            .select("id")
+            .eq("user_id", current.user.id)
+            .eq("liked_user_id", user.id)
+            .maybeSingle();
+
+          if (mutualLike) {
+            setMatchedUser(current.user);
+            setMatchedPercent(current.matchPercent);
+          }
         }
 
         recordLike();
-
-        // Simulate match for demo
-        if (Math.random() > 0.5) {
-          setMatchedUser(current.user);
-          setMatchedPercent(current.matchPercent);
-        }
       }
     },
     [remaining, requireAuth, user],
