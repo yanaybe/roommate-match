@@ -89,7 +89,7 @@ export default function Landing() {
 
       {/* ── Nav ── */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
+        <div className="w-full px-5 h-14 flex items-center justify-between">
           <span className="text-lg font-extrabold text-foreground">
             Room<span className="text-primary">Match</span>
           </span>
