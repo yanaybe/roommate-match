@@ -79,7 +79,7 @@ export default function BottomNav() {
       </nav>
 
       {/* ── Desktop: left sidebar ── */}
-      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-64 z-50 bg-card/95 backdrop-blur-xl border-r border-border flex-col">
+      <aside className="hidden md:flex fixed top-0 bottom-0 w-64 z-50 bg-card/95 backdrop-blur-xl border-border flex-col ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l">
         {/* Logo */}
         <div className="px-6 py-6 border-b border-border/50">
           <span className="text-2xl font-extrabold text-foreground tracking-tight">
@@ -124,7 +124,7 @@ export default function BottomNav() {
                 {isActive && !isCreate && (
                   <motion.div
                     layoutId="activeTabDesktop"
-                    className="ml-auto w-1.5 h-5 gradient-primary rounded-full"
+                    className="ltr:ml-auto rtl:mr-auto w-1.5 h-5 gradient-primary rounded-full"
                   />
                 )}
               </button>

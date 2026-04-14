@@ -496,7 +496,7 @@ export default function ApartmentDetail() {
       </div>
 
       {/* Bottom action bar */}
-      <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-40">
+      <div className="fixed bottom-0 ltr:left-0 ltr:md:left-64 rtl:right-0 rtl:md:right-64 ltr:right-0 rtl:left-0 bg-card/95 backdrop-blur-xl border-t border-border z-40">
         <div className="max-w-3xl mx-auto px-4 py-3 flex gap-3">
           <button
             onClick={() => requireAuth(() => navigate("/chats"))}

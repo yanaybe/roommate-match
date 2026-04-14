@@ -283,8 +283,8 @@ export default function PostApartment() {
                   <div className="space-y-2">
                     <Label className="text-foreground">Street Address</Label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input placeholder="Street name and number" value={form.address} onChange={e => update("address", e.target.value)} className="rounded-xl pl-10" />
+                      <MapPin className="absolute ltr:left-3 rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input placeholder="Street name and number" value={form.address} onChange={e => update("address", e.target.value)} className="rounded-xl ltr:pl-10 rtl:pr-10" />
                     </div>
                   </div>
                 </div>
@@ -465,7 +465,7 @@ export default function PostApartment() {
       </div>
 
       {/* Bottom buttons */}
-      <div className="fixed bottom-16 md:bottom-0 left-0 md:left-64 right-0 z-30 bg-background/80 backdrop-blur-lg border-t border-border">
+      <div className="fixed bottom-16 md:bottom-0 ltr:left-0 ltr:md:left-64 rtl:right-0 rtl:md:right-64 ltr:right-0 rtl:left-0 z-30 bg-background/80 backdrop-blur-lg border-t border-border">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           {step > 0 && (
             <Button variant="outline" onClick={() => setStep(step - 1)} className="rounded-xl flex-1">
