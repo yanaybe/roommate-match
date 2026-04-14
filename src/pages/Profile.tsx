@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil } from "lucide-react";
 import PremiumSheet from "@/components/PremiumSheet";
 import PreferencesSheet from "@/components/profile/PreferencesSheet";
 import ActivitySheet from "@/components/profile/ActivitySheet";
@@ -113,6 +113,13 @@ export default function Profile() {
                 </span>
               )}
             </div>
+            <button
+              onClick={() => navigate("/onboarding?edit=true")}
+              className="absolute bottom-0 right-0 w-7 h-7 gradient-primary rounded-full flex items-center justify-center shadow-md ring-2 ring-background"
+              title="Edit profile"
+            >
+              <Pencil className="w-3.5 h-3.5 text-primary-foreground" />
+            </button>
           </div>
           <h1 className="text-xl font-extrabold text-foreground">
             {profile.name}, {profile.age}
