@@ -393,7 +393,13 @@ export default function Chats() {
               <Send className="w-7 h-7 text-primary" />
             </div>
             <h2 className="font-bold text-foreground mb-1">{t("noConversationsYet")}</h2>
-            <p className="text-muted-foreground text-sm">{t("matchToChat")}</p>
+            <p className="text-muted-foreground text-sm mb-4">{t("matchToChat")}</p>
+            <button
+              onClick={() => navigate("/roommates")}
+              className="gradient-primary text-primary-foreground px-6 py-2.5 rounded-xl font-semibold text-sm"
+            >
+              Browse Roommates
+            </button>
           </div>
         ) : (
           <AnimatePresence>

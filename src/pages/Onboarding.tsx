@@ -521,7 +521,10 @@ export default function Onboarding() {
           <h1 className="text-2xl font-extrabold text-foreground">
             Set up your <span className="text-primary">profile</span>
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">Step {step + 1} of {STEPS.length} — {STEPS[step]}</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            Step {step + 1} of {STEPS.length} — {STEPS[step]}
+            {step === 0 && <span className="ml-2 text-primary font-medium">· ~3 min</span>}
+          </p>
         </div>
 
         <div className="flex gap-1.5 mb-6">

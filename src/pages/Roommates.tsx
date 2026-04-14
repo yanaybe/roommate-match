@@ -260,7 +260,22 @@ export default function Roommates() {
               <Heart className="w-8 h-8 text-muted-foreground" />
             </div>
             <h2 className="text-lg font-bold text-foreground mb-1">{t("noMoreProfiles")}</h2>
-            <p className="text-muted-foreground text-sm mb-4">{t("checkBackLater")}</p>
+            <p className="text-muted-foreground text-sm mb-5">{t("checkBackLater")}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleUndo}
+                disabled={swiped.length === 0}
+                className="flex items-center gap-2 px-5 py-2.5 bg-secondary rounded-xl text-sm font-semibold text-foreground disabled:opacity-40"
+              >
+                <RotateCcw className="w-4 h-4" /> Undo last
+              </button>
+              <button
+                onClick={() => navigate("/onboarding?edit=true")}
+                className="px-5 py-2.5 gradient-primary text-primary-foreground rounded-xl text-sm font-semibold"
+              >
+                Adjust Preferences
+              </button>
+            </div>
           </div>
         )}
 
