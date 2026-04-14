@@ -72,6 +72,8 @@ export default function MySquads() {
 
   const handleAcceptInvite = async (invite: any) => {
     if (!user) return;
+    // Verify the invite is actually addressed to the current user
+    if (invite.invitee_id !== user.id) return;
     await supabase.from("squad_members").insert({
       squad_id: invite.squad_id,
       user_id: user.id,

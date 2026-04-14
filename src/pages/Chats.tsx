@@ -349,6 +349,9 @@ export default function Chats() {
 
   const deleteConversation = async (convId: string) => {
     if (!user) return;
+    // Verify the current user is actually a participant in this conversation
+    const isParticipant = conversations.some((c) => c.id === convId);
+    if (!isParticipant) return;
     // Delete read receipts, messages, participation, then conversation
     const { data: msgs } = await supabase
       .from("messages")
