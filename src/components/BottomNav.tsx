@@ -29,7 +29,7 @@ export default function BottomNav() {
     <>
       {/* ── Mobile: bottom bar ── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom">
-        <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+        <div className="flex items-center justify-around h-16 w-full px-2">
           {tabs.map((tab) => {
             const isActive = location.pathname === tab.path;
             const Icon = tab.icon;
