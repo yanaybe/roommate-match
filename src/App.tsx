@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Outlet } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, Outlet } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -44,6 +44,9 @@ function HomeRoute() {
 }
 
 function AuthedLayout() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/auth" replace />;
   return <div className="md:pl-64"><Outlet /></div>;
 }
 
@@ -61,7 +64,17 @@ const App = () => (
             <NotificationToaster />
             <BottomNav />
             <Routes>
+              {/* Public — no auth, no sidebar */}
               <Route path="/" element={<HomeRoute />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/contact-support" element={<ContactSupport />} />
+              <Route path="*" element={<NotFound />} />
+
+              {/* Protected — must be signed in, gets sidebar */}
               <Route element={<AuthedLayout />}>
                 <Route path="/apartment/:id" element={<ApartmentDetail />} />
                 <Route path="/roommates" element={<Roommates />} />
@@ -73,16 +86,9 @@ const App = () => (
                 <Route path="/my-squads" element={<MySquads />} />
                 <Route path="/chats" element={<Chats />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/billing-history" element={<BillingHistory />} />
-                <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/contact-support" element={<ContactSupport />} />
                 <Route path="/help-center" element={<HelpCenter />} />
-                <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
           </BrowserRouter>
