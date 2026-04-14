@@ -419,7 +419,7 @@ export default function SquadHub() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pb-20">
+      <div className="min-h-screen bg-background flex items-center justify-center pb-20 md:pb-8">
         <p className="text-muted-foreground text-sm">Loading squad...</p>
       </div>
     );
@@ -427,7 +427,7 @@ export default function SquadHub() {
 
   if (!squad) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center pb-20 px-4">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center pb-20 md:pb-8 px-4">
         <p className="text-foreground font-bold mb-2">Squad not found</p>
         <button onClick={() => navigate("/create")} className="gradient-primary text-primary-foreground px-6 py-2 rounded-xl text-sm font-semibold">
           Go Back
@@ -444,7 +444,7 @@ export default function SquadHub() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20 flex flex-col">
+    <div className="min-h-screen bg-background pb-20 md:pb-8 flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 pb-2">

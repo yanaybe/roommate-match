@@ -35,7 +35,7 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen bg-background pb-20 md:pb-8 flex flex-col items-center justify-center px-4">
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
           <LogIn className="w-8 h-8 text-primary" />
         </div>
@@ -53,7 +53,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pb-20">
+      <div className="min-h-screen bg-background flex items-center justify-center pb-20 md:pb-8">
         <p className="text-muted-foreground text-sm">{t("loadingProfile")}</p>
       </div>
     );
@@ -61,7 +61,7 @@ export default function Profile() {
 
   if (!profile || !profile.onboarding_complete) {
     return (
-      <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen bg-background pb-20 md:pb-8 flex flex-col items-center justify-center px-4">
         <h2 className="text-xl font-extrabold text-foreground mb-2">{t("completeYourProfile")}</h2>
         <p className="text-muted-foreground text-sm text-center mb-6">{t("fillOutProfile")}</p>
         <button
