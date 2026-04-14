@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Outlet } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -39,7 +39,12 @@ const queryClient = new QueryClient();
 function HomeRoute() {
   const { user, loading } = useAuth();
   if (loading) return null;
-  return user ? <Index /> : <Landing />;
+  if (!user) return <Landing />;
+  return <Index />;
+}
+
+function AuthedLayout() {
+  return <div className="md:pl-64"><Outlet /></div>;
 }
 
 const App = () => (
@@ -55,9 +60,9 @@ const App = () => (
           <BrowserRouter>
             <NotificationToaster />
             <BottomNav />
-            <div className="md:pl-64">
-              <Routes>
-                <Route path="/" element={<HomeRoute />} />
+            <Routes>
+              <Route path="/" element={<HomeRoute />} />
+              <Route element={<AuthedLayout />}>
                 <Route path="/apartment/:id" element={<ApartmentDetail />} />
                 <Route path="/roommates" element={<Roommates />} />
                 <Route path="/roommate/:id" element={<RoommateProfile />} />
@@ -78,8 +83,8 @@ const App = () => (
                 <Route path="/contact-support" element={<ContactSupport />} />
                 <Route path="/help-center" element={<HelpCenter />} />
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
+              </Route>
+            </Routes>
           </BrowserRouter>
         </DailyLimitsProvider>
         </NotificationsProvider>
