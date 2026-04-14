@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export interface Filters {
   budgetMin: number;
@@ -75,6 +76,7 @@ const TriButton = ({
 
 export default function FilterModal({ open, onClose, filters, onApply }: FilterModalProps) {
   const [local, setLocal] = useState<Filters>(filters);
+  const { t } = useLanguage();
 
   const update = <K extends keyof Filters>(key: K, val: Filters[K]) =>
     setLocal((p) => ({ ...p, [key]: val }));
@@ -134,7 +136,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
           >
             {/* Header */}
             <div className="sticky top-0 bg-card z-10 px-5 pt-5 pb-3 border-b border-border flex items-center justify-between">
-              <h2 className="text-lg font-extrabold text-foreground">Filters</h2>
+              <h2 className="text-lg font-extrabold text-foreground">{t("filterTitle")}</h2>
               <button onClick={onClose} className="p-1 text-muted-foreground">
                 <X className="w-5 h-5" />
               </button>
@@ -145,7 +147,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               {/* Budget Range */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
-                  Budget (₪/month)
+                  {t("budgetMonthly")}
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -169,7 +171,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               {/* Rooms */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
-                  Number of Rooms
+                  {t("numberOfRooms")}
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -193,7 +195,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               {/* Min size */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
-                  Minimum Size (m²)
+                  {t("minimumSize")}
                 </label>
                 <input
                   type="number"
@@ -207,7 +209,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               {/* Match minimum */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
-                  Minimum Match %
+                  {t("minimumMatchPct")}
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -227,7 +229,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               {/* Room type */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
-                  Room Type
+                  {t("roomType")}
                 </label>
                 <div className="flex gap-2">
                   {(["any", "private", "shared"] as const).map((opt) => (
@@ -240,7 +242,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                           : "bg-secondary text-secondary-foreground"
                       }`}
                     >
-                      {opt === "any" ? "Any" : opt === "private" ? "Private" : "Shared OK"}
+                      {opt === "any" ? t("optAny") : opt === "private" ? t("optPrivate") : t("optSharedOk")}
                     </button>
                   ))}
                 </div>
@@ -249,15 +251,15 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               {/* Furnished */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
-                  Apartment Preferences
+                  {t("apartmentPreferences")}
                 </label>
                 <div>
-                  <span className="text-xs text-muted-foreground mb-1 block">Furnished</span>
+                  <span className="text-xs text-muted-foreground mb-1 block">{t("furnishedLbl")}</span>
                   <TriButton
                     options={[
-                      { value: "any", label: "Any" },
-                      { value: "yes", label: "Yes" },
-                      { value: "no", label: "No" },
+                      { value: "any", label: t("optAny") },
+                      { value: "yes", label: t("optYes") },
+                      { value: "no", label: t("optNo") },
                     ]}
                     value={local.furnished}
                     onChange={(v) => update("furnished", v as Filters["furnished"])}
@@ -268,53 +270,53 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               {/* Lifestyle */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
-                  Lifestyle Preferences
+                  {t("lifestylePreferences")}
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="text-xs text-muted-foreground mb-1 block">Smoking</span>
+                    <span className="text-xs text-muted-foreground mb-1 block">{t("smokingLbl")}</span>
                     <TriButton
                       options={[
-                        { value: "any", label: "Any" },
-                        { value: "no", label: "No" },
-                        { value: "yes", label: "Yes" },
+                        { value: "any", label: t("optAny") },
+                        { value: "no", label: t("optNo") },
+                        { value: "yes", label: t("optYes") },
                       ]}
                       value={local.smoking}
                       onChange={(v) => update("smoking", v as Filters["smoking"])}
                     />
                   </div>
                   <div>
-                    <span className="text-xs text-muted-foreground mb-1 block">Pets</span>
+                    <span className="text-xs text-muted-foreground mb-1 block">{t("petsLbl")}</span>
                     <TriButton
                       options={[
-                        { value: "any", label: "Any" },
-                        { value: "no", label: "No" },
-                        { value: "yes", label: "Yes" },
+                        { value: "any", label: t("optAny") },
+                        { value: "no", label: t("optNo") },
+                        { value: "yes", label: t("optYes") },
                       ]}
                       value={local.pets}
                       onChange={(v) => update("pets", v as Filters["pets"])}
                     />
                   </div>
                   <div>
-                    <span className="text-xs text-muted-foreground mb-1 block">Work from Home</span>
+                    <span className="text-xs text-muted-foreground mb-1 block">{t("wfhFilter")}</span>
                     <TriButton
                       options={[
-                        { value: "any", label: "Any" },
-                        { value: "yes", label: "Yes" },
-                        { value: "no", label: "No" },
+                        { value: "any", label: t("optAny") },
+                        { value: "yes", label: t("optYes") },
+                        { value: "no", label: t("optNo") },
                       ]}
                       value={local.wfh}
                       onChange={(v) => update("wfh", v as Filters["wfh"])}
                     />
                   </div>
                   <div>
-                    <span className="text-xs text-muted-foreground mb-1 block">Religious Level</span>
+                    <span className="text-xs text-muted-foreground mb-1 block">{t("religiousLevelFilter")}</span>
                     <TriButton
                       options={[
-                        { value: "any", label: "Any" },
-                        { value: "secular", label: "Secular" },
-                        { value: "traditional", label: "Trad." },
-                        { value: "religious", label: "Religious" },
+                        { value: "any", label: t("optAny") },
+                        { value: "secular", label: t("optSecular") },
+                        { value: "traditional", label: t("optTrad") },
+                        { value: "religious", label: t("optReligious") },
                       ]}
                       value={local.religiousLevel}
                       onChange={(v) => update("religiousLevel", v as Filters["religiousLevel"])}
@@ -326,15 +328,15 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               {/* Sleep Schedule */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
-                  Sleep Schedule
+                  {t("sleepScheduleFilter")}
                 </label>
                 <div className="flex gap-2">
                   {([
-                    { value: "any", label: "Any" },
-                    { value: "early", label: "Early Bird" },
-                    { value: "night", label: "Night Owl" },
-                    { value: "flexible", label: "Flexible" },
-                  ] as const).map((opt) => (
+                    { value: "any" as const, label: t("optAny") },
+                    { value: "early" as const, label: t("optEarlyBird") },
+                    { value: "night" as const, label: t("optNightOwl") },
+                    { value: "flexible" as const, label: t("optFlexible") },
+                  ]).map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => update("sleepSchedule", opt.value)}
@@ -353,7 +355,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               {/* Min Cleanliness */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
-                  Min. Roommate Cleanliness
+                  {t("minCleanliness")}
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -374,7 +376,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               {/* Amenities */}
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-2">
-                  Amenities
+                  {t("amenitiesLabel")}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {allAmenities.map((a) => (
@@ -401,13 +403,13 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                 onClick={handleReset}
                 className="flex-1 py-3.5 rounded-xl text-sm font-bold bg-secondary text-secondary-foreground active:scale-95 transition-transform"
               >
-                Reset All
+                {t("resetAll")}
               </button>
               <button
                 onClick={handleApply}
                 className="flex-1 py-3.5 rounded-xl text-sm font-bold gradient-primary text-primary-foreground shadow-elevated active:scale-95 transition-transform"
               >
-                Show Results{activeCount > 0 ? ` (${activeCount})` : ""}
+                {t("showResults")}{activeCount > 0 ? ` (${activeCount})` : ""}
               </button>
             </div>
           </motion.div>

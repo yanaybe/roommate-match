@@ -224,8 +224,8 @@ export default function Roommates() {
           >
             <span className="text-2xl">👤</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-primary">Complete your profile</p>
-              <p className="text-xs text-muted-foreground">You need a profile to swipe and match</p>
+              <p className="text-sm font-semibold text-primary">{t("completeProfileBanner")}</p>
+              <p className="text-xs text-muted-foreground">{t("needProfileToSwipe")}</p>
             </div>
             <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
           </button>

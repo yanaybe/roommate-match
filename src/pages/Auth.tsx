@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -18,6 +19,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!user) return;
@@ -77,14 +79,14 @@ export default function Auth() {
             Roo<span className="text-primary">match</span>
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {isLogin ? "Welcome back" : "Create your account"}
+            {isLogin ? t("welcomeBack") : t("createYourAccount")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="email"
-            placeholder="Email"
+            placeholder={t("emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -92,7 +94,7 @@ export default function Auth() {
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder={t("passwordPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -104,17 +106,17 @@ export default function Auth() {
             disabled={loading}
             className="w-full gradient-primary text-primary-foreground font-bold py-3 rounded-xl text-sm disabled:opacity-50"
           >
-            {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
+            {loading ? t("loading") : isLogin ? t("signIn") : t("signUp")}
           </button>
         </form>
 
         <p className="text-center text-muted-foreground text-sm mt-6">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+          {isLogin ? t("dontHaveAccount") : t("alreadyHaveAccount")}{" "}
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="text-primary font-semibold"
           >
-            {isLogin ? "Sign Up" : "Sign In"}
+            {isLogin ? t("signUp") : t("signIn")}
           </button>
         </p>
       </div>

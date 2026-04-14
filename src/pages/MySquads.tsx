@@ -22,12 +22,14 @@ import { useMySquads, useMyInvites, useDiscoverSquads } from "@/hooks/useSquad";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
+import { useLanguage } from "@/hooks/useLanguage";
 
 type Tab = "my" | "discover";
 
 export default function MySquads() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { squads, loading, refetch } = useMySquads();
   const { invites, refetch: refetchInvites } = useMyInvites();
   const { squads: openSquads, loading: discoverLoading, refetch: refetchDiscover } = useDiscoverSquads();
@@ -133,12 +135,12 @@ export default function MySquads() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pb-20 md:pb-8">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Sign in to view squads</p>
+          <p className="text-muted-foreground mb-4">{t("signInToViewSquads")}</p>
           <button
             onClick={() => navigate("/auth")}
             className="gradient-primary text-primary-foreground px-6 py-2 rounded-xl text-sm font-semibold"
           >
-            Sign In
+            {t("signIn")}
           </button>
         </div>
       </div>
@@ -154,7 +156,7 @@ export default function MySquads() {
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <div className="flex-1">
-            <h1 className="text-xl font-extrabold text-foreground">Squads</h1>
+            <h1 className="text-xl font-extrabold text-foreground">{t("squads")}</h1>
           </div>
           <button onClick={() => navigate("/create-squad")} className="gradient-primary p-2 rounded-xl">
             <Plus className="w-5 h-5 text-primary-foreground" />
@@ -163,23 +165,23 @@ export default function MySquads() {
 
         {/* Tabs */}
         <div className="max-w-2xl mx-auto px-4 pb-2 flex gap-2">
-          {(["my", "discover"] as Tab[]).map((t) => (
+          {(["my", "discover"] as Tab[]).map((tabId) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={tabId}
+              onClick={() => setTab(tabId)}
               className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                tab === t
+                tab === tabId
                   ? "gradient-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t === "my" ? "My Squads" : "Discover"}
-              {t === "my" && invites.length > 0 && (
+              {tabId === "my" ? t("mySquadsTab") : t("discoverTab")}
+              {tabId === "my" && invites.length > 0 && (
                 <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-destructive text-destructive-foreground">
                   {invites.length}
                 </span>
               )}
-              {t === "discover" && openSquads.length > 0 && (
+              {tabId === "discover" && openSquads.length > 0 && (
                 <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-accent text-accent-foreground">
                   {openSquads.length}
                 </span>
@@ -196,7 +198,7 @@ export default function MySquads() {
             {invites.length > 0 && (
               <div>
                 <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Bell className="w-3.5 h-3.5" /> Pending Invites
+                  <Bell className="w-3.5 h-3.5" /> {t("pendingInvites")}
                 </h2>
                 <div className="space-y-2">
                   {invites.map((inv) => (
@@ -215,7 +217,7 @@ export default function MySquads() {
                             {inv.squad?.name ?? "Squad"}
                           </p>
                           <p className="text-muted-foreground text-xs">
-                            Invited by {inv.inviter_profile?.name ?? "someone"}
+                            {t("invitedBy")} {inv.inviter_profile?.name ?? "someone"}
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -242,27 +244,27 @@ export default function MySquads() {
             {/* My squads list */}
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <p className="text-muted-foreground text-sm">Loading squads...</p>
+                <p className="text-muted-foreground text-sm">{t("loadingSquads")}</p>
               </div>
             ) : squads.length === 0 && invites.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
                   <Users className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h2 className="text-lg font-bold text-foreground mb-1">No squads yet</h2>
-                <p className="text-muted-foreground text-sm mb-6">Create a squad or discover one to join!</p>
+                <h2 className="text-lg font-bold text-foreground mb-1">{t("noSquadsYet")}</h2>
+                <p className="text-muted-foreground text-sm mb-6">{t("createOrDiscoverSquad")}</p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => navigate("/create-squad")}
                     className="gradient-primary text-primary-foreground px-5 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2"
                   >
-                    <Plus className="w-4 h-4" /> Create Squad
+                    <Plus className="w-4 h-4" /> {t("createSquad")}
                   </button>
                   <button
                     onClick={() => setTab("discover")}
                     className="bg-secondary text-foreground px-5 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2"
                   >
-                    <Users className="w-4 h-4" /> Discover
+                    <Users className="w-4 h-4" /> {t("discoverTab")}
                   </button>
                 </div>
               </div>
@@ -316,7 +318,7 @@ export default function MySquads() {
                 }`}
               >
                 <SlidersHorizontal className="w-4 h-4" />
-                Filters
+                {t("filters")}
                 {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-primary" />}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFilters ? "rotate-180" : ""}`} />
               </button>
@@ -334,7 +336,7 @@ export default function MySquads() {
                       {/* Location */}
                       <div>
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                          Location
+                          {t("locationFilter")}
                         </label>
                         {allLocations.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
@@ -346,7 +348,7 @@ export default function MySquads() {
                                   : "bg-secondary text-muted-foreground hover:text-foreground"
                               }`}
                             >
-                              All
+                              {t("allLocations")}
                             </button>
                             {allLocations.map((loc) => (
                               <button
@@ -367,7 +369,7 @@ export default function MySquads() {
                             type="text"
                             value={filterLocation}
                             onChange={(e) => setFilterLocation(e.target.value)}
-                            placeholder="Type a location..."
+                            placeholder={t("typeLocation")}
                             className="w-full bg-secondary rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none"
                           />
                         )}
@@ -376,7 +378,7 @@ export default function MySquads() {
                       {/* Budget range */}
                       <div>
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                          <span>Budget Range</span>
+                          <span>{t("budgetRange")}</span>
                           <span className="text-foreground normal-case font-bold">
                             ₪{filterBudgetMin.toLocaleString()} – ₪{filterBudgetMax.toLocaleString()}
                           </span>
@@ -398,7 +400,7 @@ export default function MySquads() {
                       <div>
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between">
                           <span className="flex items-center gap-1">
-                            <Percent className="w-3 h-3" /> Min Match
+                            <Percent className="w-3 h-3" /> {t("minMatch")}
                           </span>
                           <span className="text-foreground normal-case font-bold">{filterMinMatch}%</span>
                         </label>
@@ -417,7 +419,7 @@ export default function MySquads() {
                           onClick={clearFilters}
                           className="text-xs font-semibold text-destructive hover:underline"
                         >
-                          Clear all filters
+                          {t("clearAllFilters")}
                         </button>
                       )}
                     </div>
@@ -428,7 +430,7 @@ export default function MySquads() {
 
             {discoverLoading ? (
               <div className="flex items-center justify-center py-20">
-                <p className="text-muted-foreground text-sm">Finding open squads...</p>
+                <p className="text-muted-foreground text-sm">{t("findingOpenSquads")}</p>
               </div>
             ) : filteredSquads.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -436,33 +438,33 @@ export default function MySquads() {
                   <Users className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <h2 className="text-lg font-bold text-foreground mb-1">
-                  {hasActiveFilters ? "No matching squads" : "No open squads"}
+                  {hasActiveFilters ? t("noMatchingSquads") : t("noOpenSquads")}
                 </h2>
                 <p className="text-muted-foreground text-sm mb-6">
                   {hasActiveFilters
-                    ? "Try adjusting your filters"
-                    : "No squads looking for members right now. Create your own!"}
+                    ? t("tryAdjustingFilters")
+                    : t("noOpenSquadsDesc")}
                 </p>
                 {hasActiveFilters ? (
                   <button
                     onClick={clearFilters}
                     className="bg-secondary text-foreground px-6 py-3 rounded-2xl font-bold text-sm"
                   >
-                    Clear Filters
+                    {t("clearFilters")}
                   </button>
                 ) : (
                   <button
                     onClick={() => navigate("/create-squad")}
                     className="gradient-primary text-primary-foreground px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2"
                   >
-                    <Plus className="w-4 h-4" /> Create Squad
+                    <Plus className="w-4 h-4" /> {t("createSquad")}
                   </button>
                 )}
               </div>
             ) : (
               <div className="space-y-3">
                 <p className="text-xs text-muted-foreground">
-                  {filteredSquads.length} squad{filteredSquads.length !== 1 ? "s" : ""} found
+                  {filteredSquads.length} {filteredSquads.length !== 1 ? t("squadsFound") : t("squadFound")}
                 </p>
                 {filteredSquads.map((squad, i) => (
                   <motion.div
@@ -492,7 +494,7 @@ export default function MySquads() {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-card-foreground text-sm truncate">{squad.name}</h3>
                         <p className="text-muted-foreground text-xs mt-0.5">
-                          Created by {squad.creator_profile?.name ?? "Unknown"}
+                          {t("createdBy")} {squad.creator_profile?.name ?? "Unknown"}
                         </p>
 
                         <div className="flex flex-wrap gap-1.5 mt-2">
@@ -534,7 +536,7 @@ export default function MySquads() {
                       ) : (
                         <UserPlus className="w-4 h-4" />
                       )}
-                      {requesting === squad.id ? "Sending..." : "Ask to Join"}
+                      {requesting === squad.id ? t("sendingRequest") : t("askToJoin")}
                     </button>
                   </motion.div>
                 ))}

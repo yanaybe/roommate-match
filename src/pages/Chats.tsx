@@ -343,7 +343,7 @@ export default function Chats() {
     const now = new Date();
     const diff = now.getTime() - d.getTime();
     if (diff < 86400000) return formatTime(dateStr);
-    if (diff < 172800000) return "Yesterday";
+    if (diff < 172800000) return t("yesterday");
     return d.toLocaleDateString();
   };
 
@@ -401,7 +401,7 @@ export default function Chats() {
               onClick={() => navigate("/roommates")}
               className="gradient-primary text-primary-foreground px-6 py-2.5 rounded-xl font-semibold text-sm"
             >
-              Browse Roommates
+              {t("findRoommates")}
             </button>
           </div>
         ) : (
@@ -494,7 +494,7 @@ export default function Chats() {
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
                 >
                   <Ban size={15} className="text-destructive shrink-0" />
-                  <span className="text-foreground">{isBlocked ? "Unblock user" : "Block user"}</span>
+                  <span className="text-foreground">{isBlocked ? t("unblockUser") : t("blockUser")}</span>
                 </button>
                 <div className="border-t border-border/40" />
                 <button
@@ -502,7 +502,7 @@ export default function Chats() {
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
                 >
                   <Flag size={15} className="text-destructive shrink-0" />
-                  <span className="text-foreground">Report user</span>
+                  <span className="text-foreground">{t("reportUser")}</span>
                 </button>
                 <div className="border-t border-border/40" />
                 <button
@@ -510,7 +510,7 @@ export default function Chats() {
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
                 >
                   <Trash2 size={15} className="text-destructive shrink-0" />
-                  <span className="text-foreground">Delete chat</span>
+                  <span className="text-foreground">{t("deleteChat")}</span>
                 </button>
               </div>
             )}
@@ -531,7 +531,7 @@ export default function Chats() {
               <div className="flex items-center justify-between px-4 pt-3 pb-2">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold text-foreground">Why you matched</span>
+                  <span className="text-xs font-bold text-foreground">{t("whyYouMatched")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {matchPercent > 0 && <MatchBadge percent={matchPercent} size="sm" />}
@@ -651,18 +651,18 @@ export default function Chats() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteConversationTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this conversation and all its messages. This action cannot be undone.
+              {t("deleteConversationDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteTarget && deleteConversation(deleteTarget)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("deleteBtn")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

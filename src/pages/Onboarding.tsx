@@ -7,8 +7,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
-
-const STEPS = ["Photos", "Basic Info", "Living Habits", "Lifestyle", "Personality", "Roommate Preferences"];
+import { useLanguage } from "@/hooks/useLanguage";
 
 const sleepOptions = ["Early bird", "Night owl", "Flexible"];
 const roomTypeOptions = ["Private", "Shared OK", "Either"];
@@ -124,11 +123,37 @@ export default function Onboarding() {
   const { user, loading: authLoading } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const isEdit = searchParams.get("edit") === "true";
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(initial);
   const [saving, setSaving] = useState(false);
+
+  const STEPS = [t("stepPhotos"), t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences")];
+
+  // Map English option values → translated display text
+  const optMap: Record<string, string> = {
+    "Early bird": t("optEarlyBird"), "Night owl": t("optNightOwl"), "Flexible": t("optFlexible"),
+    "Private": t("optPrivate"), "Shared OK": t("optSharedOk"), "Either": t("optEither"),
+    "Daily": t("optDaily"), "Sometimes": t("optSometimes"), "Rarely": t("optRarely"), "Never": t("optNever"),
+    "Very organized": t("optVeryOrganized"), "Moderate": t("optModerate"), "Relaxed": t("relaxed"),
+    "Very religious": t("optVeryReligious"), "Traditional": t("optTraditional"),
+    "Somewhat": t("optSomewhat"), "Not religious": t("optNotReligious"),
+    "Socially": t("optSocially"), "Often": t("optOften"),
+    "Frequently": t("optFrequently"), "Occasionally": t("optOccasionally"),
+    "Chill & quiet": t("optChillQuiet"), "Balanced": t("optBalanced"),
+    "Social & active": t("optSocialActive"), "Party lover": t("optPartyLover"),
+    "No preference": t("optNoPreference"), "Male": t("optMale"), "Female": t("optFemale"), "Mixed": t("optMixed"),
+    "Very similar": t("optVerySimilar"), "Somewhat similar": t("optSomewhatSimilar"),
+    "Morning (6-12)": t("optMorning"), "Afternoon (12-18)": t("optAfternoon"),
+    "Evening (18-24)": t("optEvening"), "Night (24-6)": t("optNight"),
+    "I smoke": t("optISmoke"), "Non-smoker, okay with smokers": t("optNonSmokerOk"),
+    "Non-smoker, prefer no smoking": t("optNonSmokerPreferNo"),
+    "I have pets": t("optHasPets"), "No pets, but okay with them": t("optNoPetsOk"),
+    "Prefer no pets": t("optPreferNoPets"),
+  };
+  const to = (val: string) => optMap[val] ?? val;
 
   // Guard: redirect unverified users to verify-email, unauthenticated to auth
   useEffect(() => {
@@ -311,8 +336,8 @@ export default function Onboarding() {
         return (
           <div className="space-y-4">
             <div className="text-center mb-2">
-              <h2 className="text-lg font-bold text-foreground">Add your photos</h2>
-              <p className="text-muted-foreground text-sm">Show your future roommates who you are!</p>
+              <h2 className="text-lg font-bold text-foreground">{t("addYourPhotos")}</h2>
+              <p className="text-muted-foreground text-sm">{t("showRoommates")}</p>
             </div>
             <PhotoUpload
               photos={form.photos}
@@ -325,38 +350,38 @@ export default function Onboarding() {
         return (
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Name</label>
-              <input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Your name" className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("nameLbl")}</label>
+              <input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder={t("yourNamePlaceholder")} className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-semibold text-foreground block mb-1.5">Age</label>
+                <label className="text-sm font-semibold text-foreground block mb-1.5">{t("ageLbl")}</label>
                 <input type="number" value={form.age} onChange={(e) => update("age", e.target.value)} placeholder="25" className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div>
-                <label className="text-sm font-semibold text-foreground block mb-1.5">City</label>
+                <label className="text-sm font-semibold text-foreground block mb-1.5">{t("cityLbl")}</label>
                 <input value={form.city} onChange={(e) => update("city", e.target.value)} placeholder="Tel Aviv" className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Work / Studies</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("workStudies")}</label>
               <input value={form.occupation} onChange={(e) => update("occupation", e.target.value)} placeholder="Software Engineer" className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Monthly rent budget (₪)</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("monthlyBudget")}</label>
               <input type="number" value={form.budget} onChange={(e) => update("budget", e.target.value)} placeholder="3500" className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Desired room type</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("desiredRoomType")}</label>
               <div className="flex flex-wrap gap-2">
                 {roomTypeOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.desired_room_type === o} onClick={() => update("desired_room_type", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.desired_room_type === o} onClick={() => update("desired_room_type", o)} />
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Bio</label>
-              <textarea value={form.bio} onChange={(e) => update("bio", e.target.value)} placeholder="Tell others about yourself..." rows={3} maxLength={200} className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("bioLbl")}</label>
+              <textarea value={form.bio} onChange={(e) => update("bio", e.target.value)} placeholder={t("bioPlaceholder")} rows={3} maxLength={200} className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
             </div>
           </div>
         );
@@ -364,27 +389,27 @@ export default function Onboarding() {
         return (
           <div className="space-y-5">
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Sleep schedule</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("sleepScheduleLabel")}</label>
               <div className="flex flex-wrap gap-2">
                 {sleepOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.sleep_schedule === o} onClick={() => update("sleep_schedule", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.sleep_schedule === o} onClick={() => update("sleep_schedule", o)} />
                 ))}
               </div>
             </div>
-            <SliderField label="Cleanliness level" value={form.cleanliness} onChange={(v) => update("cleanliness", v)} labels={["Messy", "", "Average", "", "Spotless"]} />
+            <SliderField label={t("cleanlinessLevel")} value={form.cleanliness} onChange={(v) => update("cleanliness", v)} labels={[t("sliderMessy"), "", t("sliderAverage"), "", t("spotless")]} />
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Cooking habits</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("cookingHabitsLbl")}</label>
               <div className="flex flex-wrap gap-2">
                 {cookingOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.cooking_habits === o} onClick={() => update("cooking_habits", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.cooking_habits === o} onClick={() => update("cooking_habits", o)} />
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Shared space organization</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("sharedSpaceOrgLbl")}</label>
               <div className="flex flex-wrap gap-2">
                 {sharedSpaceOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.shared_space_org === o} onClick={() => update("shared_space_org", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.shared_space_org === o} onClick={() => update("shared_space_org", o)} />
                 ))}
               </div>
             </div>
@@ -394,53 +419,53 @@ export default function Onboarding() {
         return (
           <div className="space-y-5">
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">🚬 Smoking</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">🚬 {t("smoking")}</label>
               <div className="flex flex-wrap gap-2">
                 {smokingPrefOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.smoking_preference === o} onClick={() => update("smoking_preference", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.smoking_preference === o} onClick={() => update("smoking_preference", o)} />
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">🐾 Pets</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">🐾 {t("pets")}</label>
               <div className="flex flex-wrap gap-2">
                 {petPrefOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.pet_preference === o} onClick={() => update("pet_preference", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.pet_preference === o} onClick={() => update("pet_preference", o)} />
                 ))}
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Toggle label="🏠 Work from home" value={form.wfh} onChange={(v) => update("wfh", v)} />
+              <Toggle label={`🏠 ${t("workFromHome")}`} value={form.wfh} onChange={(v) => update("wfh", v)} />
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Religious level</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("religiousLevel")}</label>
               <div className="flex flex-wrap gap-2">
                 {religiousOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.religious_level === o} onClick={() => update("religious_level", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.religious_level === o} onClick={() => update("religious_level", o)} />
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Alcohol</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("alcohol")}</label>
               <div className="flex flex-wrap gap-2">
                 {alcoholOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.alcohol === o} onClick={() => update("alcohol", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.alcohol === o} onClick={() => update("alcohol", o)} />
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Fitness</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("fitness")}</label>
               <div className="flex flex-wrap gap-2">
                 {fitnessOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.fitness === o} onClick={() => update("fitness", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.fitness === o} onClick={() => update("fitness", o)} />
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Guests</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("guests")}</label>
               <div className="flex flex-wrap gap-2">
                 {guestsOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.guests === o} onClick={() => update("guests", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.guests === o} onClick={() => update("guests", o)} />
                 ))}
               </div>
             </div>
@@ -449,21 +474,21 @@ export default function Onboarding() {
       case 4:
         return (
           <div className="space-y-5">
-            <SliderField label="Social vs Private" value={form.social_level} onChange={(v) => update("social_level", v)} labels={["Very private", "", "Balanced", "", "Very social"]} />
-            <SliderField label="Noise level" value={form.noise_level} onChange={(v) => update("noise_level", v)} labels={["Silent", "", "Moderate", "", "Loud"]} />
+            <SliderField label={t("socialVsPrivate")} value={form.social_level} onChange={(v) => update("social_level", v)} labels={[t("sliderVeryPrivate"), "", t("sliderBalanced"), "", t("sliderVerySocial")]} />
+            <SliderField label={t("noiseLevelLabel")} value={form.noise_level} onChange={(v) => update("noise_level", v)} labels={[t("sliderSilent"), "", t("sliderModerate"), "", t("sliderLoud")]} />
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Partying / Events</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("partyingEventsLbl")}</label>
               <div className="flex flex-wrap gap-2">
                 {partyingOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.partying === o} onClick={() => update("partying", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.partying === o} onClick={() => update("partying", o)} />
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">General lifestyle vibe</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("generalVibeLbl")}</label>
               <div className="flex flex-wrap gap-2">
                 {vibeOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.lifestyle_vibe === o} onClick={() => update("lifestyle_vibe", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.lifestyle_vibe === o} onClick={() => update("lifestyle_vibe", o)} />
                 ))}
               </div>
             </div>
@@ -474,36 +499,36 @@ export default function Onboarding() {
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-semibold text-foreground block mb-1.5">Min age</label>
+                <label className="text-sm font-semibold text-foreground block mb-1.5">{t("minAge")}</label>
                 <input type="number" value={form.preferred_age_min} onChange={(e) => update("preferred_age_min", e.target.value)} className="w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div>
-                <label className="text-sm font-semibold text-foreground block mb-1.5">Max age</label>
+                <label className="text-sm font-semibold text-foreground block mb-1.5">{t("maxAge")}</label>
                 <input type="number" value={form.preferred_age_max} onChange={(e) => update("preferred_age_max", e.target.value)} className="w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Gender preference</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("genderPref")}</label>
               <div className="flex flex-wrap gap-2">
                 {genderPrefOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.gender_preference === o} onClick={() => update("gender_preference", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.gender_preference === o} onClick={() => update("gender_preference", o)} />
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Lifestyle similarity</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("lifestyleSim")}</label>
               <div className="flex flex-wrap gap-2">
                 {similarityOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.lifestyle_similarity === o} onClick={() => update("lifestyle_similarity", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.lifestyle_similarity === o} onClick={() => update("lifestyle_similarity", o)} />
                 ))}
               </div>
             </div>
-            <SliderField label="Cleanliness expectations" value={form.cleanliness_expectations} onChange={(v) => update("cleanliness_expectations", v)} labels={["Relaxed", "", "Moderate", "", "Strict"]} />
+            <SliderField label={t("cleanlinessExpectations")} value={form.cleanliness_expectations} onChange={(v) => update("cleanliness_expectations", v)} labels={[t("sliderRelaxed"), "", t("sliderModerate"), "", t("sliderStrict")]} />
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Preferred activity hours</label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("preferredActivityHours")}</label>
               <div className="flex flex-wrap gap-2">
                 {activityOptions.map((o) => (
-                  <OptionButton key={o} label={o} selected={form.activity_hours === o} onClick={() => update("activity_hours", o)} />
+                  <OptionButton key={o} label={to(o)} selected={form.activity_hours === o} onClick={() => update("activity_hours", o)} />
                 ))}
               </div>
             </div>
@@ -519,11 +544,11 @@ export default function Onboarding() {
       <div className="max-w-lg mx-auto px-4 pt-12 md:pt-6 pb-8">
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold text-foreground">
-            Set up your <span className="text-primary">profile</span>
+            {t("setupProfile").split(" ").slice(0, -1).join(" ")} <span className="text-primary">{t("setupProfile").split(" ").slice(-1)[0]}</span>
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Step {step + 1} of {STEPS.length} — {STEPS[step]}
-            {step === 0 && <span className="ml-2 text-primary font-medium">· ~3 min</span>}
+            {t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}
+            {step === 0 && <span className="ltr:ml-2 rtl:mr-2 text-primary font-medium">· {t("threeMin")}</span>}
           </p>
         </div>
 
@@ -548,7 +573,7 @@ export default function Onboarding() {
         <div className="flex gap-3 mt-8">
           {step > 0 && (
             <button onClick={() => setStep(step - 1)} className="flex items-center gap-1 px-5 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm">
-              <ArrowLeft className="w-4 h-4" /> Back
+              <ArrowLeft className="w-4 h-4" /> {t("back")}
             </button>
           )}
           <button
@@ -564,9 +589,9 @@ export default function Onboarding() {
             className="flex-1 flex items-center justify-center gap-1 py-3 gradient-primary text-primary-foreground rounded-xl font-bold text-sm disabled:opacity-40"
           >
             {step < STEPS.length - 1 ? (
-              <>Next <ArrowRight className="w-4 h-4" /></>
-            ) : saving ? "Saving..." : (
-              <>Complete <Check className="w-4 h-4" /></>
+              <>{t("nextBtn")} <ArrowRight className="w-4 h-4" /></>
+            ) : saving ? t("savingProfile") : (
+              <>{t("completeBtn")} <Check className="w-4 h-4" /></>
             )}
           </button>
         </div>

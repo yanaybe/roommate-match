@@ -7,13 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-
-const steps = ["Squad Info", "Budget", "Location", "Filters"];
+import { useLanguage } from "@/hooks/useLanguage";
 const cities = ["Tel Aviv", "Jerusalem", "Haifa", "Beer Sheva", "Netanya", "Herzliya", "Ramat Gan", "Petah Tikva"];
 
 export default function CreateSquad() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
@@ -82,8 +82,8 @@ export default function CreateSquad() {
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <div className="flex-1">
-            <h1 className="text-lg font-extrabold text-foreground">Create Squad</h1>
-            <p className="text-muted-foreground text-xs">Step {step + 1} of {steps.length}</p>
+            <h1 className="text-lg font-extrabold text-foreground">{t("createSquad")}</h1>
+            <p className="text-muted-foreground text-xs">{t("step")} {step + 1} / {steps.length}</p>
           </div>
         </div>
         {/* Progress */}
@@ -105,8 +105,8 @@ export default function CreateSquad() {
                   <Users className="w-8 h-8 text-primary-foreground" />
                 </div>
                 <div className="text-center">
-                  <h2 className="text-xl font-bold text-foreground mb-1">Name Your Squad</h2>
-                  <p className="text-muted-foreground text-sm">Give your roommate group a fun name</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{t("nameYourSquad")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("squadNameDesc")}</p>
                 </div>
 
                 <Input
@@ -118,7 +118,7 @@ export default function CreateSquad() {
                 />
 
                 <div>
-                  <label className="text-sm font-semibold text-foreground mb-3 block">How many roommates?</label>
+                  <label className="text-sm font-semibold text-foreground mb-3 block">{t("howManyRoommates")}</label>
                   <div className="flex gap-3 justify-center">
                     {[2, 3, 4, 5].map((n) => (
                       <button
@@ -134,7 +134,7 @@ export default function CreateSquad() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-center text-muted-foreground text-xs mt-2">Including you</p>
+                  <p className="text-center text-muted-foreground text-xs mt-2">{t("includingYou")}</p>
                 </div>
               </div>
             </motion.div>
@@ -144,13 +144,13 @@ export default function CreateSquad() {
             <motion.div key="budget" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
               <div className="space-y-6">
                 <div className="text-center">
-                  <h2 className="text-xl font-bold text-foreground mb-1">Budget Range</h2>
-                  <p className="text-muted-foreground text-sm">Per person monthly budget</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{t("budgetRange")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("perPersonBudget")}</p>
                 </div>
 
                 <div className="bg-card rounded-2xl shadow-card p-6">
                   <div className="flex justify-between mb-4">
-                    <span className="text-muted-foreground text-sm">Min</span>
+                    <span className="text-muted-foreground text-sm">{t("min")}</span>
                     <span className="font-bold text-foreground">₪{budgetMin.toLocaleString()}</span>
                   </div>
                   <Slider
@@ -163,7 +163,7 @@ export default function CreateSquad() {
                   />
 
                   <div className="flex justify-between mb-4">
-                    <span className="text-muted-foreground text-sm">Max</span>
+                    <span className="text-muted-foreground text-sm">{t("max")}</span>
                     <span className="font-bold text-foreground">₪{budgetMax.toLocaleString()}</span>
                   </div>
                   <Slider
@@ -175,7 +175,7 @@ export default function CreateSquad() {
                   />
 
                   <div className="mt-4 p-3 bg-secondary rounded-xl text-center">
-                    <span className="text-sm text-muted-foreground">Total group budget: </span>
+                    <span className="text-sm text-muted-foreground">{t("totalGroupBudget")} </span>
                     <span className="font-bold text-foreground">₪{(budgetMin * targetSize).toLocaleString()} – ₪{(budgetMax * targetSize).toLocaleString()}</span>
                   </div>
                 </div>
@@ -187,8 +187,8 @@ export default function CreateSquad() {
             <motion.div key="location" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
               <div className="space-y-6">
                 <div className="text-center">
-                  <h2 className="text-xl font-bold text-foreground mb-1">Preferred Locations</h2>
-                  <p className="text-muted-foreground text-sm">Where do you want to live?</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{t("preferredLocations")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("whereWantToLive")}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -209,7 +209,7 @@ export default function CreateSquad() {
                 </div>
 
                 {locations.length === 0 && (
-                  <p className="text-center text-muted-foreground text-xs">Skip to keep all locations open</p>
+                  <p className="text-center text-muted-foreground text-xs">{t("skipAllLocations")}</p>
                 )}
               </div>
             </motion.div>
@@ -219,8 +219,8 @@ export default function CreateSquad() {
             <motion.div key="filters" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
               <div className="space-y-6">
                 <div className="text-center">
-                  <h2 className="text-xl font-bold text-foreground mb-1">Must-Have Filters</h2>
-                  <p className="text-muted-foreground text-sm">Set your dealbreakers</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{t("mustHaveFilters")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("setDealbreakers")}</p>
                 </div>
 
                 <div className="space-y-3">
@@ -232,8 +232,8 @@ export default function CreateSquad() {
                   >
                     <Shield className="w-5 h-5" />
                     <div className="text-left flex-1">
-                      <h3 className="font-semibold text-sm">Non-smokers only</h3>
-                      <p className={`text-xs ${noSmoking ? "text-primary-foreground/70" : "text-muted-foreground"}`}>No smoking in the apartment</p>
+                      <h3 className="font-semibold text-sm">{t("nonSmokersOnly")}</h3>
+                      <p className={`text-xs ${noSmoking ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{t("noSmokingApt")}</p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${noSmoking ? "border-primary-foreground bg-primary-foreground/20" : "border-border"}`}>
                       {noSmoking && <div className="w-2.5 h-2.5 rounded-full bg-primary-foreground" />}
@@ -248,8 +248,8 @@ export default function CreateSquad() {
                   >
                     <Sparkles className="w-5 h-5" />
                     <div className="text-left flex-1">
-                      <h3 className="font-semibold text-sm">Pet friendly</h3>
-                      <p className={`text-xs ${petFriendly ? "text-primary-foreground/70" : "text-muted-foreground"}`}>Pets welcome in the apartment</p>
+                      <h3 className="font-semibold text-sm">{t("petFriendlyFilter")}</h3>
+                      <p className={`text-xs ${petFriendly ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{t("petsWelcomeApt")}</p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${petFriendly ? "border-primary-foreground bg-primary-foreground/20" : "border-border"}`}>
                       {petFriendly && <div className="w-2.5 h-2.5 rounded-full bg-primary-foreground" />}
@@ -259,7 +259,7 @@ export default function CreateSquad() {
 
                 <div className="bg-card rounded-2xl shadow-card p-4">
                   <div className="flex justify-between mb-3">
-                    <span className="text-sm font-semibold text-foreground">Minimum cleanliness</span>
+                    <span className="text-sm font-semibold text-foreground">{t("minimumCleanliness")}</span>
                     <span className="text-sm font-bold text-primary">{minCleanliness}/5</span>
                   </div>
                   <Slider
@@ -270,8 +270,8 @@ export default function CreateSquad() {
                     step={1}
                   />
                   <div className="flex justify-between mt-1">
-                    <span className="text-xs text-muted-foreground">Relaxed</span>
-                    <span className="text-xs text-muted-foreground">Spotless</span>
+                    <span className="text-xs text-muted-foreground">{t("relaxed")}</span>
+                    <span className="text-xs text-muted-foreground">{t("spotless")}</span>
                   </div>
                 </div>
               </div>
@@ -287,7 +287,7 @@ export default function CreateSquad() {
               disabled={!canProceed()}
               className="flex-1 gradient-primary text-primary-foreground py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40"
             >
-              Continue <ArrowRight className="w-4 h-4" />
+              {t("continueBtn")} <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
             <button
@@ -295,7 +295,7 @@ export default function CreateSquad() {
               disabled={saving || !canProceed()}
               className="flex-1 gradient-primary text-primary-foreground py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40"
             >
-              {saving ? "Creating..." : "Create Squad 🚀"}
+              {saving ? t("creating") : t("createSquadBtn")}
             </button>
           )}
         </div>

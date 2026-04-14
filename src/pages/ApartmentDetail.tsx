@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isUUID, getMockSavedApartmentKey } from "@/lib/profileUtils";
 import { useBlockReport } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
+import { useLanguage } from "@/hooks/useLanguage";
 import BoostListingSheet from "@/components/BoostListingSheet";
 import { Zap } from "lucide-react";
 
@@ -76,6 +77,7 @@ function RoommateProfileModal({
   user: UserProfile;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <AnimatePresence>
       <motion.div
@@ -119,23 +121,23 @@ function RoommateProfileModal({
             </div>
 
             <div>
-              <h3 className="text-sm font-bold text-foreground mb-2">Living Habits</h3>
+              <h3 className="text-sm font-bold text-foreground mb-2">{t("livingHabitsSection")}</h3>
               <div className="grid grid-cols-2 gap-2">
-                <InfoChip label="Sleep" value={user.sleepSchedule} />
-                <InfoChip label="Cleanliness" value={`${user.cleanliness}/5`} />
-                <InfoChip label="Budget" value={`₪${user.budget.toLocaleString()}`} />
-                <InfoChip label="Room" value={user.roomType} />
+                <InfoChip label={t("sleepScheduleLabel")} value={user.sleepSchedule} />
+                <InfoChip label={t("cleanlinessLabel")} value={`${user.cleanliness}/5`} />
+                <InfoChip label={t("budgetLabel")} value={`₪${user.budget.toLocaleString()}`} />
+                <InfoChip label={t("roomTypeLabel")} value={user.roomType} />
               </div>
             </div>
 
             <div>
-              <h3 className="text-sm font-bold text-foreground mb-2">Lifestyle</h3>
+              <h3 className="text-sm font-bold text-foreground mb-2">{t("lifestyleSection")}</h3>
               <div className="flex flex-wrap gap-2">
-                <Tag label={user.smoking ? "Smoker 🚬" : "Non-smoker"} />
-                <Tag label={user.pets ? "Has pets 🐾" : "No pets"} />
-                <Tag label={user.wfh ? "Works from home 💻" : "Works outside"} />
-                <Tag label={`Social: ${user.social}/5`} />
-                <Tag label={`Noise: ${user.noise}/5`} />
+                <Tag label={user.smoking ? t("smokerLabel") : t("nonSmokerLabel")} />
+                <Tag label={user.pets ? t("hasPetsLabel") : t("noPetsLabel")} />
+                <Tag label={user.wfh ? t("worksFromHomeLabel") : t("worksOutsideLabel")} />
+                <Tag label={`${t("socialLevelLabel")}: ${user.social}/5`} />
+                <Tag label={`${t("noiseLevelLabel")}: ${user.noise}/5`} />
               </div>
             </div>
           </div>
@@ -167,6 +169,7 @@ export default function ApartmentDetail() {
   const navigate = useNavigate();
   const { requireAuth } = useRequireAuth();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { canSave, savesLimit, recordSave, openPremiumSheet } = useDailyLimits();
   const { reportListing } = useBlockReport();
   const [imgIndex, setImgIndex] = useState(0);
@@ -227,12 +230,12 @@ export default function ApartmentDetail() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-lg font-bold text-foreground mb-2">Apartment not found</h2>
+          <h2 className="text-lg font-bold text-foreground mb-2">{t("apartmentNotFound")}</h2>
           <button
             onClick={() => navigate("/")}
             className="text-primary font-semibold text-sm"
           >
-            Back to listings
+            {t("backToListings")}
           </button>
         </div>
       </div>
@@ -301,7 +304,7 @@ export default function ApartmentDetail() {
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
                       >
                         <Zap size={15} className="text-primary shrink-0" />
-                        <span className="text-foreground font-medium">Boost listing</span>
+                        <span className="text-foreground font-medium">{t("boostListing")}</span>
                       </button>
                       <div className="border-t border-border/40" />
                     </>
@@ -311,7 +314,7 @@ export default function ApartmentDetail() {
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
                   >
                     <Flag size={15} className="text-destructive shrink-0" />
-                    <span className="text-foreground">Report listing</span>
+                    <span className="text-foreground">{t("reportListing")}</span>
                   </button>
                 </div>
               )}
@@ -386,42 +389,42 @@ export default function ApartmentDetail() {
         <div className="space-y-3">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">Your Room</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-primary">{t("yourRoom")}</span>
               <div className="flex-1 h-px bg-primary/20" />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center">
-                <span className="text-primary text-[10px] font-semibold uppercase tracking-wide block mb-0.5">Monthly Rent</span>
+                <span className="text-primary text-[10px] font-semibold uppercase tracking-wide block mb-0.5">{t("monthlyRent")}</span>
                 <span className="text-foreground text-lg font-extrabold">₪{apartment.price.toLocaleString()}</span>
               </div>
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center">
                 <Calendar className="w-4 h-4 mx-auto text-primary mb-1" />
                 <span className="text-foreground text-xs font-bold block leading-tight">{apartment.available}</span>
-                <span className="text-muted-foreground text-[10px]">Available</span>
+                <span className="text-muted-foreground text-[10px]">{t("available")}</span>
               </div>
             </div>
           </div>
 
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">The Apartment</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("theApartment")}</span>
               <div className="flex-1 h-px bg-border" />
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-card rounded-xl p-3 text-center shadow-card">
                 <Bed className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
                 <span className="text-foreground text-sm font-bold block">{apartment.rooms}</span>
-                <span className="text-muted-foreground text-[10px]">Bedrooms</span>
+                <span className="text-muted-foreground text-[10px]">{t("bedroomsLabel")}</span>
               </div>
               <div className="bg-card rounded-xl p-3 text-center shadow-card">
                 <Bath className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
                 <span className="text-foreground text-sm font-bold block">{apartment.bathrooms}</span>
-                <span className="text-muted-foreground text-[10px]">Bathrooms</span>
+                <span className="text-muted-foreground text-[10px]">{t("bathroomsLabel")}</span>
               </div>
               <div className="bg-card rounded-xl p-3 text-center shadow-card">
                 <Maximize className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
                 <span className="text-foreground text-sm font-bold block">{apartment.size}</span>
-                <span className="text-muted-foreground text-[10px]">m² total</span>
+                <span className="text-muted-foreground text-[10px]">{t("mSquaredTotal")}</span>
               </div>
             </div>
           </div>
@@ -429,7 +432,7 @@ export default function ApartmentDetail() {
 
         {/* Amenities */}
         <div>
-          <h2 className="text-sm font-bold text-foreground mb-2">Amenities</h2>
+          <h2 className="text-sm font-bold text-foreground mb-2">{t("amenitiesLabel")}</h2>
           <div className="flex flex-wrap gap-2">
             {apartment.amenities.map((a) => (
               <span
@@ -445,7 +448,7 @@ export default function ApartmentDetail() {
         {/* Roommates */}
         <div>
           <h2 className="text-sm font-bold text-foreground mb-3">
-            Current Roommates ({apartment.roommates.length})
+            {t("currentRoommates")} ({apartment.roommates.length})
           </h2>
           <div className="space-y-2">
             {apartment.roommates.map((rm) => {
@@ -503,7 +506,7 @@ export default function ApartmentDetail() {
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm gradient-primary text-primary-foreground transition-all"
           >
             <MessageCircle className="w-4 h-4" />
-            Message Owner
+            {t("messageOwner")}
           </button>
         </div>
       </div>

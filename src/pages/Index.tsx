@@ -183,8 +183,8 @@ export default function Index() {
           >
             <span className="text-2xl">👤</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-primary">Complete your profile</p>
-              <p className="text-xs text-muted-foreground">Unlock match % and get discovered by roommates</p>
+              <p className="text-sm font-semibold text-primary">{t("completeProfileBanner")}</p>
+              <p className="text-xs text-muted-foreground">{t("unlockMatchBanner")}</p>
             </div>
             <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
           </button>
@@ -199,8 +199,8 @@ export default function Index() {
           >
             <span className="text-2xl">👥</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-primary">Searching with friends?</p>
-              <p className="text-xs text-muted-foreground">Create a Squad — find apartments together and vote as a group</p>
+              <p className="text-sm font-semibold text-primary">{t("searchingWithFriends")}</p>
+              <p className="text-xs text-muted-foreground">{t("createSquadBanner")}</p>
             </div>
             <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
           </button>
@@ -226,7 +226,7 @@ export default function Index() {
                 onClick={() => setFilters(defaultFilters)}
                 className="mt-4 gradient-primary text-primary-foreground px-6 py-2.5 rounded-xl font-semibold text-sm"
               >
-                Clear Filters
+                {t("clearFilters")}
               </button>
             </div>
           )

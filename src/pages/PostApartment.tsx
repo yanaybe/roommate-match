@@ -11,8 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-
-const STEPS = ["Photos", "Location", "Details", "Room", "Amenities", "Review"];
+import { useLanguage } from "@/hooks/useLanguage";
 
 const CITIES = ["Tel Aviv", "Jerusalem", "Haifa", "Beer Sheva", "Netanya", "Herzliya", "Ramat Gan", "Rishon LeZion", "Petah Tikva", "Ashdod"];
 
@@ -28,8 +27,10 @@ const MIME_TO_EXT: Record<string, string> = {
 export default function PostApartment() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
+  const STEPS = [t("addPhotos"), t("locationSection"), t("apartmentDetails"), t("availableRoom"), t("amenitiesTitle"), t("reviewYourListing")];
   const [submitting, setSubmitting] = useState(false);
 
   const [images, setImages] = useState<File[]>([]);
@@ -185,18 +186,18 @@ export default function PostApartment() {
   };
 
   const amenities = [
-    { key: "hasBalcony", label: "Balcony", icon: "🌅" },
-    { key: "hasParking", label: "Parking", icon: "🅿️" },
-    { key: "hasElevator", label: "Elevator", icon: "🛗" },
-    { key: "hasAc", label: "A/C", icon: "❄️" },
-    { key: "hasLaundry", label: "Laundry", icon: "🧺" },
-    { key: "hasWifi", label: "WiFi", icon: "📶" },
-    { key: "hasGym", label: "Gym", icon: "💪" },
-    { key: "hasSecurity", label: "Security", icon: "🔒" },
-    { key: "hasRooftop", label: "Rooftop", icon: "🏙️" },
-    { key: "hasGarden", label: "Garden", icon: "🌿" },
-    { key: "petFriendly", label: "Pet Friendly", icon: "🐾" },
-    { key: "isFurnished", label: "Furnished", icon: "🛋️" },
+    { key: "hasBalcony", label: t("amenityBalcony"), icon: "🌅" },
+    { key: "hasParking", label: t("amenityParking"), icon: "🅿️" },
+    { key: "hasElevator", label: t("amenityElevator"), icon: "🛗" },
+    { key: "hasAc", label: t("amenityAC"), icon: "❄️" },
+    { key: "hasLaundry", label: t("amenityLaundry"), icon: "🧺" },
+    { key: "hasWifi", label: t("amenityWifi"), icon: "📶" },
+    { key: "hasGym", label: t("amenityGym"), icon: "💪" },
+    { key: "hasSecurity", label: t("amenitySecurity"), icon: "🔒" },
+    { key: "hasRooftop", label: t("amenityRooftop"), icon: "🏙️" },
+    { key: "hasGarden", label: t("amenityGarden"), icon: "🌿" },
+    { key: "petFriendly", label: t("amenityPetFriendly"), icon: "🐾" },
+    { key: "isFurnished", label: t("amenityFurnished"), icon: "🛋️" },
   ];
 
   return (
@@ -208,8 +209,8 @@ export default function PostApartment() {
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <div className="flex-1">
-            <h1 className="font-bold text-foreground text-lg">Post Your Apartment</h1>
-            <p className="text-xs text-muted-foreground">Step {step + 1} of {STEPS.length} — {STEPS[step]}</p>
+            <h1 className="font-bold text-foreground text-lg">{t("postYourApartment")}</h1>
+            <p className="text-xs text-muted-foreground">{t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}</p>
           </div>
         </div>
         {/* Progress bar */}
@@ -230,8 +231,8 @@ export default function PostApartment() {
             {step === 0 && (
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-xl font-bold text-foreground mb-1">Add Photos</h2>
-                  <p className="text-muted-foreground text-sm">Upload up to 8 photos of your apartment and room</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{t("addPhotos")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("uploadPhotosDesc")}</p>
                 </div>
 
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageAdd} />
@@ -243,13 +244,13 @@ export default function PostApartment() {
                       <button onClick={() => removeImage(i)} className="absolute top-1.5 right-1.5 p-1 bg-destructive rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                         <X className="w-3.5 h-3.5 text-destructive-foreground" />
                       </button>
-                      {i === 0 && <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">Cover</span>}
+                      {i === 0 && <span className="absolute bottom-1.5 ltr:left-1.5 rtl:right-1.5 text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">{t("coverPhoto")}</span>}
                     </div>
                   ))}
                   {images.length < 8 && (
                     <button onClick={() => fileInputRef.current?.click()} className="aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-colors">
                       <Camera className="w-6 h-6 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">Add</span>
+                      <span className="text-xs text-muted-foreground">{t("addPhoto")}</span>
                     </button>
                   )}
                 </div>
@@ -260,13 +261,13 @@ export default function PostApartment() {
             {step === 1 && (
               <div className="space-y-5">
                 <div>
-                  <h2 className="text-xl font-bold text-foreground mb-1">Location</h2>
-                  <p className="text-muted-foreground text-sm">Where is the apartment located?</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{t("locationSection")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("whereApartmentLocated")}</p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-foreground">City</Label>
+                    <Label className="text-foreground">{t("city")}</Label>
                     <Select value={form.city} onValueChange={v => update("city", v)}>
                       <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -276,15 +277,15 @@ export default function PostApartment() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-foreground">Neighborhood</Label>
-                    <Input placeholder="e.g. Florentin, Neve Tzedek..." value={form.neighborhood} onChange={e => update("neighborhood", e.target.value)} className="rounded-xl" />
+                    <Label className="text-foreground">{t("neighborhood")}</Label>
+                    <Input placeholder={t("neighborhoodPlaceholder")} value={form.neighborhood} onChange={e => update("neighborhood", e.target.value)} className="rounded-xl" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-foreground">Street Address</Label>
+                    <Label className="text-foreground">{t("streetAddress")}</Label>
                     <div className="relative">
                       <MapPin className="absolute ltr:left-3 rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input placeholder="Street name and number" value={form.address} onChange={e => update("address", e.target.value)} className="rounded-xl ltr:pl-10 rtl:pr-10" />
+                      <Input placeholder={t("streetNameNumber")} value={form.address} onChange={e => update("address", e.target.value)} className="rounded-xl ltr:pl-10 rtl:pr-10" />
                     </div>
                   </div>
                 </div>
@@ -295,35 +296,35 @@ export default function PostApartment() {
             {step === 2 && (
               <div className="space-y-5">
                 <div>
-                  <h2 className="text-xl font-bold text-foreground mb-1">Apartment Details</h2>
-                  <p className="text-muted-foreground text-sm">Tell us about the apartment</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{t("apartmentDetails")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("tellAboutApt")}</p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-foreground">Title</Label>
-                    <Input placeholder="e.g. Sunny Loft in Florentin" value={form.title} onChange={e => update("title", e.target.value)} className="rounded-xl" />
+                    <Label className="text-foreground">{t("aptTitle")}</Label>
+                    <Input placeholder={t("titlePlaceholder")} value={form.title} onChange={e => update("title", e.target.value)} className="rounded-xl" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-foreground">Description</Label>
-                    <Textarea placeholder="Describe the apartment, the vibe, the neighborhood..." value={form.description} onChange={e => update("description", e.target.value)} className="rounded-xl min-h-[100px]" />
+                    <Label className="text-foreground">{t("aptDescription")}</Label>
+                    <Textarea placeholder={t("descPlaceholder")} value={form.description} onChange={e => update("description", e.target.value)} className="rounded-xl min-h-[100px]" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label className="text-foreground flex items-center gap-1.5"><span>💰</span> Monthly Price (₪)</Label>
+                      <Label className="text-foreground flex items-center gap-1.5"><span>💰</span> {t("monthlyPrice")}</Label>
                       <Input type="number" placeholder="3,500" value={form.price} onChange={e => update("price", e.target.value)} className="rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-foreground flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5" /> Size (m²)</Label>
+                      <Label className="text-foreground flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5" /> {t("sizeM2")}</Label>
                       <Input type="number" placeholder="85" value={form.size} onChange={e => update("size", e.target.value)} className="rounded-xl" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-2">
-                      <Label className="text-foreground flex items-center gap-1.5"><Bed className="w-3.5 h-3.5" /> Rooms</Label>
+                      <Label className="text-foreground flex items-center gap-1.5"><Bed className="w-3.5 h-3.5" /> {t("roomsLbl")}</Label>
                       <Select value={form.rooms} onValueChange={v => update("rooms", v)}>
                         <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -332,7 +333,7 @@ export default function PostApartment() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-foreground flex items-center gap-1.5"><Bath className="w-3.5 h-3.5" /> Baths</Label>
+                      <Label className="text-foreground flex items-center gap-1.5"><Bath className="w-3.5 h-3.5" /> {t("bathsLbl")}</Label>
                       <Select value={form.bathrooms} onValueChange={v => update("bathrooms", v)}>
                         <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -341,7 +342,7 @@ export default function PostApartment() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-foreground flex items-center gap-1.5"><Building className="w-3.5 h-3.5" /> Floor</Label>
+                      <Label className="text-foreground flex items-center gap-1.5"><Building className="w-3.5 h-3.5" /> {t("floorLbl")}</Label>
                       <Input type="number" placeholder="3" value={form.floor} onChange={e => update("floor", e.target.value)} className="rounded-xl" />
                     </div>
                   </div>
@@ -353,38 +354,38 @@ export default function PostApartment() {
             {step === 3 && (
               <div className="space-y-5">
                 <div>
-                  <h2 className="text-xl font-bold text-foreground mb-1">The Available Room</h2>
-                  <p className="text-muted-foreground text-sm">Details about the room you're offering</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{t("availableRoom")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("detailsAboutRoom")}</p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-foreground">Room Type</Label>
+                    <Label className="text-foreground">{t("roomType")}</Label>
                     <div className="grid grid-cols-2 gap-3">
                       {["Private", "Shared"].map(type => (
                         <button key={type} onClick={() => update("roomType", type)} className={`p-4 rounded-2xl border-2 transition-all text-center ${form.roomType === type ? "border-primary bg-primary/10" : "border-border hover:border-muted-foreground/30"}`}>
                           <span className="text-2xl mb-1 block">{type === "Private" ? "🚪" : "👥"}</span>
-                          <span className={`font-semibold text-sm ${form.roomType === type ? "text-primary" : "text-foreground"}`}>{type} Room</span>
+                          <span className={`font-semibold text-sm ${form.roomType === type ? "text-primary" : "text-foreground"}`}>{type === "Private" ? t("privateRoom") : t("sharedRoom")}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-foreground">Room Description</Label>
-                    <Textarea placeholder="Describe the room — size, window direction, included furniture..." value={form.roomDescription} onChange={e => update("roomDescription", e.target.value)} className="rounded-xl min-h-[100px]" />
+                    <Label className="text-foreground">{t("roomDescLbl")}</Label>
+                    <Textarea placeholder={t("roomDescPlaceholder")} value={form.roomDescription} onChange={e => update("roomDescription", e.target.value)} className="rounded-xl min-h-[100px]" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Available From</Label>
+                    <Label className="text-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {t("availableFromLbl")}</Label>
                     <Select value={form.availableDate} onValueChange={v => update("availableDate", v)}>
                       <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Immediately">Immediately</SelectItem>
-                        <SelectItem value="Next week">Next week</SelectItem>
-                        <SelectItem value="Next month">Next month</SelectItem>
-                        <SelectItem value="In 2 months">In 2 months</SelectItem>
-                        <SelectItem value="Flexible">Flexible</SelectItem>
+                        <SelectItem value="Immediately">{t("immediately")}</SelectItem>
+                        <SelectItem value="Next week">{t("nextWeekLbl")}</SelectItem>
+                        <SelectItem value="Next month">{t("nextMonthLbl")}</SelectItem>
+                        <SelectItem value="In 2 months">{t("in2Months")}</SelectItem>
+                        <SelectItem value="Flexible">{t("optFlexible")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -396,8 +397,8 @@ export default function PostApartment() {
             {step === 4 && (
               <div className="space-y-5">
                 <div>
-                  <h2 className="text-xl font-bold text-foreground mb-1">Amenities</h2>
-                  <p className="text-muted-foreground text-sm">What does the apartment include?</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{t("amenitiesTitle")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("amenitiesDesc")}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -419,8 +420,8 @@ export default function PostApartment() {
             {step === 5 && (
               <div className="space-y-5">
                 <div>
-                  <h2 className="text-xl font-bold text-foreground mb-1">Review Your Listing</h2>
-                  <p className="text-muted-foreground text-sm">Make sure everything looks good</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">{t("reviewYourListing")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("makeEverythingGood")}</p>
                 </div>
 
                 {/* Preview card */}
@@ -469,16 +470,16 @@ export default function PostApartment() {
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           {step > 0 && (
             <Button variant="outline" onClick={() => setStep(step - 1)} className="rounded-xl flex-1">
-              Back
+              {t("back")}
             </Button>
           )}
           {step < STEPS.length - 1 ? (
             <Button onClick={() => setStep(step + 1)} disabled={!canProceed()} className="rounded-xl flex-1 gradient-primary text-primary-foreground">
-              Continue <ArrowRight className="w-4 h-4 ml-1" />
+              {t("continueBtn")} <ArrowRight className="w-4 h-4 ltr:ml-1 rtl:mr-1" />
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={submitting} className="rounded-xl flex-1 gradient-primary text-primary-foreground">
-              {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Posting...</> : <>Post Apartment 🎉</>}
+              {submitting ? <><Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" /> {t("postingApt")}</> : <>{t("postApartmentBtn")}</>}
             </Button>
           )}
         </div>

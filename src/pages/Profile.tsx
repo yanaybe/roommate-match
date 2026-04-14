@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const getMenuItems = (t: (key: string) => string) => [
   { icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" },
-  { icon: ShieldCheck, label: "Get Verified", desc: "Add phone badge to your profile", accent: false, action: "verify" },
+  { icon: ShieldCheck, label: t("getVerified"), desc: t("addPhoneBadge"), accent: false, action: "verify" },
   { icon: Bookmark, label: t("myActivity"), desc: t("myActivityDesc"), accent: false, action: "activity" },
   { icon: Sparkles, label: t("preferences"), desc: t("preferencesDesc"), accent: false, action: "preferences" },
   { icon: Bell, label: t("notifications"), desc: t("notificationsDesc"), action: "notifications" },

@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useBlockReport } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
+import { useLanguage } from "@/hooks/useLanguage";
 
 function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
   const photos = (p as any).photos as string[] | undefined;
@@ -63,6 +64,7 @@ export default function RoommateProfile() {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const { profile: myProfile } = useProfile();
+  const { t } = useLanguage();
   const { profiles: allProfiles } = useAllProfiles();
   const [imgIndex, setImgIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -85,7 +87,7 @@ export default function RoommateProfile() {
   if (!userData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Profile not found</p>
+        <p className="text-muted-foreground">{t("profileNotFound")}</p>
       </div>
     );
   }
@@ -95,23 +97,23 @@ export default function RoommateProfile() {
 
 
   const extraDetails = fullProfile ? [
-    { icon: UtensilsCrossed, label: "Cooking", value: fullProfile.cooking_habits, color: "text-orange-500", bg: "bg-orange-500/10" },
-    { icon: Dumbbell, label: "Fitness", value: fullProfile.fitness, color: "text-green-500", bg: "bg-green-500/10" },
-    { icon: Wine, label: "Alcohol", value: fullProfile.alcohol, color: "text-rose-500", bg: "bg-rose-500/10" },
-    { icon: PartyPopper, label: "Partying", value: fullProfile.partying, color: "text-violet-500", bg: "bg-violet-500/10" },
-    { icon: Users, label: "Guests", value: fullProfile.guests, color: "text-sky-500", bg: "bg-sky-500/10" },
-    { icon: Clock, label: "Active hours", value: fullProfile.activity_hours, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { icon: Smile, label: "Vibe", value: fullProfile.lifestyle_vibe, color: "text-pink-500", bg: "bg-pink-500/10" },
-    { icon: BookOpen, label: "Religious", value: fullProfile.religious_level, color: "text-teal-500", bg: "bg-teal-500/10" },
+    { icon: UtensilsCrossed, label: t("cookingLabel"), value: fullProfile.cooking_habits, color: "text-orange-500", bg: "bg-orange-500/10" },
+    { icon: Dumbbell, label: t("fitnessLabel"), value: fullProfile.fitness, color: "text-green-500", bg: "bg-green-500/10" },
+    { icon: Wine, label: t("alcoholLabel"), value: fullProfile.alcohol, color: "text-rose-500", bg: "bg-rose-500/10" },
+    { icon: PartyPopper, label: t("partyingLabel"), value: fullProfile.partying, color: "text-violet-500", bg: "bg-violet-500/10" },
+    { icon: Users, label: t("guestsLabel"), value: fullProfile.guests, color: "text-sky-500", bg: "bg-sky-500/10" },
+    { icon: Clock, label: t("activeHoursLabel"), value: fullProfile.activity_hours, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { icon: Smile, label: t("vibeLabel"), value: fullProfile.lifestyle_vibe, color: "text-pink-500", bg: "bg-pink-500/10" },
+    { icon: BookOpen, label: t("religiousLabel"), value: fullProfile.religious_level, color: "text-teal-500", bg: "bg-teal-500/10" },
   ].filter(d => d.value) : [];
 
   const vibes: string[] = [];
-  if (userData.wfh) vibes.push("🏠 WFH");
-  if (userData.pets) vibes.push("🐾 Has pets");
-  if (userData.smoking) vibes.push("🚬 Smoker");
-  else vibes.push("🚭 Non-smoker");
-  if (userData.sleepSchedule === "Night owl") vibes.push("🦉 Night owl");
-  else vibes.push("🌅 Early bird");
+  if (userData.wfh) vibes.push(t("wfhVibeLabel"));
+  if (userData.pets) vibes.push(t("hasPetsLabel"));
+  if (userData.smoking) vibes.push(t("smokerLabel"));
+  else vibes.push(t("nonSmokerLabel"));
+  if (userData.sleepSchedule === "Night owl") vibes.push(t("nightOwlLabel"));
+  else vibes.push(t("earlyBirdLabel"));
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-8">
@@ -160,7 +162,7 @@ export default function RoommateProfile() {
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
                     >
                       <Ban size={15} className="text-destructive shrink-0" />
-                      <span className="text-foreground">{isBlocked ? "Unblock user" : "Block user"}</span>
+                      <span className="text-foreground">{isBlocked ? t("unblockUser") : t("blockUser")}</span>
                     </button>
                     <div className="border-t border-border/40" />
                     <button
@@ -168,7 +170,7 @@ export default function RoommateProfile() {
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
                     >
                       <Flag size={15} className="text-destructive shrink-0" />
-                      <span className="text-foreground">Report user</span>
+                      <span className="text-foreground">{t("reportUser")}</span>
                     </button>
                   </div>
                 )}
@@ -239,9 +241,9 @@ export default function RoommateProfile() {
               <DollarSign size={18} className="text-green-500" />
             </div>
             <div>
-              <p className="text-[11px] text-muted-foreground">Budget</p>
+              <p className="text-[11px] text-muted-foreground">{t("budgetLabel")}</p>
               <p className="text-base font-extrabold text-foreground">₪{userData.budget.toLocaleString()}</p>
-              <p className="text-[10px] text-muted-foreground">/ month</p>
+              <p className="text-[10px] text-muted-foreground">{t("perMonth")}</p>
             </div>
           </div>
           <div className="bg-card rounded-2xl shadow-elevated p-4 flex items-center gap-3">
@@ -249,9 +251,9 @@ export default function RoommateProfile() {
               <Home size={18} className="text-primary" />
             </div>
             <div>
-              <p className="text-[11px] text-muted-foreground">Room type</p>
+              <p className="text-[11px] text-muted-foreground">{t("roomTypeLabel")}</p>
               <p className="text-base font-extrabold text-foreground">{userData.roomType}</p>
-              <p className="text-[10px] text-muted-foreground">preference</p>
+              <p className="text-[10px] text-muted-foreground">{t("preference")}</p>
             </div>
           </div>
         </motion.div>
@@ -264,7 +266,7 @@ export default function RoommateProfile() {
             transition={{ delay: 0.05 }}
             className="bg-card rounded-2xl shadow-card p-4"
           >
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">About</h2>
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("aboutSection")}</h2>
             <p className="text-sm text-foreground leading-relaxed">{userData.bio}</p>
           </motion.div>
         )}
@@ -290,14 +292,14 @@ export default function RoommateProfile() {
           transition={{ delay: 0.1 }}
           className="bg-card rounded-2xl shadow-card p-4 space-y-4"
         >
-          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Living Habits</h2>
+          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("livingHabitsSection")}</h2>
 
           <div className="space-y-3">
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
                   <Sparkles size={13} className="text-amber-500" />
-                  <span className="text-xs font-semibold text-foreground">Cleanliness</span>
+                  <span className="text-xs font-semibold text-foreground">{t("cleanlinessLabel")}</span>
                 </div>
                 <span className="text-xs font-bold text-amber-500">{userData.cleanliness}/5</span>
               </div>
@@ -308,7 +310,7 @@ export default function RoommateProfile() {
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
                   <Users size={13} className="text-sky-500" />
-                  <span className="text-xs font-semibold text-foreground">Social level</span>
+                  <span className="text-xs font-semibold text-foreground">{t("socialLevelLabel")}</span>
                 </div>
                 <span className="text-xs font-bold text-sky-500">{userData.social}/5</span>
               </div>
@@ -319,7 +321,7 @@ export default function RoommateProfile() {
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
                   <Volume2 size={13} className="text-rose-500" />
-                  <span className="text-xs font-semibold text-foreground">Noise level</span>
+                  <span className="text-xs font-semibold text-foreground">{t("noiseLevelLabel")}</span>
                 </div>
                 <span className="text-xs font-bold text-rose-500">{userData.noise}/5</span>
               </div>
@@ -329,7 +331,7 @@ export default function RoommateProfile() {
             <div className="flex items-center justify-between pt-1 border-t border-border/40">
               <div className="flex items-center gap-1.5">
                 {userData.sleepSchedule === "Night owl" ? <Moon size={13} className="text-violet-500" /> : <Sun size={13} className="text-yellow-500" />}
-                <span className="text-xs font-semibold text-foreground">Sleep schedule</span>
+                <span className="text-xs font-semibold text-foreground">{t("sleepScheduleLabel")}</span>
               </div>
               <span className="text-xs font-bold text-muted-foreground">{userData.sleepSchedule}</span>
             </div>
@@ -344,7 +346,7 @@ export default function RoommateProfile() {
             transition={{ delay: 0.13 }}
             className="bg-card rounded-2xl shadow-card p-4"
           >
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Lifestyle</h2>
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">{t("lifestyleSection")}</h2>
             <div className="grid grid-cols-2 gap-2">
               {extraDetails.map((d) => (
                 <div key={d.label} className={`flex items-center gap-2.5 p-3 rounded-xl ${d.bg}`}>
@@ -368,7 +370,7 @@ export default function RoommateProfile() {
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Compatibility</h2>
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("compatibilitySection")}</h2>
             <div className="flex items-center gap-2.5">
               <div className="relative w-14 h-14">
                 <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
@@ -385,9 +387,9 @@ export default function RoommateProfile() {
               </div>
               <div>
                 <p className="text-sm font-bold text-foreground">
-                  {matchPercent >= 80 ? "Great match 🎉" : matchPercent >= 60 ? "Good match 👍" : matchPercent > 0 ? "Fair match" : "—"}
+                  {matchPercent >= 80 ? t("greatMatch") : matchPercent >= 60 ? t("goodMatch") : matchPercent > 0 ? t("fairMatch") : "—"}
                 </p>
-                <p className="text-[11px] text-muted-foreground">Based on your profiles</p>
+                <p className="text-[11px] text-muted-foreground">{t("basedOnProfiles")}</p>
               </div>
             </div>
           </div>
@@ -425,7 +427,7 @@ export default function RoommateProfile() {
               })}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground text-center py-2">Complete your profile to see a detailed breakdown</p>
+            <p className="text-xs text-muted-foreground text-center py-2">{t("completeForBreakdown")}</p>
           )}
         </motion.div>
 
