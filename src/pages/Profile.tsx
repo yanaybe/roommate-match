@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil } from "lucide-react";
 import PremiumSheet from "@/components/PremiumSheet";
 import PreferencesSheet from "@/components/profile/PreferencesSheet";
 import ActivitySheet from "@/components/profile/ActivitySheet";
@@ -35,7 +35,7 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen bg-background pb-20 md:pb-8 flex flex-col items-center justify-center px-4">
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
           <LogIn className="w-8 h-8 text-primary" />
         </div>
@@ -53,7 +53,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pb-20">
+      <div className="min-h-screen bg-background flex items-center justify-center pb-20 md:pb-8">
         <p className="text-muted-foreground text-sm">{t("loadingProfile")}</p>
       </div>
     );
@@ -61,7 +61,7 @@ export default function Profile() {
 
   if (!profile || !profile.onboarding_complete) {
     return (
-      <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen bg-background pb-20 md:pb-8 flex flex-col items-center justify-center px-4">
         <h2 className="text-xl font-extrabold text-foreground mb-2">{t("completeYourProfile")}</h2>
         <p className="text-muted-foreground text-sm text-center mb-6">{t("fillOutProfile")}</p>
         <button
@@ -113,6 +113,13 @@ export default function Profile() {
                 </span>
               )}
             </div>
+            <button
+              onClick={() => navigate("/onboarding?edit=true")}
+              className="absolute bottom-0 right-0 w-7 h-7 gradient-primary rounded-full flex items-center justify-center shadow-md ring-2 ring-background"
+              title="Edit profile"
+            >
+              <Pencil className="w-3.5 h-3.5 text-primary-foreground" />
+            </button>
           </div>
           <h1 className="text-xl font-extrabold text-foreground">
             {profile.name}, {profile.age}

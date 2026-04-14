@@ -90,8 +90,12 @@
   * {
     @apply border-border;
   }
+  html {
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    overflow-x: hidden;
   }
   button, a, [role="button"], input[type="submit"], input[type="button"], summary {
     cursor: pointer;

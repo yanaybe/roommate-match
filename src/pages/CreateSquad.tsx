@@ -75,7 +75,7 @@ export default function CreateSquad() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 md:pb-8">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-2xl mx-auto px-4 pt-12 md:pt-6 pb-3 flex items-center gap-3">
           <button onClick={() => step > 0 ? setStep(step - 1) : navigate("/create")} className="p-1 -ml-1">

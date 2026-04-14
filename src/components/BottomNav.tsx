@@ -5,6 +5,7 @@ import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 export default function BottomNav() {
   const location = useLocation();
@@ -13,6 +14,7 @@ export default function BottomNav() {
   const { unreadCount: unreadNotifs } = useNotifications();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { profile } = useProfile();
 
   const tabs = [
     { path: "/", icon: Home, label: t("navRooms") },
@@ -29,7 +31,7 @@ export default function BottomNav() {
     <>
       {/* ── Mobile: bottom bar ── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom">
-        <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+        <div className="flex items-center justify-around h-16 w-full px-2">
           {tabs.map((tab) => {
             const isActive = location.pathname === tab.path;
             const Icon = tab.icon;
@@ -130,7 +132,23 @@ export default function BottomNav() {
         </nav>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-border/50">
+        <div className="px-3 py-4 border-t border-border/50">
+          {profile && (
+            <button
+              onClick={() => navigate("/profile")}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary transition-colors text-left mb-2"
+            >
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shrink-0">
+                {profile.avatar_url
+                  ? <img src={profile.avatar_url} alt={profile.name} className="w-full h-full object-cover" />
+                  : <span className="text-primary text-sm font-bold">{profile.name.charAt(0).toUpperCase()}</span>}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground truncate">{profile.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{profile.occupation}</p>
+              </div>
+            </button>
+          )}
           <p className="text-[11px] text-muted-foreground/60 text-center">
             © 2026 Roomatch
           </p>

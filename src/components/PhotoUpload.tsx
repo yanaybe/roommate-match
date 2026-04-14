@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
 interface PhotoUploadProps {
   photos: string[];
   onChange: (photos: string[]) => void;
@@ -30,8 +33,22 @@ export default function PhotoUpload({ photos, onChange, maxPhotos = 6 }: PhotoUp
 
     for (let i = 0; i < Math.min(files.length, remaining); i++) {
       const file = files[i];
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const filePath = `${user.id}/${Date.now()}_${i}.${ext}`;
+
+      // Validate MIME type against allowlist (not just the filename extension)
+      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+        toast.error("Only JPEG, PNG, WebP, and GIF images are allowed");
+        continue;
+      }
+
+      // Enforce file size limit
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error("File too large — maximum size is 10 MB");
+        continue;
+      }
+
+      // Derive extension from MIME type, not filename, to prevent extension spoofing
+      const ext = file.type.split("/")[1] || "jpg";
+      const filePath = `${user.id}/${crypto.randomUUID()}.${ext}`;
 
       const { error } = await supabase.storage
         .from("profile-photos")

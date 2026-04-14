@@ -72,6 +72,8 @@ export default function MySquads() {
 
   const handleAcceptInvite = async (invite: any) => {
     if (!user) return;
+    // Verify the invite is actually addressed to the current user
+    if (invite.invitee_id !== user.id) return;
     await supabase.from("squad_members").insert({
       squad_id: invite.squad_id,
       user_id: user.id,
@@ -129,7 +131,7 @@ export default function MySquads() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pb-20">
+      <div className="min-h-screen bg-background flex items-center justify-center pb-20 md:pb-8">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Sign in to view squads</p>
           <button
@@ -144,7 +146,7 @@ export default function MySquads() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 md:pb-8">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-2xl mx-auto px-4 pt-12 md:pt-6 pb-3 flex items-center gap-3">
