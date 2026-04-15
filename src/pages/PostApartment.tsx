@@ -201,20 +201,19 @@ export default function PostApartment() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-8">
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+    <div className="h-dvh flex flex-col bg-background">
+      {/* Sticky header + progress */}
+      <div className="shrink-0 bg-background/95 backdrop-blur-lg border-b border-border">
+        <div className="max-w-lg mx-auto px-4 pt-3 pb-2 flex items-center gap-3">
           <button onClick={() => step > 0 ? setStep(step - 1) : navigate("/create")} className="p-2 rounded-xl hover:bg-muted transition-colors">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <div className="flex-1">
-            <h1 className="font-bold text-foreground text-lg">{t("postYourApartment")}</h1>
-            <p className="text-xs text-muted-foreground">{t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-foreground text-base">{t("postYourApartment")}</h1>
+            <p className="text-xs text-muted-foreground truncate">{t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}</p>
           </div>
         </div>
-        {/* Progress bar */}
-        <div className="max-w-lg mx-auto px-4 pb-3">
+        <div className="max-w-lg mx-auto px-4 pb-2">
           <div className="flex gap-1.5">
             {STEPS.map((_, i) => (
               <div key={i} className={`h-1 rounded-full flex-1 transition-colors duration-300 ${i <= step ? "gradient-primary" : "bg-muted"}`} />
@@ -223,7 +222,9 @@ export default function PostApartment() {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-6">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="max-w-lg mx-auto px-4 py-5">
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.25 }}>
 
@@ -464,9 +465,10 @@ export default function PostApartment() {
           </motion.div>
         </AnimatePresence>
       </div>
+      </div>
 
-      {/* Bottom buttons */}
-      <div className="fixed bottom-16 md:bottom-0 ltr:left-0 ltr:md:left-64 rtl:right-0 rtl:md:right-64 ltr:right-0 rtl:left-0 z-30 bg-background/80 backdrop-blur-lg border-t border-border">
+      {/* Sticky footer buttons */}
+      <div className="shrink-0 bg-background/95 backdrop-blur-lg border-t border-border pb-16 md:pb-0">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           {step > 0 && (
             <Button variant="outline" onClick={() => setStep(step - 1)} className="rounded-xl flex-1">

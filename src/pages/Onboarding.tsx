@@ -540,37 +540,44 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-lg mx-auto px-4 pt-12 md:pt-6 pb-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-foreground">
-            {t("setupProfile").split(" ").slice(0, -1).join(" ")} <span className="text-primary">{t("setupProfile").split(" ").slice(-1)[0]}</span>
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}
-            {step === 0 && <span className="ltr:ml-2 rtl:mr-2 text-primary font-medium">· {t("threeMin")}</span>}
-          </p>
-        </div>
-
-        <div className="flex gap-1.5 mb-6">
+    <div className="h-dvh flex flex-col bg-background">
+      {/* Sticky header: title + progress */}
+      <div className="shrink-0 max-w-lg mx-auto w-full px-4 pt-10 md:pt-6 pb-3">
+        <h1 className="text-xl font-extrabold text-foreground leading-tight">
+          {t("setupProfile").split(" ").slice(0, -1).join(" ")}{" "}
+          <span className="text-primary">{t("setupProfile").split(" ").slice(-1)[0]}</span>
+        </h1>
+        <p className="text-muted-foreground text-xs mt-0.5">
+          {t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}
+          {step === 0 && <span className="ltr:ml-2 rtl:mr-2 text-primary font-medium">· {t("threeMin")}</span>}
+        </p>
+        <div className="flex gap-1.5 mt-3">
           {STEPS.map((_, i) => (
             <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= step ? "gradient-primary" : "bg-secondary"}`} />
           ))}
         </div>
+      </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            {renderStep()}
-          </motion.div>
-        </AnimatePresence>
+      {/* Scrollable step content */}
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="max-w-lg mx-auto px-4 py-3">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {renderStep()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
 
-        <div className="flex gap-3 mt-8">
+      {/* Fixed footer: back / next buttons */}
+      <div className="shrink-0 bg-background/95 backdrop-blur-sm border-t border-border pb-16 md:pb-0">
+        <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           {step > 0 && (
             <button onClick={() => setStep(step - 1)} className="flex items-center gap-1 px-5 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm">
               <ArrowLeft className="w-4 h-4" /> {t("back")}

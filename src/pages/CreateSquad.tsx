@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { useLanguage } from "@/hooks/useLanguage";
 const cities = ["Tel Aviv", "Jerusalem", "Haifa", "Beer Sheva", "Netanya", "Herzliya", "Ramat Gan", "Petah Tikva"];
+const steps = [0, 1, 2, 3];
 
 export default function CreateSquad() {
   const { user } = useAuth();
@@ -75,18 +76,18 @@ export default function CreateSquad() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-8">
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 pt-12 md:pt-6 pb-3 flex items-center gap-3">
+    <div className="h-dvh flex flex-col bg-background">
+      {/* Sticky header + progress */}
+      <div className="shrink-0 bg-background/95 backdrop-blur-xl border-b border-border">
+        <div className="max-w-lg mx-auto px-4 pt-3 pb-2 flex items-center gap-3">
           <button onClick={() => step > 0 ? setStep(step - 1) : navigate("/create")} className="p-1 -ml-1">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <div className="flex-1">
-            <h1 className="text-lg font-extrabold text-foreground">{t("createSquad")}</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-extrabold text-foreground">{t("createSquad")}</h1>
             <p className="text-muted-foreground text-xs">{t("step")} {step + 1} / {steps.length}</p>
           </div>
         </div>
-        {/* Progress */}
         <div className="max-w-lg mx-auto px-4 pb-2">
           <div className="flex gap-1.5">
             {steps.map((_, i) => (
@@ -96,7 +97,9 @@ export default function CreateSquad() {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-6">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="max-w-lg mx-auto px-4 py-5">
         <AnimatePresence mode="wait">
           {step === 0 && (
             <motion.div key="info" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
@@ -278,9 +281,12 @@ export default function CreateSquad() {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+      </div>
 
-        {/* Navigation */}
-        <div className="mt-8 flex gap-3">
+      {/* Sticky footer navigation */}
+      <div className="shrink-0 bg-background/95 backdrop-blur-sm border-t border-border pb-16 md:pb-0">
+        <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           {step < steps.length - 1 ? (
             <button
               onClick={() => setStep(step + 1)}

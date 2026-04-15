@@ -89,13 +89,24 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
+    min-width: 0;
   }
   html {
     overflow-x: hidden;
+    overscroll-behavior-x: none;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
+  }
+  img, video, svg {
+    max-width: 100%;
+    height: auto;
+  }
+  input, textarea, select {
+    max-width: 100%;
   }
   button, a, [role="button"], input[type="submit"], input[type="button"], summary {
     cursor: pointer;
