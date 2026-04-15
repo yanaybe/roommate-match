@@ -148,7 +148,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28 lg:pb-8">
+    <div className="min-h-screen bg-background pb-28 desk:pb-8">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">

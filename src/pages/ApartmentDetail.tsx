@@ -248,7 +248,7 @@ export default function ApartmentDetail() {
     setImgIndex((i) => (i - 1 + apartment.images.length) % apartment.images.length);
 
   return (
-    <div className="min-h-screen bg-background pb-28 lg:pb-8">
+    <div className="min-h-screen bg-background pb-28 desk:pb-8">
       {/* Image gallery */}
       <div className="relative max-w-3xl mx-auto overflow-hidden">
         <div className="relative aspect-[16/10] overflow-hidden">

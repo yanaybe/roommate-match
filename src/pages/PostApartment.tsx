@@ -468,7 +468,7 @@ export default function PostApartment() {
       </div>
 
       {/* Sticky footer buttons */}
-      <div className="shrink-0 bg-background/95 backdrop-blur-lg border-t border-border pb-16 lg:pb-0">
+      <div className="shrink-0 bg-background/95 backdrop-blur-lg border-t border-border pb-16 desk:pb-0">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           {step > 0 && (
             <Button variant="outline" onClick={() => setStep(step - 1)} className="rounded-xl flex-1">

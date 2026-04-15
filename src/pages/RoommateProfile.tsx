@@ -116,7 +116,7 @@ export default function RoommateProfile() {
   else vibes.push(t("earlyBirdLabel"));
 
   return (
-    <div className="min-h-screen bg-background pb-28 lg:pb-8">
+    <div className="min-h-screen bg-background pb-28 desk:pb-8">
 
       {/* ── Photo hero ── */}
       <div className="relative w-full h-[75vh] overflow-hidden">
