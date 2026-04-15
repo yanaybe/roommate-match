@@ -73,7 +73,7 @@ export default function Index() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { profile } = useProfile();
-  const { squads } = useMySquads();
+  const { squads, loading: squadsLoading } = useMySquads();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -191,7 +191,7 @@ export default function Index() {
         </div>
       )}
 
-      {user && profile?.onboarding_complete && squads.length === 0 && (
+      {user && profile?.onboarding_complete && !squadsLoading && squads.length === 0 && (
         <div className="max-w-5xl mx-auto px-4 pt-3">
           <button
             onClick={() => navigate("/create-squad")}
