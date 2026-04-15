@@ -119,6 +119,13 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
   );
 }
 
+type Errors = Partial<Record<keyof FormData | "preferred_age_max" | "preferred_age_min", string>>;
+
+function ErrorMsg({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="text-destructive text-xs mt-1 font-medium">{msg}</p>;
+}
+
 export default function Onboarding() {
   const { user, loading: authLoading } = useAuth();
   const { profile } = useProfile();
@@ -129,6 +136,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(initial);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Errors>({});
 
   const STEPS = [t("stepPhotos"), t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences")];
 
@@ -208,8 +216,74 @@ export default function Onboarding() {
     }
   }, [profile]);
 
-  const update = <K extends keyof FormData>(key: K, val: FormData[K]) =>
+  const update = <K extends keyof FormData>(key: K, val: FormData[K]) => {
     setForm((p) => ({ ...p, [key]: val }));
+    setErrors((e) => ({ ...e, [key]: undefined }));
+  };
+
+  const validateStep = (): Errors => {
+    const e: Errors = {};
+    if (step === 1) {
+      const name = form.name.trim();
+      if (!name) {
+        e.name = "Name is required";
+      } else if (name.length < 2) {
+        e.name = "Name must be at least 2 characters";
+      } else if (name.length > 50) {
+        e.name = "Name must be under 50 characters";
+      } else if (!/^[\p{L}\s''\-]+$/u.test(name)) {
+        e.name = "Name can only contain letters and spaces";
+      }
+
+      const age = Number(form.age);
+      if (!form.age.trim()) {
+        e.age = "Age is required";
+      } else if (!Number.isInteger(age) || age < 16 || age > 100) {
+        e.age = "Age must be between 16 and 100";
+      }
+
+      const city = form.city.trim();
+      if (!city) {
+        e.city = "City is required";
+      } else if (city.length < 2) {
+        e.city = "Please enter a valid city name";
+      } else if (/\d/.test(city)) {
+        e.city = "City name cannot contain numbers";
+      }
+
+      const occ = form.occupation.trim();
+      if (!occ) {
+        e.occupation = "Occupation is required";
+      } else if (occ.length < 2) {
+        e.occupation = "Please enter at least 2 characters";
+      }
+
+      const budget = Number(form.budget);
+      if (!form.budget.trim()) {
+        e.budget = "Budget is required";
+      } else if (isNaN(budget) || budget < 500) {
+        e.budget = "Budget must be at least ₪500";
+      } else if (budget > 100000) {
+        e.budget = "Please enter a realistic budget (under ₪100,000)";
+      }
+    }
+
+    if (step === 5) {
+      const minAge = Number(form.preferred_age_min);
+      const maxAge = Number(form.preferred_age_max);
+      if (!Number.isInteger(minAge) || minAge < 16 || minAge > 100) {
+        e.preferred_age_min = "Must be between 16 and 100";
+      }
+      if (!Number.isInteger(maxAge) || maxAge < 16 || maxAge > 100) {
+        e.preferred_age_max = "Must be between 16 and 100";
+      }
+      if (!e.preferred_age_min && !e.preferred_age_max && minAge >= maxAge) {
+        e.preferred_age_max = "Max age must be greater than min age";
+      }
+    }
+
+    return e;
+  };
 
   const canProceed = () => {
     if (step === 0) return form.photos.length >= 1;
@@ -351,25 +425,64 @@ export default function Onboarding() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("nameLbl")}</label>
-              <input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder={t("yourNamePlaceholder")} className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              <input
+                value={form.name}
+                onChange={(e) => update("name", e.target.value)}
+                placeholder={t("yourNamePlaceholder")}
+                maxLength={50}
+                className={`w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.name ? "ring-2 ring-destructive" : ""}`}
+              />
+              <ErrorMsg msg={errors.name} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-1.5">{t("ageLbl")}</label>
-                <input type="number" value={form.age} onChange={(e) => update("age", e.target.value)} placeholder="25" className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                <input
+                  type="number"
+                  value={form.age}
+                  onChange={(e) => update("age", e.target.value)}
+                  placeholder="25"
+                  min="16"
+                  max="100"
+                  className={`w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.age ? "ring-2 ring-destructive" : ""}`}
+                />
+                <ErrorMsg msg={errors.age} />
               </div>
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-1.5">{t("cityLbl")}</label>
-                <input value={form.city} onChange={(e) => update("city", e.target.value)} placeholder="Tel Aviv" className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                <input
+                  value={form.city}
+                  onChange={(e) => update("city", e.target.value)}
+                  placeholder="Tel Aviv"
+                  maxLength={50}
+                  className={`w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.city ? "ring-2 ring-destructive" : ""}`}
+                />
+                <ErrorMsg msg={errors.city} />
               </div>
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("workStudies")}</label>
-              <input value={form.occupation} onChange={(e) => update("occupation", e.target.value)} placeholder="Software Engineer" className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              <input
+                value={form.occupation}
+                onChange={(e) => update("occupation", e.target.value)}
+                placeholder="Software Engineer"
+                maxLength={80}
+                className={`w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.occupation ? "ring-2 ring-destructive" : ""}`}
+              />
+              <ErrorMsg msg={errors.occupation} />
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("monthlyBudget")}</label>
-              <input type="number" value={form.budget} onChange={(e) => update("budget", e.target.value)} placeholder="3500" className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              <input
+                type="number"
+                value={form.budget}
+                onChange={(e) => update("budget", e.target.value)}
+                placeholder="3500"
+                min="500"
+                max="100000"
+                className={`w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.budget ? "ring-2 ring-destructive" : ""}`}
+              />
+              <ErrorMsg msg={errors.budget} />
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("desiredRoomType")}</label>
@@ -500,11 +613,25 @@ export default function Onboarding() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-1.5">{t("minAge")}</label>
-                <input type="number" value={form.preferred_age_min} onChange={(e) => update("preferred_age_min", e.target.value)} className="w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                <input
+                  type="number"
+                  value={form.preferred_age_min}
+                  onChange={(e) => update("preferred_age_min", e.target.value)}
+                  min="16" max="100"
+                  className={`w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.preferred_age_min ? "ring-2 ring-destructive" : ""}`}
+                />
+                <ErrorMsg msg={errors.preferred_age_min} />
               </div>
               <div>
                 <label className="text-sm font-semibold text-foreground block mb-1.5">{t("maxAge")}</label>
-                <input type="number" value={form.preferred_age_max} onChange={(e) => update("preferred_age_max", e.target.value)} className="w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                <input
+                  type="number"
+                  value={form.preferred_age_max}
+                  onChange={(e) => update("preferred_age_max", e.target.value)}
+                  min="16" max="100"
+                  className={`w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.preferred_age_max ? "ring-2 ring-destructive" : ""}`}
+                />
+                <ErrorMsg msg={errors.preferred_age_max} />
               </div>
             </div>
             <div>
@@ -591,12 +718,18 @@ export default function Onboarding() {
       <div className="shrink-0 bg-background/95 backdrop-blur-sm border-t border-border pb-16 desk:pb-0">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)} className="flex items-center gap-1 px-5 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm">
+            <button onClick={() => { setStep(step - 1); setErrors({}); }} className="flex items-center gap-1 px-5 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm">
               <ArrowLeft className="w-4 h-4" /> {t("back")}
             </button>
           )}
           <button
             onClick={async () => {
+              const stepErrors = validateStep();
+              if (Object.keys(stepErrors).length > 0) {
+                setErrors(stepErrors);
+                return;
+              }
+              setErrors({});
               if (step < STEPS.length - 1) {
                 saveProgress(form);
                 setStep(step + 1);
