@@ -126,7 +126,7 @@ export default function Index() {
   })();
 
   return (
-    <div className="min-h-screen bg-background pb-28 desk:pb-8 overflow-x-hidden">
+    <div className="min-h-screen bg-background pb-28 desk:pb-8">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-5xl mx-auto px-4 pt-12 desk:pt-6 pb-3">
           <div className="flex items-center justify-between mb-3">
@@ -175,6 +175,8 @@ export default function Index() {
         </div>
       </div>
 
+      {/* content below sticky header — clipped so nothing bleeds horizontally */}
+      <div className="w-full" style={{ overflowX: "clip" }}>
       {user && profile && !profile.onboarding_complete && (
         <div className="max-w-5xl mx-auto px-4 pt-3">
           <button
@@ -244,6 +246,7 @@ export default function Index() {
           </Suspense>
         )}
       </div>
+      </div>{/* end overflow-x clip wrapper */}
 
       <FilterModal
         open={filtersOpen}

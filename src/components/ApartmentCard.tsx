@@ -93,9 +93,9 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, duration: 0.4 }}
+      transition={{ delay: Math.min(index * 0.06, 0.3), duration: 0.3 }}
       className="bg-card rounded-2xl shadow-card overflow-hidden cursor-pointer"
       onClick={() => navigate(`/apartment/${apartment.id}`)}
     >
