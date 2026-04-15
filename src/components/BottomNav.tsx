@@ -54,6 +54,12 @@ export default function BottomNav() {
                 ) : (
                   <>
                     <div className="relative">
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTabMobile"
+                          className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-0.5 gradient-primary rounded-full"
+                        />
+                      )}
                       <Icon className={`w-5 h-5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`} />
                       {badge > 0 && (
                         <span className="absolute -top-1.5 -right-2 gradient-primary text-primary-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
@@ -64,12 +70,6 @@ export default function BottomNav() {
                     <span className={`text-[10px] font-medium transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>
                       {tab.label}
                     </span>
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeTabMobile"
-                        className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 gradient-primary rounded-full"
-                      />
-                    )}
                   </>
                 )}
               </button>
