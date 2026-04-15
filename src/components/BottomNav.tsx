@@ -31,7 +31,7 @@ export default function BottomNav() {
   return (
     <>
       {/* ── Mobile: bottom bar ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom">
         <div className="flex items-center justify-around h-16 w-full px-2">
           {tabs.map((tab) => {
             const isActive = location.pathname === tab.path;
@@ -79,7 +79,7 @@ export default function BottomNav() {
       </nav>
 
       {/* ── Desktop: left sidebar ── */}
-      <aside className="hidden md:flex fixed top-0 bottom-0 w-64 z-50 bg-card/95 backdrop-blur-xl border-border flex-col ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l">
+      <aside className="hidden lg:flex fixed top-0 bottom-0 w-64 z-50 bg-card/95 backdrop-blur-xl border-border flex-col ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l">
         {/* Logo */}
         <div className="px-6 py-6 border-b border-border/50">
           <span className="text-2xl font-extrabold text-foreground tracking-tight">

@@ -40,14 +40,14 @@ function HomeRoute() {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Landing />;
-  return <div className="md:ltr:pl-64 md:rtl:pr-64"><Index /></div>;
+  return <div className="lg:ltr:pl-64 lg:rtl:pr-64"><Index /></div>;
 }
 
 function AuthedLayout() {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/auth" replace />;
-  return <div className="md:ltr:pl-64 md:rtl:pr-64"><Outlet /></div>;
+  return <div className="lg:ltr:pl-64 lg:rtl:pr-64"><Outlet /></div>;
 }
 
 const App = () => (

@@ -14,8 +14,8 @@ export default function CreateApartment() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-28 md:pb-8">
-      <div className="max-w-2xl mx-auto px-4 pt-16 md:pt-8">
+    <div className="min-h-screen bg-background pb-28 lg:pb-8">
+      <div className="max-w-2xl mx-auto px-4 pt-16 lg:pt-8">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-extrabold text-foreground mb-2">{t("create")}</h1>
           <p className="text-muted-foreground mb-8">{t("whatLookingFor")}</p>

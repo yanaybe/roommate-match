@@ -542,7 +542,7 @@ export default function Onboarding() {
   return (
     <div className="h-dvh flex flex-col bg-background">
       {/* Sticky header: title + progress */}
-      <div className="shrink-0 max-w-lg mx-auto w-full px-4 pt-10 md:pt-6 pb-3">
+      <div className="shrink-0 max-w-lg mx-auto w-full px-4 pt-10 lg:pt-6 pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-extrabold text-foreground leading-tight">
@@ -588,7 +588,7 @@ export default function Onboarding() {
       </div>
 
       {/* Fixed footer: back / next buttons */}
-      <div className="shrink-0 bg-background/95 backdrop-blur-sm border-t border-border pb-16 md:pb-0">
+      <div className="shrink-0 bg-background/95 backdrop-blur-sm border-t border-border pb-16 lg:pb-0">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           {step > 0 && (
             <button onClick={() => setStep(step - 1)} className="flex items-center gap-1 px-5 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm">
