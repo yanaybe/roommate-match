@@ -24,7 +24,7 @@ export default function BottomNav() {
     { path: "/profile", icon: User, label: t("navProfile") },
   ];
 
-  const publicOnlyPaths = ["/auth", "/terms-of-service", "/privacy-policy", "/contact-support"];
+  const publicOnlyPaths = ["/auth", "/terms-of-service", "/privacy-policy", "/contact-support", "/onboarding"];
   if (publicOnlyPaths.includes(location.pathname)) return null;
   if (location.pathname === "/" && !user) return null;
 
