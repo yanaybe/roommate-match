@@ -373,7 +373,7 @@ export default function Chats() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pb-20 md:pb-8">
+      <div className="min-h-screen bg-background flex items-center justify-center pb-28 md:pb-8">
         <p className="text-muted-foreground">{t("signInToChat")}</p>
       </div>
     );

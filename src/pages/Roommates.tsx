@@ -195,7 +195,7 @@ export default function Roommates() {
   const visibleCards = remaining.slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-8 flex flex-col">
+    <div className="min-h-screen bg-background pb-28 md:pb-8 flex flex-col">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 md:pt-6 pb-3 flex items-center justify-between">
           <div>
