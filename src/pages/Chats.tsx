@@ -620,7 +620,7 @@ export default function Chats() {
       />
     </div>
   ) : (
-    <div className="hidden md:flex flex-1 items-center justify-center text-center">
+    <div className="hidden md:flex h-full flex-1 items-center justify-center text-center pt-16 pb-8">
       <div>
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
           <Send className="w-7 h-7 text-primary" />
@@ -643,7 +643,7 @@ export default function Chats() {
         <div className="w-80 shrink-0 border-r border-border overflow-hidden">
           {ConversationList}
         </div>
-        <div className="flex-1 overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden">
           {ChatPanel}
         </div>
       </div>
