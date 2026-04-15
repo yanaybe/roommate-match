@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Crown, CreditCard, Receipt, ChevronRight, TrendingUp,
   Eye, Heart, BarChart3, Lock, HelpCircle, MessageCircle, FileText,
-  ShieldCheck, Globe, Moon, MapPin, Sun, Sparkles, Zap, Star, Check
+  ShieldCheck, Globe, Moon, Sun, Sparkles, Zap, Star, Check
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -356,12 +356,6 @@ export default function Settings() {
                 />
               }
               onClick={() => toggleDarkMode(!darkMode)}
-            />
-            <SettingsItem
-              icon={MapPin}
-              label={t("locationPreferences")}
-              desc={t("locationPreferencesDesc")}
-              onClick={() => {}}
             />
           </div>
         </section>
