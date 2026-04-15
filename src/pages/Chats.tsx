@@ -81,6 +81,7 @@ function generateIcebreakers(me: any, other: any, otherName: string): string[] {
 
 export default function Chats() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { refresh: refreshUnread } = useUnreadCount();
   const { profile: myProfile } = useProfile();
   const { t } = useLanguage();
