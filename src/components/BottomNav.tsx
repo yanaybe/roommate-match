@@ -56,7 +56,10 @@ export default function BottomNav() {
                     <div className="relative">
                       {isActive && (
                         <motion.div
-                          layoutId="activeTabMobile"
+                          key={tab.path}
+                          initial={{ opacity: 0, scaleX: 0 }}
+                          animate={{ opacity: 1, scaleX: 1 }}
+                          transition={{ duration: 0.2 }}
                           className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-0.5 gradient-primary rounded-full"
                         />
                       )}
