@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
@@ -80,6 +81,7 @@ function generateIcebreakers(me: any, other: any, otherName: string): string[] {
 
 export default function Chats() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { refresh: refreshUnread } = useUnreadCount();
   const { profile: myProfile } = useProfile();
   const { t } = useLanguage();
