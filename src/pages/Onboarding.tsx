@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
 import { useLanguage } from "@/hooks/useLanguage";
+import { sanitizeText, isSafeImageUrl } from "@/lib/security";
 
 const sleepOptions = ["Early bird", "Night owl", "Flexible"];
 const roomTypeOptions = ["Private", "Shared OK", "Either"];
@@ -296,10 +297,10 @@ export default function Onboarding() {
     if (!user) return;
     const payload = {
       user_id: user.id,
-      name: currentForm.name.trim() || null,
+      name: sanitizeText(currentForm.name) || null,
       age: parseInt(currentForm.age) || null,
-      city: currentForm.city.trim() || null,
-      occupation: currentForm.occupation.trim() || null,
+      city: sanitizeText(currentForm.city) || null,
+      occupation: sanitizeText(currentForm.occupation) || null,
       budget: parseInt(currentForm.budget) || 0,
       desired_room_type: currentForm.desired_room_type,
       sleep_schedule: currentForm.sleep_schedule,
@@ -323,7 +324,7 @@ export default function Onboarding() {
       lifestyle_similarity: currentForm.lifestyle_similarity,
       cleanliness_expectations: currentForm.cleanliness_expectations,
       activity_hours: currentForm.activity_hours,
-      bio: currentForm.bio.trim(),
+      bio: sanitizeText(currentForm.bio),
       avatar_url: currentForm.photos[0] || null,
       photos: currentForm.photos,
       onboarding_complete: false,
@@ -334,36 +335,46 @@ export default function Onboarding() {
   const handleSubmit = async () => {
     if (!user) return;
 
-    const ageNum = parseInt(form.age);
-    const budgetNum = parseInt(form.budget);
-    const minAge = parseInt(form.preferred_age_min);
-    const maxAge = parseInt(form.preferred_age_max);
+    // Sanitize all free-text inputs (strip control chars, bidi overrides, null bytes)
+    const safeName       = sanitizeText(form.name);
+    const safeCity       = sanitizeText(form.city);
+    const safeOccupation = sanitizeText(form.occupation);
+    const safeBio        = sanitizeText(form.bio);
 
-    if (form.name.trim().length < 2) {
+    const ageNum    = parseInt(form.age);
+    const budgetNum = parseInt(form.budget);
+    // Clamp preferred ages to valid range regardless of what was typed
+    const minAge = Math.max(16, Math.min(100, parseInt(form.preferred_age_min) || 18));
+    const maxAge = Math.max(minAge + 1, Math.min(100, parseInt(form.preferred_age_max) || 40));
+
+    if (safeName.length < 2) {
       toast.error("Name must be at least 2 characters");
       return;
     }
-    if (isNaN(ageNum) || ageNum < 16 || ageNum > 120) {
-      toast.error("Please enter a valid age (16–120)");
+    if (isNaN(ageNum) || ageNum < 16 || ageNum > 100) {
+      toast.error("Please enter a valid age (16–100)");
       return;
     }
-    if (isNaN(budgetNum) || budgetNum < 100) {
-      toast.error("Please enter a valid budget (minimum ₪100)");
+    if (isNaN(budgetNum) || budgetNum < 500) {
+      toast.error("Please enter a valid budget (minimum ₪500)");
       return;
     }
-    if (!isNaN(minAge) && !isNaN(maxAge) && minAge >= maxAge) {
-      toast.error("Minimum preferred age must be less than maximum");
+
+    // Validate avatar URL is safe (https only, no javascript: / data: URIs)
+    const avatarUrl = form.photos[0] || null;
+    if (avatarUrl && !isSafeImageUrl(avatarUrl)) {
+      toast.error("Invalid photo URL detected");
       return;
     }
 
     setSaving(true);
     const payload = {
       user_id: user.id,
-      name: form.name.trim(),
-      age: parseInt(form.age) || null,
-      city: form.city.trim(),
-      occupation: form.occupation.trim(),
-      budget: parseInt(form.budget) || 0,
+      name: safeName,
+      age: ageNum,
+      city: safeCity,
+      occupation: safeOccupation,
+      budget: budgetNum,
       desired_room_type: form.desired_room_type,
       sleep_schedule: form.sleep_schedule,
       cleanliness: form.cleanliness,
@@ -380,15 +391,15 @@ export default function Onboarding() {
       noise_level: form.noise_level,
       partying: form.partying,
       lifestyle_vibe: form.lifestyle_vibe,
-      preferred_age_min: parseInt(form.preferred_age_min) || 18,
-      preferred_age_max: parseInt(form.preferred_age_max) || 40,
+      preferred_age_min: minAge,
+      preferred_age_max: maxAge,
       gender_preference: form.gender_preference,
       lifestyle_similarity: form.lifestyle_similarity,
       cleanliness_expectations: form.cleanliness_expectations,
       activity_hours: form.activity_hours,
-      bio: form.bio.trim(),
+      bio: safeBio,
       onboarding_complete: true,
-      avatar_url: form.photos[0] || null,
+      avatar_url: avatarUrl,
       photos: form.photos,
     };
 

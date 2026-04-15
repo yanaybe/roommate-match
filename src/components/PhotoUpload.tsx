@@ -3,6 +3,7 @@ import { Camera, X, Plus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { validateImageMagicBytes } from "@/lib/security";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -43,6 +44,13 @@ export default function PhotoUpload({ photos, onChange, maxPhotos = 6 }: PhotoUp
       // Enforce file size limit
       if (file.size > MAX_FILE_SIZE) {
         toast.error("File too large — maximum size is 10 MB");
+        continue;
+      }
+
+      // Validate magic bytes — prevents polyglot files that spoof MIME type
+      const isTrulyImage = await validateImageMagicBytes(file);
+      if (!isTrulyImage) {
+        toast.error("File does not appear to be a valid image");
         continue;
       }
 

@@ -6,21 +6,32 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useLanguage } from "@/hooks/useLanguage";
 import { motion } from "framer-motion";
-import { Home, MessageCircle, ShieldCheck, ArrowRight } from "lucide-react";
+import { Home, MessageCircle, ShieldCheck, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { analyzePassword } from "@/lib/security";
 
-const authSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
+const emailSchema = z.string().email("Invalid email address");
+
+const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
+
+  const pwAnalysis = analyzePassword(password);
 
   useEffect(() => {
     if (!user) return;
@@ -49,18 +60,30 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
-    const result = authSchema.safeParse({ email, password });
-    if (!result.success) {
-      toast.error(result.error.issues[0].message);
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      toast.error(emailResult.error.issues[0].message);
       setLoading(false);
       return;
     }
 
     if (isLogin) {
+      if (!password) { toast.error("Password is required"); setLoading(false); return; }
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
       else navigate("/");
     } else {
+      const pwResult = passwordSchema.safeParse(password);
+      if (!pwResult.success) {
+        toast.error(pwResult.error.issues[0].message);
+        setLoading(false);
+        return;
+      }
+      if (password !== confirmPassword) {
+        toast.error("Passwords do not match");
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -188,20 +211,97 @@ export default function Auth() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
             className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <input
-            type="password"
-            placeholder={t("passwordPlaceholder")}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-            className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+
+          {/* Password + strength meter */}
+          <div className="space-y-2">
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder={t("passwordPlaceholder")}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 pr-11 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {password.length > 0 && (
+              <div className="space-y-1.5">
+                {/* Strength bars */}
+                <div className="flex gap-1">
+                  {[1, 2, 3].map((level) => (
+                    <div
+                      key={level}
+                      className={`h-1 flex-1 rounded-full transition-colors ${
+                        pwAnalysis.score >= level * 1.5
+                          ? level === 1 ? "bg-destructive"
+                            : level === 2 ? "bg-yellow-500"
+                            : "bg-green-500"
+                          : "bg-secondary"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className={`text-xs font-semibold ${
+                  pwAnalysis.strength === "weak" ? "text-destructive"
+                  : pwAnalysis.strength === "fair" ? "text-yellow-500"
+                  : "text-green-500"
+                }`}>
+                  {pwAnalysis.strength === "weak" ? "Weak" : pwAnalysis.strength === "fair" ? "Fair" : "Strong"} password
+                </p>
+                {pwAnalysis.missing.length > 0 && (
+                  <ul className="space-y-0.5">
+                    {pwAnalysis.missing.map((m) => (
+                      <li key={m} className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                        <span className="w-1 h-1 rounded-full bg-muted-foreground inline-block" />
+                        {m}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Confirm password */}
+          <div className="relative">
+            <input
+              type={showConfirm ? "text" : "password"}
+              placeholder="Confirm password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              className={`w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 pr-11 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
+                confirmPassword.length > 0 && confirmPassword !== password ? "ring-2 ring-destructive" : ""
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+          {confirmPassword.length > 0 && confirmPassword !== password && (
+            <p className="text-destructive text-xs -mt-1 font-medium">Passwords do not match</p>
+          )}
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || pwAnalysis.strength === "weak" || password !== confirmPassword}
             className="w-full gradient-primary text-primary-foreground font-bold py-3 rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? t("loading") : (
