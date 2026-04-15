@@ -64,7 +64,7 @@ export default function Auth() {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: `${window.location.origin}/verify-email` },
       });
       if (error) toast.error(error.message);
       else navigate("/verify-email");

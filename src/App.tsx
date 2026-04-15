@@ -33,13 +33,17 @@ import RoommateProfile from "./pages/RoommateProfile";
 import BillingHistory from "./pages/BillingHistory";
 import Landing from "./pages/Landing";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 const queryClient = new QueryClient();
 
 function HomeRoute() {
   const { user, loading } = useAuth();
-  if (loading) return null;
+  const { profile, loading: profileLoading } = useProfile();
+  if (loading || profileLoading) return null;
   if (!user) return <Landing />;
+  if (!user.email_confirmed_at) return <Navigate to="/verify-email" replace />;
+  if (!profile?.onboarding_complete) return <Navigate to="/onboarding" replace />;
   return <div className="desk:ltr:pl-64 desk:rtl:pr-64"><Index /></div>;
 }
 
@@ -47,6 +51,7 @@ function AuthedLayout() {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/auth" replace />;
+  if (!user.email_confirmed_at) return <Navigate to="/verify-email" replace />;
   return <div className="desk:ltr:pl-64 desk:rtl:pr-64"><Outlet /></div>;
 }
 
