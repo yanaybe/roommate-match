@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, SlidersHorizontal } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export interface Filters {
@@ -39,7 +39,18 @@ export const defaultFilters: Filters = {
   furnished: "any",
 };
 
-const allAmenities = ["Balcony", "AC", "Laundry", "WiFi", "Rooftop", "Parking", "Gym", "Elevator", "Security", "Garden"];
+const allAmenities = [
+  { key: "Balcony", emoji: "🌅" },
+  { key: "AC", emoji: "❄️" },
+  { key: "WiFi", emoji: "📶" },
+  { key: "Parking", emoji: "🅿️" },
+  { key: "Laundry", emoji: "🧺" },
+  { key: "Rooftop", emoji: "🏙️" },
+  { key: "Gym", emoji: "💪" },
+  { key: "Elevator", emoji: "🛗" },
+  { key: "Security", emoji: "🔒" },
+  { key: "Garden", emoji: "🌿" },
+];
 
 interface FilterModalProps {
   open: boolean;
@@ -48,31 +59,79 @@ interface FilterModalProps {
   onApply: (f: Filters) => void;
 }
 
-const TriButton = ({
+// ── small reusable pieces ────────────────────────────────────────────────────
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
+      {children}
+    </p>
+  );
+}
+
+function Chip({
+  label,
+  selected,
+  onClick,
+  size = "md",
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+  size?: "sm" | "md";
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full font-semibold transition-all active:scale-95 ${
+        size === "sm"
+          ? "px-2.5 py-1 text-[11px]"
+          : "px-3.5 py-1.5 text-xs"
+      } ${
+        selected
+          ? "gradient-primary text-primary-foreground shadow-sm"
+          : "bg-secondary text-muted-foreground"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+/** One-row filter: emoji + label on left, chips on right */
+function FilterRow({
+  emoji,
+  label,
   options,
   value,
   onChange,
 }: {
+  emoji: string;
+  label: string;
   options: { value: string; label: string }[];
   value: string;
   onChange: (v: string) => void;
-}) => (
-  <div className="flex gap-1">
-    {options.map((opt) => (
-      <button
-        key={opt.value}
-        onClick={() => onChange(opt.value)}
-        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-          value === opt.value
-            ? "gradient-primary text-primary-foreground"
-            : "bg-secondary text-secondary-foreground"
-        }`}
-      >
-        {opt.label}
-      </button>
-    ))}
-  </div>
-);
+}) {
+  return (
+    <div className="flex items-center gap-2 py-0.5">
+      <span className="text-base w-5 shrink-0 text-center">{emoji}</span>
+      <span className="text-xs font-medium text-foreground w-16 shrink-0">{label}</span>
+      <div className="flex gap-1 flex-1 justify-end flex-wrap">
+        {options.map((opt) => (
+          <Chip
+            key={opt.value}
+            label={opt.label}
+            size="sm"
+            selected={value === opt.value}
+            onClick={() => onChange(opt.value)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 
 export default function FilterModal({ open, onClose, filters, onApply }: FilterModalProps) {
   const [local, setLocal] = useState<Filters>(filters);
@@ -89,14 +148,8 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
         : [...p.amenities, a],
     }));
 
-  const handleApply = () => {
-    onApply(local);
-    onClose();
-  };
-
-  const handleReset = () => {
-    setLocal(defaultFilters);
-  };
+  const handleApply = () => { onApply(local); onClose(); };
+  const handleReset = () => setLocal(defaultFilters);
 
   const activeCount = (() => {
     let c = 0;
@@ -123,152 +176,174 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] bg-foreground/50 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] bg-foreground/40 backdrop-blur-sm"
           onClick={onClose}
         >
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl max-h-[85vh] flex flex-col"
+            transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="sticky top-0 bg-card z-10 px-5 pt-5 pb-3 border-b border-border flex items-center justify-between">
-              <h2 className="text-lg font-extrabold text-foreground">{t("filterTitle")}</h2>
-              <button onClick={onClose} className="p-1 text-muted-foreground">
-                <X className="w-5 h-5" />
+            {/* ── Handle bar ── */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-10 h-1 bg-border rounded-full" />
+            </div>
+
+            {/* ── Header ── */}
+            <div className="shrink-0 px-5 pb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-primary" />
+                <h2 className="text-base font-extrabold text-foreground">{t("filterTitle")}</h2>
+                {activeCount > 0 && (
+                  <span className="gradient-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {activeCount}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
+            {/* ── Scrollable body ── */}
             <div className="flex-1 overflow-y-auto overscroll-contain">
-            <div className="px-4 py-3 space-y-4">
+              <div className="px-5 pb-4 space-y-5">
 
-              {/* Row 1: Budget + Rooms side by side */}
-              <div className="grid grid-cols-2 gap-3">
+                {/* Budget */}
                 <div>
-                  <label className="text-xs font-semibold text-foreground block mb-1.5">
-                    {t("budgetMonthly")}
-                  </label>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="number"
-                      value={local.budgetMin}
-                      onChange={(e) => update("budgetMin", Number(e.target.value))}
-                      placeholder="Min"
-                      className="flex-1 bg-secondary text-secondary-foreground px-2 py-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                    <span className="text-muted-foreground text-xs shrink-0">–</span>
-                    <input
-                      type="number"
-                      value={local.budgetMax}
-                      onChange={(e) => update("budgetMax", Number(e.target.value))}
-                      placeholder="Max"
-                      className="flex-1 bg-secondary text-secondary-foreground px-2 py-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
+                  <SectionLabel>💰 {t("budgetMonthly")}</SectionLabel>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
+                      <span className="text-xs text-muted-foreground shrink-0">₪</span>
+                      <input
+                        type="number"
+                        value={local.budgetMin}
+                        onChange={(e) => update("budgetMin", Number(e.target.value))}
+                        placeholder="Min"
+                        className="flex-1 bg-transparent text-foreground text-sm font-medium focus:outline-none w-0"
+                      />
+                    </div>
+                    <div className="w-4 h-px bg-border shrink-0" />
+                    <div className="flex-1 flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
+                      <span className="text-xs text-muted-foreground shrink-0">₪</span>
+                      <input
+                        type="number"
+                        value={local.budgetMax}
+                        onChange={(e) => update("budgetMax", Number(e.target.value))}
+                        placeholder="Max"
+                        className="flex-1 bg-transparent text-foreground text-sm font-medium focus:outline-none w-0"
+                      />
+                    </div>
                   </div>
                 </div>
+
+                {/* Rooms */}
                 <div>
-                  <label className="text-xs font-semibold text-foreground block mb-1.5">
-                    {t("numberOfRooms")}
-                  </label>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="number"
-                      value={local.roomsMin}
-                      onChange={(e) => update("roomsMin", Number(e.target.value))}
-                      min={1}
-                      className="flex-1 bg-secondary text-secondary-foreground px-2 py-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                    <span className="text-muted-foreground text-xs shrink-0">–</span>
-                    <input
-                      type="number"
-                      value={local.roomsMax}
-                      onChange={(e) => update("roomsMax", Number(e.target.value))}
-                      min={1}
-                      className="flex-1 bg-secondary text-secondary-foreground px-2 py-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
+                  <SectionLabel>🛏 {t("numberOfRooms")}</SectionLabel>
+                  <div className="flex gap-1.5">
+                    {[
+                      { label: t("optAny"), min: 1, max: 10 },
+                      { label: "1", min: 1, max: 1 },
+                      { label: "2", min: 2, max: 2 },
+                      { label: "3", min: 3, max: 3 },
+                      { label: "4", min: 4, max: 4 },
+                      { label: "5+", min: 5, max: 10 },
+                    ].map((opt) => {
+                      const selected = local.roomsMin === opt.min && local.roomsMax === opt.max;
+                      return (
+                        <button
+                          key={opt.label}
+                          onClick={() => { update("roomsMin", opt.min); update("roomsMax", opt.max); }}
+                          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                            selected
+                              ? "gradient-primary text-primary-foreground shadow-sm"
+                              : "bg-secondary text-muted-foreground"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              </div>
 
-              {/* Row 2: Size + Match% side by side */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-foreground block mb-1.5">
-                    {t("minimumSize")}
-                  </label>
-                  <input
-                    type="number"
-                    value={local.sizeMin}
-                    onChange={(e) => update("sizeMin", Number(e.target.value))}
-                    placeholder="0 m²"
-                    className="w-full bg-secondary text-secondary-foreground px-2 py-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+                {/* Size + Match side by side */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <SectionLabel>📐 {t("minimumSize")}</SectionLabel>
+                    <div className="flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
+                      <input
+                        type="number"
+                        value={local.sizeMin || ""}
+                        onChange={(e) => update("sizeMin", Number(e.target.value))}
+                        placeholder="0"
+                        className="flex-1 bg-transparent text-foreground text-sm font-medium focus:outline-none w-0"
+                      />
+                      <span className="text-xs text-muted-foreground shrink-0">m²</span>
+                    </div>
+                  </div>
+                  <div>
+                    <SectionLabel>
+                      ✨ {t("minimumMatchPct")}{" "}
+                      <span className="text-primary normal-case tracking-normal font-bold">{local.matchMin}%</span>
+                    </SectionLabel>
+                    <div className="flex items-center gap-2 pt-1.5">
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={local.matchMin}
+                        onChange={(e) => update("matchMin", Number(e.target.value))}
+                        className="flex-1 accent-primary h-1.5"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-foreground block mb-1.5">
-                    {t("minimumMatchPct")} <span className="text-primary font-bold">{local.matchMin}%</span>
-                  </label>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={local.matchMin}
-                    onChange={(e) => update("matchMin", Number(e.target.value))}
-                    className="w-full accent-primary mt-1"
-                  />
-                </div>
-              </div>
 
-              {/* Row 3: Room type + Furnished side by side */}
-              <div className="grid grid-cols-2 gap-3">
+                {/* Room type */}
                 <div>
-                  <label className="text-xs font-semibold text-foreground block mb-1.5">
-                    {t("roomType")}
-                  </label>
-                  <div className="flex gap-1">
+                  <SectionLabel>🚪 {t("roomType")}</SectionLabel>
+                  <div className="flex gap-2">
                     {(["any", "private", "shared"] as const).map((opt) => (
-                      <button
+                      <Chip
                         key={opt}
+                        label={opt === "any" ? t("optAny") : opt === "private" ? t("optPrivate") : t("optSharedOk")}
+                        selected={local.roomType === opt}
                         onClick={() => update("roomType", opt)}
-                        className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
-                          local.roomType === opt
-                            ? "gradient-primary text-primary-foreground"
-                            : "bg-secondary text-secondary-foreground"
-                        }`}
-                      >
-                        {opt === "any" ? t("optAny") : opt === "private" ? t("optPrivate") : t("optSharedOk")}
-                      </button>
+                      />
                     ))}
                   </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-foreground block mb-1.5">
-                    {t("furnishedLbl")}
-                  </label>
-                  <TriButton
-                    options={[
-                      { value: "any", label: t("optAny") },
-                      { value: "yes", label: t("optYes") },
-                      { value: "no", label: t("optNo") },
-                    ]}
-                    value={local.furnished}
-                    onChange={(v) => update("furnished", v as Filters["furnished"])}
-                  />
-                </div>
-              </div>
 
-              {/* Lifestyle 2-col grid */}
-              <div>
-                <label className="text-xs font-semibold text-foreground block mb-2">
-                  {t("lifestylePreferences")}
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-[11px] text-muted-foreground mb-1 block">{t("smokingLbl")}</span>
-                    <TriButton
+                {/* Furnished */}
+                <div>
+                  <SectionLabel>🛋 {t("furnishedLbl")}</SectionLabel>
+                  <div className="flex gap-2">
+                    {(["any", "yes", "no"] as const).map((opt) => (
+                      <Chip
+                        key={opt}
+                        label={opt === "any" ? t("optAny") : opt === "yes" ? t("optYes") : t("optNo")}
+                        selected={local.furnished === opt}
+                        onClick={() => update("furnished", opt)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Lifestyle rows */}
+                <div>
+                  <SectionLabel>🌿 {t("lifestylePreferences")}</SectionLabel>
+                  <div className="bg-secondary/50 rounded-2xl px-3 py-2 space-y-2">
+                    <FilterRow
+                      emoji="🚬"
+                      label={t("smokingLbl")}
                       options={[
                         { value: "any", label: t("optAny") },
                         { value: "no", label: t("optNo") },
@@ -277,10 +352,10 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                       value={local.smoking}
                       onChange={(v) => update("smoking", v as Filters["smoking"])}
                     />
-                  </div>
-                  <div>
-                    <span className="text-[11px] text-muted-foreground mb-1 block">{t("petsLbl")}</span>
-                    <TriButton
+                    <div className="h-px bg-border/50" />
+                    <FilterRow
+                      emoji="🐾"
+                      label={t("petsLbl")}
                       options={[
                         { value: "any", label: t("optAny") },
                         { value: "no", label: t("optNo") },
@@ -289,10 +364,10 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                       value={local.pets}
                       onChange={(v) => update("pets", v as Filters["pets"])}
                     />
-                  </div>
-                  <div>
-                    <span className="text-[11px] text-muted-foreground mb-1 block">{t("wfhFilter")}</span>
-                    <TriButton
+                    <div className="h-px bg-border/50" />
+                    <FilterRow
+                      emoji="🏠"
+                      label={t("wfhFilter")}
                       options={[
                         { value: "any", label: t("optAny") },
                         { value: "yes", label: t("optYes") },
@@ -302,53 +377,57 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                       onChange={(v) => update("wfh", v as Filters["wfh"])}
                     />
                   </div>
-                  <div>
-                    <span className="text-[11px] text-muted-foreground mb-1 block">{t("religiousLevelFilter")}</span>
-                    <TriButton
-                      options={[
-                        { value: "any", label: t("optAny") },
-                        { value: "secular", label: t("optSecular") },
-                        { value: "traditional", label: t("optTrad") },
-                        { value: "religious", label: t("optReligious") },
-                      ]}
-                      value={local.religiousLevel}
-                      onChange={(v) => update("religiousLevel", v as Filters["religiousLevel"])}
-                    />
-                  </div>
                 </div>
-              </div>
 
-              {/* Sleep + Cleanliness in one row */}
-              <div className="grid grid-cols-2 gap-3">
+                {/* Religious level */}
                 <div>
-                  <label className="text-xs font-semibold text-foreground block mb-1.5">
-                    {t("sleepScheduleFilter")}
-                  </label>
-                  <div className="flex gap-1 flex-wrap">
-                    {([
-                      { value: "any" as const, label: t("optAny") },
-                      { value: "early" as const, label: t("optEarlyBird") },
-                      { value: "night" as const, label: t("optNightOwl") },
-                      { value: "flexible" as const, label: t("optFlexible") },
-                    ]).map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => update("sleepSchedule", opt.value)}
-                        className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
-                          local.sleepSchedule === opt.value
-                            ? "gradient-primary text-primary-foreground"
-                            : "bg-secondary text-secondary-foreground"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
+                  <SectionLabel>🕍 {t("religiousLevelFilter")}</SectionLabel>
+                  <div className="flex flex-wrap gap-2">
+                    {(["any", "secular", "traditional", "religious"] as const).map((opt) => (
+                      <Chip
+                        key={opt}
+                        label={
+                          opt === "any" ? t("optAny") :
+                          opt === "secular" ? t("optSecular") :
+                          opt === "traditional" ? t("optTrad") :
+                          t("optReligious")
+                        }
+                        selected={local.religiousLevel === opt}
+                        onClick={() => update("religiousLevel", opt)}
+                      />
                     ))}
                   </div>
                 </div>
+
+                {/* Sleep schedule */}
                 <div>
-                  <label className="text-xs font-semibold text-foreground block mb-1.5">
-                    {t("minCleanliness")} <span className="text-primary font-bold">{local.cleanlinessMin}/5</span>
-                  </label>
+                  <SectionLabel>🌙 {t("sleepScheduleFilter")}</SectionLabel>
+                  <div className="flex gap-2 flex-wrap">
+                    {([
+                      { value: "any" as const, label: t("optAny") },
+                      { value: "early" as const, label: `🌅 ${t("optEarlyBird")}` },
+                      { value: "night" as const, label: `🦉 ${t("optNightOwl")}` },
+                      { value: "flexible" as const, label: `〜 ${t("optFlexible")}` },
+                    ]).map((opt) => (
+                      <Chip
+                        key={opt.value}
+                        label={opt.label}
+                        selected={local.sleepSchedule === opt.value}
+                        onClick={() => update("sleepSchedule", opt.value)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Cleanliness slider */}
+                <div>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <SectionLabel>✨ {t("minCleanliness")}</SectionLabel>
+                    <span className="text-xs font-bold text-primary -mt-0.5">
+                      {"⭐".repeat(local.cleanlinessMin)}
+                      {"☆".repeat(5 - local.cleanlinessMin)}
+                    </span>
+                  </div>
                   <input
                     type="range"
                     min={1}
@@ -356,40 +435,43 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                     step={1}
                     value={local.cleanlinessMin}
                     onChange={(e) => update("cleanlinessMin", Number(e.target.value))}
-                    className="w-full accent-primary mt-1"
+                    className="w-full accent-primary"
                   />
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[10px] text-muted-foreground">{t("sliderRelaxed")}</span>
+                    <span className="text-[10px] text-muted-foreground">{t("spotless")}</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Amenities */}
-              <div>
-                <label className="text-xs font-semibold text-foreground block mb-1.5">
-                  {t("amenitiesLabel")}
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {allAmenities.map((a) => (
-                    <button
-                      key={a}
-                      onClick={() => toggleAmenity(a)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
-                        local.amenities.includes(a)
-                          ? "gradient-primary text-primary-foreground"
-                          : "bg-secondary text-secondary-foreground"
-                      }`}
-                    >
-                      {a}
-                    </button>
-                  ))}
+                {/* Amenities */}
+                <div>
+                  <SectionLabel>🏠 {t("amenitiesLabel")}</SectionLabel>
+                  <div className="flex flex-wrap gap-2">
+                    {allAmenities.map(({ key, emoji }) => (
+                      <button
+                        key={key}
+                        onClick={() => toggleAmenity(key)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
+                          local.amenities.includes(key)
+                            ? "gradient-primary text-primary-foreground shadow-sm"
+                            : "bg-secondary text-muted-foreground"
+                        }`}
+                      >
+                        <span>{emoji}</span>
+                        {key}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
               </div>
             </div>
-            </div>
 
-            {/* Footer */}
-            <div className="bg-card border-t border-border px-5 py-4 flex gap-3 shrink-0">
+            {/* ── Footer ── */}
+            <div className="shrink-0 bg-card border-t border-border px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] flex gap-3">
               <button
                 onClick={handleReset}
-                className="flex-1 py-3.5 rounded-xl text-sm font-bold bg-secondary text-secondary-foreground active:scale-95 transition-transform"
+                className="px-5 py-3.5 rounded-xl text-sm font-bold bg-secondary text-secondary-foreground active:scale-95 transition-transform"
               >
                 {t("resetAll")}
               </button>
