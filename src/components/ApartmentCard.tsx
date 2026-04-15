@@ -151,12 +151,12 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
 
       {/* Info */}
       <div className="p-4 space-y-2">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="font-bold text-card-foreground">{apartment.title}</h3>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-card-foreground truncate">{apartment.title}</h3>
             <div className="flex items-center gap-1 text-muted-foreground text-sm">
-              <MapPin className="w-3.5 h-3.5" />
-              {apartment.location}
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{apartment.location}</span>
             </div>
           </div>
           <div className="text-right">
@@ -170,11 +170,11 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
           <span>Available {apartment.available}</span>
         </div>
 
-        <div className="flex items-center gap-3 text-muted-foreground text-xs border-t border-border/40 pt-2">
+        <div className="flex items-center gap-3 flex-wrap text-muted-foreground text-xs border-t border-border/40 pt-2">
           <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">Apt:</span>
-          <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" /> {apartment.rooms} bed</span>
-          <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" /> {apartment.bathrooms} bath</span>
-          <span className="flex items-center gap-1"><Maximize className="w-3.5 h-3.5" /> {apartment.size}m²</span>
+          <span className="flex items-center gap-1 shrink-0"><Bed className="w-3.5 h-3.5" /> {apartment.rooms} bed</span>
+          <span className="flex items-center gap-1 shrink-0"><Bath className="w-3.5 h-3.5" /> {apartment.bathrooms} bath</span>
+          <span className="flex items-center gap-1 shrink-0"><Maximize className="w-3.5 h-3.5" /> {apartment.size}m²</span>
         </div>
 
         <div className="flex gap-2 flex-wrap pt-1">
