@@ -53,16 +53,12 @@ export default function BottomNav() {
                   </div>
                 ) : (
                   <>
+                    <motion.div
+                      animate={{ opacity: isActive ? 1 : 0, scaleX: isActive ? 1 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="w-6 h-0.5 gradient-primary rounded-full mb-1"
+                    />
                     <div className="relative">
-                      {isActive && (
-                        <motion.div
-                          key={tab.path}
-                          initial={{ opacity: 0, scaleX: 0 }}
-                          animate={{ opacity: 1, scaleX: 1 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-0.5 gradient-primary rounded-full"
-                        />
-                      )}
                       <Icon className={`w-5 h-5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`} />
                       {badge > 0 && (
                         <span className="absolute -top-1.5 -right-2 gradient-primary text-primary-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
