@@ -543,14 +543,26 @@ export default function Onboarding() {
     <div className="h-dvh flex flex-col bg-background">
       {/* Sticky header: title + progress */}
       <div className="shrink-0 max-w-lg mx-auto w-full px-4 pt-10 md:pt-6 pb-3">
-        <h1 className="text-xl font-extrabold text-foreground leading-tight">
-          {t("setupProfile").split(" ").slice(0, -1).join(" ")}{" "}
-          <span className="text-primary">{t("setupProfile").split(" ").slice(-1)[0]}</span>
-        </h1>
-        <p className="text-muted-foreground text-xs mt-0.5">
-          {t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}
-          {step === 0 && <span className="ltr:ml-2 rtl:mr-2 text-primary font-medium">· {t("threeMin")}</span>}
-        </p>
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-extrabold text-foreground leading-tight">
+              {t("setupProfile").split(" ").slice(0, -1).join(" ")}{" "}
+              <span className="text-primary">{t("setupProfile").split(" ").slice(-1)[0]}</span>
+            </h1>
+            <p className="text-muted-foreground text-xs mt-0.5">
+              {t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}
+              {step === 0 && <span className="ltr:ml-2 rtl:mr-2 text-primary font-medium">· {t("threeMin")}</span>}
+            </p>
+          </div>
+          {isEdit && (
+            <button
+              onClick={() => navigate(-1)}
+              className="ml-3 p-2 rounded-xl bg-secondary text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          )}
+        </div>
         <div className="flex gap-1.5 mt-3">
           {STEPS.map((_, i) => (
             <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= step ? "gradient-primary" : "bg-secondary"}`} />
