@@ -11,6 +11,8 @@ import { useBlockReport } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
 import { calculateUserMatch } from "@/lib/matching";
 import MatchBadge from "@/components/MatchBadge";
+import { sanitizeText } from "@/lib/security";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -90,6 +92,8 @@ export default function Chats() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  // Rate limiting: track timestamps of recent sends (max 5 per 3 seconds)
+  const recentSendTimestamps = useRef<number[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -324,7 +328,29 @@ export default function Chats() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !activeConv || !user) return;
 
-    const content = newMessage.trim();
+    // ── Rate limiting: max 5 messages per 3 seconds ───────────────────────────
+    const now = Date.now();
+    const WINDOW_MS = 3000;
+    const MAX_IN_WINDOW = 5;
+    recentSendTimestamps.current = recentSendTimestamps.current.filter(
+      (t) => now - t < WINDOW_MS
+    );
+    if (recentSendTimestamps.current.length >= MAX_IN_WINDOW) {
+      toast.error("Slow down — you're sending messages too fast");
+      return;
+    }
+    recentSendTimestamps.current.push(now);
+
+    // ── Sanitize content (strip control chars + bidi overrides) ──────────────
+    const content = sanitizeText(newMessage);
+    if (!content) return;
+
+    // ── Enforce max message length ────────────────────────────────────────────
+    if (content.length > 2000) {
+      toast.error("Message too long (max 2000 characters)");
+      return;
+    }
+
     setNewMessage("");
 
     await supabase.from("messages").insert({
@@ -606,6 +632,7 @@ export default function Chats() {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder={t("typeMessage")}
+            maxLength={2000}
             className="flex-1 bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <button onClick={sendMessage} disabled={!newMessage.trim()} className="gradient-primary p-2.5 rounded-full disabled:opacity-40">

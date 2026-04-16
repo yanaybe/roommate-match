@@ -9,12 +9,19 @@ export function sanitizeText(value: string): string {
 }
 
 // ── URL safety ───────────────────────────────────────────────────────────────
-// Rejects javascript:, data:, and any non-https scheme.
+// Avatar URLs must come from our own Supabase storage bucket.
+// This prevents javascript:, data:, and any third-party domain from
+// being stored as a profile image URL.
+const ALLOWED_IMAGE_HOSTS = [
+  "fwgyslyngfpjpditoiov.supabase.co", // our Supabase storage
+];
+
 export function isSafeImageUrl(url: string): boolean {
-  if (!url) return true; // empty is fine (no avatar)
+  if (!url) return true; // empty = no avatar, fine
   try {
-    const { protocol } = new URL(url);
-    return protocol === "https:";
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") return false;
+    return ALLOWED_IMAGE_HOSTS.some((host) => parsed.hostname === host);
   } catch {
     return false;
   }
