@@ -4,6 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
 import MatchModal from "@/components/MatchModal";
+import { Skeleton } from "@/components/ui/skeleton";
 import { type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
@@ -201,8 +202,16 @@ export default function Roommates() {
 
       <div className="flex-1 max-w-lg mx-auto w-full px-4 pt-4">
         {profilesLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <p className="text-muted-foreground text-sm">{t("loadingProfiles")}</p>
+          <div className="relative w-full aspect-[3/4] max-h-[520px]">
+            <Skeleton className="absolute inset-0 rounded-3xl" />
+            <div className="absolute bottom-6 left-6 right-6 space-y-2">
+              <Skeleton className="h-7 w-2/3 rounded-xl" />
+              <Skeleton className="h-4 w-1/2 rounded-xl" />
+              <div className="flex gap-2 pt-1">
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+            </div>
           </div>
         ) : remaining.length > 0 ? (
           <div className="relative w-full aspect-[3/4] max-h-[520px]">

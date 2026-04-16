@@ -1,6 +1,7 @@
 import { Search, SlidersHorizontal, Map, List, ArrowRight } from "lucide-react";
 import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import FilterModal, { defaultFilters, type Filters } from "@/components/FilterModal";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,24 @@ const CITY_COORDS: Record<string, [number, number]> = {
   "Petah Tikva": [32.0842, 34.8841],
   "Ashdod": [31.8010, 34.6550],
 };
+
+function ApartmentCardSkeleton() {
+  return (
+    <div className="bg-card rounded-2xl overflow-hidden shadow-card">
+      <Skeleton className="w-full h-48" />
+      <div className="p-4 space-y-3">
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <div className="flex gap-2">
+          <Skeleton className="h-6 w-14 rounded-full" />
+          <Skeleton className="h-6 w-14 rounded-full" />
+          <Skeleton className="h-6 w-14 rounded-full" />
+        </div>
+        <Skeleton className="h-9 w-full rounded-xl" />
+      </div>
+    </div>
+  );
+}
 
 function dbRowToApartment(row: any): Apartment {
   const amenities: string[] = [];
@@ -70,6 +89,7 @@ export default function Index() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [apartments, setApartments] = useState<Apartment[]>([]);
+  const [apartmentsLoading, setApartmentsLoading] = useState(true);
   const { t } = useLanguage();
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -82,8 +102,9 @@ export default function Index() {
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
-        if (error) { console.error("Failed to load apartments:", error); return; }
+        if (error) { console.error("Failed to load apartments:", error); }
         setApartments((data ?? []).map(dbRowToApartment));
+        setApartmentsLoading(false);
       });
   }, []);
 
@@ -211,7 +232,13 @@ export default function Index() {
 
       <div className="max-w-5xl mx-auto px-4 pt-4">
         {view === "list" ? (
-          filtered.length > 0 ? (
+          apartmentsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ApartmentCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : filtered.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.map((apt, i) => (
                 <ApartmentCard key={apt.id} apartment={apt} index={i} />

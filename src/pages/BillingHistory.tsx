@@ -19,11 +19,11 @@ interface Transaction {
 
 const mockTransactions: Transaction[] = [];
 
-const statusConfig: Record<TransactionStatus, { label: string; icon: React.ElementType; color: string }> = {
-  completed: { label: "Completed", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40" },
-  pending: { label: "Pending", icon: Clock, color: "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/40" },
-  failed: { label: "Failed", icon: XCircle, color: "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950/40" },
-  refunded: { label: "Refunded", icon: XCircle, color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/40" },
+const statusConfig: Record<TransactionStatus, { labelKey: string; icon: React.ElementType; color: string }> = {
+  completed: { labelKey: "billingStatusCompleted", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40" },
+  pending: { labelKey: "billingStatusPending", icon: Clock, color: "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/40" },
+  failed: { labelKey: "billingStatusFailed", icon: XCircle, color: "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950/40" },
+  refunded: { labelKey: "billingStatusRefunded", icon: XCircle, color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/40" },
 };
 
 const typeColors: Record<string, string> = {
@@ -63,10 +63,10 @@ export default function BillingHistory() {
     .reduce((sum, tx) => sum + parseFloat(tx.amount.replace("₪", "")), 0);
 
   const filters: { key: FilterType; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "subscription", label: "Subscriptions" },
-    { key: "boost", label: "Boosts" },
-    { key: "extra", label: "Extras" },
+    { key: "all", label: t("billingFilterAll") },
+    { key: "subscription", label: t("billingFilterSubscriptions") },
+    { key: "boost", label: t("billingFilterBoosts") },
+    { key: "extra", label: t("billingFilterExtras") },
   ];
 
   return (
@@ -80,7 +80,7 @@ export default function BillingHistory() {
           >
             <ArrowLeft size={18} className="text-foreground" />
           </button>
-          <h1 className="text-lg font-bold text-foreground">Billing History</h1>
+          <h1 className="text-lg font-bold text-foreground">{t("billingHistory")}</h1>
         </div>
       </div>
 
@@ -93,10 +93,10 @@ export default function BillingHistory() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-primary-foreground/70 text-xs font-medium mb-1">Total Spent</p>
+              <p className="text-primary-foreground/70 text-xs font-medium mb-1">{t("billingTotalSpent")}</p>
               <p className="text-3xl font-bold text-primary-foreground">₪{totalSpent.toFixed(2)}</p>
               <p className="text-primary-foreground/50 text-xs mt-1">
-                {mockTransactions.filter((tx) => tx.status === "completed").length} transactions
+                {mockTransactions.filter((tx) => tx.status === "completed").length} {t("billingTransactions")}
               </p>
             </div>
             <div className="w-14 h-14 rounded-2xl bg-primary-foreground/15 flex items-center justify-center">
@@ -132,8 +132,8 @@ export default function BillingHistory() {
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
               <Receipt size={28} className="text-muted-foreground" />
             </div>
-            <p className="text-sm font-semibold text-muted-foreground">No transactions found</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Your billing history will appear here</p>
+            <p className="text-sm font-semibold text-muted-foreground">{t("billingNoTransactions")}</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">{t("billingHistoryAppearHere")}</p>
           </motion.div>
         ) : (
           Object.entries(grouped).map(([month, txns], gi) => (
@@ -173,7 +173,7 @@ export default function BillingHistory() {
                         </span>
                         <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.color}`}>
                           <StatusIcon size={10} />
-                          {status.label}
+                          {t(status.labelKey)}
                         </span>
                       </div>
                     </motion.div>
@@ -195,10 +195,10 @@ export default function BillingHistory() {
             <CreditCard size={18} className="text-muted-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">Payment Method</p>
+            <p className="text-sm font-semibold text-foreground">{t("billingPaymentMethod")}</p>
             <p className="text-xs text-muted-foreground">Visa •••• 4242</p>
           </div>
-          <button className="text-xs font-semibold text-primary cursor-pointer">Change</button>
+          <button className="text-xs font-semibold text-primary cursor-pointer">{t("billingChange")}</button>
         </motion.div>
       </div>
     </div>

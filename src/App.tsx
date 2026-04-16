@@ -55,6 +55,15 @@ function AuthedLayout() {
   return <div className="desk:ltr:pl-64 desk:rtl:pr-64"><Outlet /></div>;
 }
 
+// Routes inside this layout additionally require a completed onboarding profile.
+// Unauthenticated / unverified users are already caught by the parent AuthedLayout.
+function OnboardedLayout() {
+  const { profile, loading: profileLoading } = useProfile();
+  if (profileLoading) return null;
+  if (!profile?.onboarding_complete) return <Navigate to="/onboarding" replace />;
+  return <Outlet />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -81,19 +90,24 @@ const App = () => (
 
               {/* Protected — must be signed in, gets sidebar */}
               <Route element={<AuthedLayout />}>
+                {/* Accessible without completing onboarding */}
                 <Route path="/apartment/:id" element={<ApartmentDetail />} />
-                <Route path="/roommates" element={<Roommates />} />
                 <Route path="/roommate/:id" element={<RoommateProfile />} />
                 <Route path="/create" element={<CreateApartment />} />
                 <Route path="/post-apartment" element={<PostApartment />} />
-                <Route path="/create-squad" element={<CreateSquad />} />
-                <Route path="/squad/:id" element={<SquadHub />} />
-                <Route path="/my-squads" element={<MySquads />} />
-                <Route path="/chats" element={<Chats />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/billing-history" element={<BillingHistory />} />
                 <Route path="/help-center" element={<HelpCenter />} />
+
+                {/* Require completed onboarding profile */}
+                <Route element={<OnboardedLayout />}>
+                  <Route path="/roommates" element={<Roommates />} />
+                  <Route path="/create-squad" element={<CreateSquad />} />
+                  <Route path="/squad/:id" element={<SquadHub />} />
+                  <Route path="/my-squads" element={<MySquads />} />
+                  <Route path="/chats" element={<Chats />} />
+                </Route>
               </Route>
             </Routes>
           </BrowserRouter>
