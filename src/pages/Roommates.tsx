@@ -14,29 +14,7 @@ import { calculateUserMatch } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 import { isUUID } from "@/lib/profileUtils";
-const getSwipeKey = (userId: string) => `swiped_profiles:${userId}`;
-
-function getSwipedMap(userId: string): Record<string, number> {
-  try {
-    return JSON.parse(localStorage.getItem(getSwipeKey(userId)) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-function setSwipedMap(userId: string, map: Record<string, number>) {
-  localStorage.setItem(getSwipeKey(userId), JSON.stringify(map));
-}
-
-function getRecentlySwipedIds(userId: string): string[] {
-  const map = getSwipedMap(userId);
-  const now = Date.now();
-  return Object.entries(map)
-    .filter(([, ts]) => now - ts < SEVEN_DAYS_MS)
-    .map(([id]) => id);
-}
 
 // Convert DB profile to mock format for SwipeCard compatibility
 function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
@@ -83,20 +61,16 @@ export default function Roommates() {
     fetchBlockedIds(user.id).then(setBlockedIds);
   }, [user?.id]);
 
-  // Load recently swiped IDs (within 7 days) from localStorage + DB liked_profiles
+  // Load all-time right-swipes from DB — liked profiles never reappear
   useEffect(() => {
     if (!user?.id) return;
-    const localSwiped = getRecentlySwipedIds(user.id);
-
-    // Fetch all-time right-swipes from DB — liked profiles never reappear
     supabase
       .from("liked_profiles")
       .select("liked_user_id")
       .eq("user_id", user.id)
       .then(({ data }) => {
         const dbLikedIds = (data ?? []).map((r) => r.liked_user_id);
-        const merged = Array.from(new Set([...localSwiped, ...dbLikedIds]));
-        setSwiped(merged);
+        setSwiped(dbLikedIds);
       });
   }, [user?.id]);
 
@@ -146,13 +120,6 @@ export default function Roommates() {
       }
 
       setSwiped((prev) => [...prev, current.user.id]);
-
-      // Persist swipe timestamp for 7-day cooldown
-      if (user) {
-        const map = getSwipedMap(user.id);
-        map[current.user.id] = Date.now();
-        setSwipedMap(user.id, map);
-      }
 
       if (direction === "right" && user) {
         if (isUUID(current.user.id)) {

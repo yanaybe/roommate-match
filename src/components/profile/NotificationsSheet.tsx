@@ -1,10 +1,15 @@
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { Heart, Users, CheckCheck } from "lucide-react";
+import { Heart, Users, CheckCheck, MessageCircle, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
 import { useNotifications } from "@/hooks/useNotifications";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -13,6 +18,12 @@ interface Props {
   user?: any;
   profile?: any;
   t: (key: string) => string;
+}
+
+interface NotifPrefs {
+  notify_on_match: boolean;
+  notify_on_message: boolean;
+  notify_on_squad_invite: boolean;
 }
 
 const TYPE_ICON: Record<string, React.ElementType> = {
@@ -27,7 +38,46 @@ const TYPE_COLOR: Record<string, string> = {
 
 export default function NotificationsSheet({ open, onOpenChange, t }: Props) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
+  const [prefs, setPrefs] = useState<NotifPrefs>({
+    notify_on_match: true,
+    notify_on_message: true,
+    notify_on_squad_invite: true,
+  });
+
+  // Load saved prefs when sheet opens
+  useEffect(() => {
+    if (!open || !user?.id) return;
+    supabase
+      .from("profiles")
+      .select("notify_on_match, notify_on_message, notify_on_squad_invite")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          const row = data as unknown as NotifPrefs;
+          setPrefs({
+            notify_on_match: row.notify_on_match ?? true,
+            notify_on_message: row.notify_on_message ?? true,
+            notify_on_squad_invite: row.notify_on_squad_invite ?? true,
+          });
+        }
+      });
+  }, [open, user?.id]);
+
+  const updatePref = async (key: keyof NotifPrefs, value: boolean) => {
+    if (!user?.id) return;
+    setPrefs((prev) => ({ ...prev, [key]: value }));
+    const { error } = await supabase
+      .from("profiles")
+      .update({ [key]: value })
+      .eq("user_id", user.id);
+    if (error) {
+      toast.error("Failed to save preference");
+      setPrefs((prev) => ({ ...prev, [key]: !value }));
+    }
+  };
 
   const handleTap = async (n: (typeof notifications)[number]) => {
     await markRead(n.id);
@@ -62,6 +112,36 @@ export default function NotificationsSheet({ open, onOpenChange, t }: Props) {
         </SheetHeader>
 
         <ScrollArea className="h-[calc(85vh-80px)] px-5 py-4">
+          {/* Notification preferences */}
+          <div className="mb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Bell className="w-4 h-4 text-muted-foreground" />
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                Notify me about
+              </p>
+            </div>
+            <div className="bg-card rounded-2xl shadow-card divide-y divide-border">
+              {(
+                [
+                  { key: "notify_on_match" as const, label: "New matches", Icon: Heart },
+                  { key: "notify_on_message" as const, label: "New messages", Icon: MessageCircle },
+                  { key: "notify_on_squad_invite" as const, label: "Squad invites", Icon: Users },
+                ] as { key: keyof NotifPrefs; label: string; Icon: React.ElementType }[]
+              ).map(({ key, label, Icon }) => (
+                <div key={key} className="flex items-center justify-between px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-semibold text-foreground">{label}</span>
+                  </div>
+                  <Switch
+                    checked={prefs[key]}
+                    onCheckedChange={(val) => updatePref(key, val)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
           {notifications.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-4xl mb-3">🔔</div>
