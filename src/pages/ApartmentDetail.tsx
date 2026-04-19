@@ -68,6 +68,7 @@ function dbRowToApartment(row: any): Apartment & { ownerId: string } {
     available: row.available_date,
     isBoosted: row.is_featured && (!row.featured_until || new Date(row.featured_until) > new Date()),
     ownerId: row.user_id,
+    listingType: (row.listing_type ?? "room") as "room" | "entire_place",
   };
 }
 
@@ -406,9 +407,16 @@ export default function ApartmentDetail() {
         {/* Title */}
         <div>
           <h1 className="text-xl font-extrabold text-foreground">{apartment.title}</h1>
-          <div className="flex items-center gap-1 text-muted-foreground text-sm mt-0.5">
-            <MapPin className="w-3.5 h-3.5" />
-            {apartment.location}
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <div className="flex items-center gap-1 text-muted-foreground text-sm">
+              <MapPin className="w-3.5 h-3.5" />
+              {apartment.location}
+            </div>
+            {(apartment as any).listingType === "entire_place" && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                🏠 Entire Apartment
+              </span>
+            )}
           </div>
         </div>
 
@@ -416,7 +424,7 @@ export default function ApartmentDetail() {
         <div className="space-y-3">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">{t("yourRoom")}</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-primary">{(apartment as any).listingType === "entire_place" ? "This Listing" : t("yourRoom")}</span>
               <div className="flex-1 h-px bg-primary/20" />
             </div>
             <div className="grid grid-cols-2 gap-2">

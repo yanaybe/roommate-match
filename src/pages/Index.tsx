@@ -80,6 +80,7 @@ function dbRowToApartment(row: any): Apartment {
     amenities,
     available: row.available_date,
     isBoosted: (row.is_featured === true && (!row.featured_until || new Date(row.featured_until) > new Date())) ?? false,
+    listingType: (row.listing_type ?? "room") as "room" | "entire_place",
   };
 }
 
@@ -124,6 +125,7 @@ export default function Index() {
       if (filters.amenities.length > 0) {
         if (!filters.amenities.every((a) => apt.amenities.includes(a))) return false;
       }
+      if (filters.listingType !== "any" && apt.listingType !== filters.listingType) return false;
       return true;
     });
   }, [search, filters, apartments]);
@@ -143,6 +145,7 @@ export default function Index() {
     if (filters.cleanlinessMin > 1) c++;
     if (filters.wfh !== "any") c++;
     if (filters.furnished !== "any") c++;
+    if (filters.listingType !== "any") c++;
     return c;
   })();
 

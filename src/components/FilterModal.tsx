@@ -13,6 +13,7 @@ export interface Filters {
   amenities: string[];
   smoking: "any" | "no" | "yes";
   pets: "any" | "no" | "yes";
+  listingType: "any" | "room" | "entire_place";
   roomType: "any" | "private" | "shared";
   religiousLevel: "any" | "secular" | "traditional" | "religious";
   sleepSchedule: "any" | "early" | "night" | "flexible";
@@ -31,6 +32,7 @@ export const defaultFilters: Filters = {
   amenities: [],
   smoking: "any",
   pets: "any",
+  listingType: "any",
   roomType: "any",
   religiousLevel: "any",
   sleepSchedule: "any",
@@ -166,6 +168,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
     if (local.cleanlinessMin > 1) c++;
     if (local.wfh !== "any") c++;
     if (local.furnished !== "any") c++;
+    if (local.listingType !== "any") c++;
     return c;
   })();
 
@@ -304,6 +307,25 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                         className="flex-1 accent-primary h-1.5"
                       />
                     </div>
+                  </div>
+                </div>
+
+                {/* Listing type */}
+                <div>
+                  <SectionLabel>🏠 Listing Type</SectionLabel>
+                  <div className="flex gap-2">
+                    {([
+                      { value: "any", label: t("optAny") },
+                      { value: "room", label: "🚪 Room" },
+                      { value: "entire_place", label: "🏠 Entire Apt" },
+                    ] as const).map((opt) => (
+                      <Chip
+                        key={opt.value}
+                        label={opt.label}
+                        selected={local.listingType === opt.value}
+                        onClick={() => update("listingType", opt.value)}
+                      />
+                    ))}
                   </div>
                 </div>
 

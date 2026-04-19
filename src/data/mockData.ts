@@ -33,6 +33,7 @@ export interface Apartment {
   amenities: string[];
   available: string;
   isBoosted?: boolean;
+  listingType?: "room" | "entire_place";
 }
 
 export interface ChatPreview {

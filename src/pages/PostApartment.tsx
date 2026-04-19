@@ -35,9 +35,25 @@ export default function PostApartment() {
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
-  const STEPS = [t("addPhotos"), t("locationSection"), t("apartmentDetails"), t("availableRoom"), t("amenitiesTitle"), t("reviewYourListing")];
+  const [listingType, setListingType] = useState<"room" | "entire_place">("room");
   const [submitting, setSubmitting] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+
+  const activeStepKeys = (listingType === "entire_place"
+    ? ["listing-type", "photos", "location", "details", "amenities", "review"]
+    : ["listing-type", "photos", "location", "details", "room-type", "amenities", "review"]) as string[];
+
+  const STEP_LABELS: Record<string, string> = {
+    "listing-type": "Listing Type",
+    "photos": t("addPhotos"),
+    "location": t("locationSection"),
+    "details": t("apartmentDetails"),
+    "room-type": t("availableRoom"),
+    "amenities": t("amenitiesTitle"),
+    "review": t("reviewYourListing"),
+  };
+
+  const currentStepKey = activeStepKeys[step] ?? "listing-type";
 
   // New files selected by the user
   const [images, setImages] = useState<File[]>([]);
@@ -118,6 +134,7 @@ export default function PostApartment() {
           hasGarden: data.has_garden ?? false,
           petFriendly: data.pet_friendly ?? false,
         });
+        setListingType((data.listing_type === "entire_place" ? "entire_place" : "room") as "room" | "entire_place");
         setKeptImages(data.images ?? []);
         setEditLoading(false);
       });
@@ -165,13 +182,14 @@ export default function PostApartment() {
   const totalImageCount = keptImages.length + images.length;
 
   const canProceed = () => {
-    switch (step) {
-      case 0: return isEditMode ? totalImageCount > 0 : images.length > 0;
-      case 1: return form.address && form.city && form.neighborhood;
-      case 2: return form.title && form.price && form.size;
-      case 3: return form.roomType;
-      case 4: return true;
-      case 5: return true;
+    switch (currentStepKey) {
+      case "listing-type": return true;
+      case "photos": return isEditMode ? totalImageCount > 0 : images.length > 0;
+      case "location": return !!(form.address && form.city && form.neighborhood);
+      case "details": return !!(form.title && form.price && form.size);
+      case "room-type": return !!form.roomType;
+      case "amenities": return true;
+      case "review": return true;
       default: return true;
     }
   };
@@ -219,6 +237,7 @@ export default function PostApartment() {
         size: parseInt(form.size) || 0,
         floor: form.floor ? parseInt(form.floor) : null,
         available_date: form.availableDate,
+        listing_type: listingType,
         room_type: form.roomType,
         room_description: form.roomDescription,
         is_furnished: form.isFurnished,
@@ -322,12 +341,12 @@ export default function PostApartment() {
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-foreground text-base">{pageTitle}</h1>
-            <p className="text-xs text-muted-foreground truncate">{t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}</p>
+            <p className="text-xs text-muted-foreground truncate">{t("step")} {step + 1} / {activeStepKeys.length} — {STEP_LABELS[currentStepKey]}</p>
           </div>
         </div>
         <div className="max-w-lg mx-auto px-4 pb-2">
           <div className="flex gap-1.5">
-            {STEPS.map((_, i) => (
+            {activeStepKeys.map((_, i) => (
               <div key={i} className={`h-1 rounded-full flex-1 transition-colors duration-300 ${i <= step ? "gradient-primary" : "bg-muted"}`} />
             ))}
           </div>
@@ -340,8 +359,40 @@ export default function PostApartment() {
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.25 }}>
 
-            {/* Step 0: Photos */}
-            {step === 0 && (
+            {/* Step: Listing Type */}
+            {currentStepKey === "listing-type" && (
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground mb-1">What are you listing?</h2>
+                  <p className="text-muted-foreground text-sm">Choose the type of listing that best describes what you're offering.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  {([
+                    { value: "room" as const, emoji: "🚪", title: "A Room", desc: "List a private or shared room in your apartment" },
+                    { value: "entire_place" as const, emoji: "🏠", title: "An Entire Apartment", desc: "List the whole place — ideal for squads and groups" },
+                  ]).map(({ value, emoji, title, desc }) => (
+                    <button
+                      key={value}
+                      onClick={() => setListingType(value)}
+                      className={`flex items-center gap-4 p-5 rounded-2xl border-2 text-left transition-all ${
+                        listingType === value
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/40"
+                      }`}
+                    >
+                      <span className="text-3xl shrink-0">{emoji}</span>
+                      <div>
+                        <p className={`font-bold text-base ${listingType === value ? "text-primary" : "text-foreground"}`}>{title}</p>
+                        <p className="text-muted-foreground text-sm">{desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step: Photos */}
+            {currentStepKey === "photos" && (
               <div className="space-y-4">
                 <div>
                   <h2 className="text-xl font-bold text-foreground mb-1">{t("addPhotos")}</h2>
@@ -415,8 +466,8 @@ export default function PostApartment() {
               </div>
             )}
 
-            {/* Step 1: Location */}
-            {step === 1 && (
+            {/* Step: Location */}
+            {currentStepKey === "location" && (
               <div className="space-y-5">
                 <div>
                   <h2 className="text-xl font-bold text-foreground mb-1">{t("locationSection")}</h2>
@@ -450,8 +501,8 @@ export default function PostApartment() {
               </div>
             )}
 
-            {/* Step 2: Details */}
-            {step === 2 && (
+            {/* Step: Details */}
+            {currentStepKey === "details" && (
               <div className="space-y-5">
                 <div>
                   <h2 className="text-xl font-bold text-foreground mb-1">{t("apartmentDetails")}</h2>
@@ -508,8 +559,8 @@ export default function PostApartment() {
               </div>
             )}
 
-            {/* Step 3: Room */}
-            {step === 3 && (
+            {/* Step: Room Type (room listings only) */}
+            {currentStepKey === "room-type" && (
               <div className="space-y-5">
                 <div>
                   <h2 className="text-xl font-bold text-foreground mb-1">{t("availableRoom")}</h2>
@@ -551,8 +602,8 @@ export default function PostApartment() {
               </div>
             )}
 
-            {/* Step 4: Amenities */}
-            {step === 4 && (
+            {/* Step: Amenities */}
+            {currentStepKey === "amenities" && (
               <div className="space-y-5">
                 <div>
                   <h2 className="text-xl font-bold text-foreground mb-1">{t("amenitiesTitle")}</h2>
@@ -574,8 +625,8 @@ export default function PostApartment() {
               </div>
             )}
 
-            {/* Step 5: Review */}
-            {step === 5 && (
+            {/* Step: Review */}
+            {currentStepKey === "review" && (
               <div className="space-y-5">
                 <div>
                   <h2 className="text-xl font-bold text-foreground mb-1">{t("reviewYourListing")}</h2>
@@ -619,7 +670,10 @@ export default function PostApartment() {
                     </div>
 
                     <div className="flex items-center gap-2 pt-1">
-                      <span className="text-xs px-2.5 py-1 bg-accent rounded-full text-accent-foreground">{form.roomType} Room</span>
+                      {listingType === "entire_place"
+                        ? <span className="text-xs px-2.5 py-1 bg-primary/10 rounded-full text-primary">🏠 Entire Apartment</span>
+                        : <span className="text-xs px-2.5 py-1 bg-accent rounded-full text-accent-foreground">{form.roomType} Room</span>
+                      }
                       <span className="text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground">📅 {form.availableDate}</span>
                       {totalImageCount > 0 && (
                         <span className="text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground">📷 {totalImageCount} photos</span>
@@ -643,7 +697,7 @@ export default function PostApartment() {
               {t("back")}
             </Button>
           )}
-          {step < STEPS.length - 1 ? (
+          {step < activeStepKeys.length - 1 ? (
             <Button onClick={() => setStep(step + 1)} disabled={!canProceed()} className="rounded-xl flex-1 gradient-primary text-primary-foreground">
               {t("continueBtn")} <ArrowRight className="w-4 h-4 ltr:ml-1 rtl:mr-1" />
             </Button>

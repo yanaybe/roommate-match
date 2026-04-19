@@ -163,8 +163,13 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             />
           ))}
         </div>
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           <MatchBadge percent={apartment.matchPercent} size="md" />
+          {apartment.listingType === "entire_place" && (
+            <span className="bg-background/90 backdrop-blur text-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+              🏠 Entire Apt
+            </span>
+          )}
         </div>
         {apartment.isBoosted && (
           <div className="absolute top-3 right-14 gradient-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full">
@@ -219,7 +224,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             </div>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Room / month</div>
+            <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{apartment.listingType === "entire_place" ? "Apt" : "Room"} / month</div>
             <span className="text-lg font-extrabold text-primary">₪{apartment.price.toLocaleString()}</span>
           </div>
         </div>
