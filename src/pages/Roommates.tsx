@@ -167,7 +167,7 @@ export default function Roommates() {
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 desk:pt-6 pb-3 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-extrabold text-foreground">{t("findRoommates")}</h1>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">{t("findRoommates")}</h1>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -232,24 +232,24 @@ export default function Roommates() {
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
-            <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
-              <Heart className="w-8 h-8 text-muted-foreground" />
+            <div className="w-24 h-24 gradient-primary rounded-full flex items-center justify-center mb-5 shadow-elevated">
+              <Heart className="w-10 h-10 text-primary-foreground" />
             </div>
-            <h2 className="text-lg font-bold text-foreground mb-1">{t("noMoreProfiles")}</h2>
-            <p className="text-muted-foreground text-sm mb-5">{t("checkBackLater")}</p>
-            <div className="flex gap-3">
+            <h2 className="text-xl font-extrabold text-foreground mb-2">{t("noMoreProfiles")}</h2>
+            <p className="text-muted-foreground text-sm mb-6 max-w-xs">{t("checkBackLater")}</p>
+            <div className="flex flex-col gap-3 w-full max-w-xs">
+              <button
+                onClick={() => navigate("/onboarding?edit=true")}
+                className="w-full py-3 gradient-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-all"
+              >
+                Adjust Preferences
+              </button>
               <button
                 onClick={handleUndo}
                 disabled={swiped.length === 0}
-                className="flex items-center gap-2 px-5 py-2.5 bg-secondary rounded-xl text-sm font-semibold text-foreground disabled:opacity-40"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-secondary rounded-xl text-sm font-semibold text-foreground hover:bg-secondary/80 disabled:opacity-40 active:scale-[0.98] transition-all"
               >
-                <RotateCcw className="w-4 h-4" /> Undo last
-              </button>
-              <button
-                onClick={() => navigate("/onboarding?edit=true")}
-                className="px-5 py-2.5 gradient-primary text-primary-foreground rounded-xl text-sm font-semibold"
-              >
-                Adjust Preferences
+                <RotateCcw className="w-4 h-4" /> Undo last swipe
               </button>
             </div>
           </div>
@@ -260,19 +260,19 @@ export default function Roommates() {
             <button
               onClick={handleUndo}
               disabled={swiped.length === 0}
-              className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center shadow-card disabled:opacity-30 transition-opacity"
+              className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center shadow-card disabled:opacity-30 hover:bg-secondary/80 hover:scale-105 active:scale-95 transition-all duration-150"
             >
               <RotateCcw className="w-5 h-5 text-muted-foreground" />
             </button>
             <button
               onClick={() => handleSwipe("left")}
-              className="w-16 h-16 bg-card border-2 border-destructive/20 rounded-full flex items-center justify-center shadow-card active:scale-95 transition-transform"
+              className="w-16 h-16 bg-card border-2 border-destructive/30 rounded-full flex items-center justify-center shadow-card hover:border-destructive/60 hover:scale-110 hover:shadow-elevated active:scale-95 transition-all duration-150"
             >
               <X className="w-7 h-7 text-destructive" />
             </button>
             <button
               onClick={() => handleSwipe("right")}
-              className="w-16 h-16 gradient-primary rounded-full flex items-center justify-center shadow-card active:scale-95 transition-transform"
+              className="w-16 h-16 gradient-primary rounded-full flex items-center justify-center shadow-card hover:scale-110 hover:shadow-elevated active:scale-95 transition-all duration-150"
             >
               <Heart className="w-7 h-7 text-primary-foreground" />
             </button>

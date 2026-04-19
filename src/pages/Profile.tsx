@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import PremiumSheet from "@/components/PremiumSheet";
 import PreferencesSheet from "@/components/profile/PreferencesSheet";
 import ActivitySheet from "@/components/profile/ActivitySheet";
@@ -53,8 +54,25 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pb-28 desk:pb-8">
-        <p className="text-muted-foreground text-sm">{t("loadingProfile")}</p>
+      <div className="min-h-screen bg-background pb-28 desk:pb-8">
+        <div className="max-w-2xl mx-auto px-4 pt-12 desk:pt-8">
+          <div className="flex flex-col items-center text-center mb-6">
+            <Skeleton className="w-24 h-24 rounded-full mb-4" />
+            <Skeleton className="h-6 w-36 mb-2 rounded-xl" />
+            <Skeleton className="h-4 w-48 rounded-xl" />
+          </div>
+          <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3.5 border-b border-border/50 last:border-0">
+                <Skeleton className="w-8 h-8 rounded-lg shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-3 w-48 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

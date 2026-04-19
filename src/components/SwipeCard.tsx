@@ -56,6 +56,10 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
           alt={user.name}
           className="w-full h-full object-cover"
           draggable={false}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src =
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&size=600`;
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
 
@@ -136,7 +140,7 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
             <Briefcase className="w-3.5 h-3.5" />
             {user.occupation}
           </div>
-          <p className="text-primary-foreground/70 text-sm mt-2">{user.bio}</p>
+          <p className="text-primary-foreground/70 text-sm mt-2 line-clamp-2">{user.bio}</p>
           <div className="flex flex-wrap gap-2 mt-3">
             <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full flex items-center gap-1">
               {user.sleepSchedule === "Night owl" ? <Moon className="w-3 h-3" /> : <Sun className="w-3 h-3" />}

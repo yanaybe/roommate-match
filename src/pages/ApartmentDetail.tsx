@@ -18,6 +18,7 @@ import {
   MessageCircle,
   MoreVertical,
   Flag,
+  Loader2,
 } from "lucide-react";
 import { type UserProfile, type Apartment } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
@@ -100,6 +101,10 @@ function RoommateProfileModal({
               src={user.avatar}
               alt={user.name}
               className="w-full h-56 object-cover rounded-t-3xl"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&size=400`;
+              }}
             />
             <button
               onClick={onClose}
@@ -117,7 +122,7 @@ function RoommateProfileModal({
               <p className="text-muted-foreground text-sm">
                 {user.occupation} · {user.city}
               </p>
-              <p className="text-muted-foreground text-sm mt-1">{user.bio}</p>
+              <p className="text-muted-foreground text-sm mt-1 line-clamp-3">{user.bio}</p>
             </div>
 
             <div>
@@ -173,6 +178,7 @@ export default function ApartmentDetail() {
   const { canSave, savesLimit, recordSave, openPremiumSheet } = useDailyLimits();
   const { reportListing } = useBlockReport();
   const [imgIndex, setImgIndex] = useState(0);
+  const [messaging, setMessaging] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [boostOpen, setBoostOpen] = useState(false);
@@ -228,12 +234,16 @@ export default function ApartmentDetail() {
 
   if (!apartment) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="text-lg font-bold text-foreground mb-2">{t("apartmentNotFound")}</h2>
+          <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-5 mx-auto">
+            <MapPin className="w-9 h-9 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-extrabold text-foreground mb-2">{t("apartmentNotFound")}</h2>
+          <p className="text-muted-foreground text-sm mb-6">This listing may have been removed or is no longer available.</p>
           <button
             onClick={() => navigate("/")}
-            className="text-primary font-semibold text-sm"
+            className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
           >
             {t("backToListings")}
           </button>
@@ -262,6 +272,10 @@ export default function ApartmentDetail() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800";
+              }}
             />
           </AnimatePresence>
 
@@ -368,7 +382,15 @@ export default function ApartmentDetail() {
                   i === imgIndex ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : "opacity-60 hover:opacity-90"
                 }`}
               >
-                <img src={img} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={img}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800";
+                  }}
+                />
               </button>
             ))}
           </div>
@@ -410,7 +432,7 @@ export default function ApartmentDetail() {
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("theApartment")}</span>
               <div className="flex-1 h-px bg-border" />
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <div className="bg-card rounded-xl p-3 text-center shadow-card">
                 <Bed className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
                 <span className="text-foreground text-sm font-bold block">{apartment.rooms}</span>
@@ -466,6 +488,10 @@ export default function ApartmentDetail() {
                       src={rm.avatar}
                       alt={rm.name}
                       className="w-14 h-14 rounded-full object-cover ring-2 ring-primary/20"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(rm.name)}&background=random&size=112`;
+                      }}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -502,11 +528,43 @@ export default function ApartmentDetail() {
       <div className="fixed bottom-0 ltr:left-0 ltr:md:left-64 rtl:right-0 rtl:md:right-64 ltr:right-0 rtl:left-0 bg-card/95 backdrop-blur-xl border-t border-border z-40">
         <div className="max-w-3xl mx-auto px-4 py-3 flex gap-3">
           <button
-            onClick={() => requireAuth(() => navigate("/chats"))}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm gradient-primary text-primary-foreground transition-all"
+            onClick={() => requireAuth(async () => {
+              if (!user || !apartment) return;
+              const ownerId = (apartment as any).ownerId;
+              if (!ownerId || ownerId === user.id) { navigate("/chats"); return; }
+              setMessaging(true);
+              try {
+                const { data: existing } = await supabase
+                  .from("conversation_participants")
+                  .select("conversation_id")
+                  .eq("user_id", user.id);
+                let existingConvId: string | null = null;
+                if (existing) {
+                  for (const p of existing) {
+                    const { data: other } = await supabase
+                      .from("conversation_participants")
+                      .select("user_id")
+                      .eq("conversation_id", p.conversation_id)
+                      .eq("user_id", ownerId)
+                      .maybeSingle();
+                    if (other) { existingConvId = p.conversation_id; break; }
+                  }
+                }
+                if (!existingConvId) {
+                  await supabase.rpc("create_conversation_with_participant", { other_user_id: ownerId });
+                }
+                navigate("/chats");
+              } catch {
+                toast.error("Could not start conversation");
+              } finally {
+                setMessaging(false);
+              }
+            })}
+            disabled={messaging}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm gradient-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-70"
           >
-            <MessageCircle className="w-4 h-4" />
-            {t("messageOwner")}
+            {messaging ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
+            {messaging ? "Opening…" : t("messageOwner")}
           </button>
         </div>
       </div>

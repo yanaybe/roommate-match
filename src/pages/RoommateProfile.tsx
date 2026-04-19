@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft, MapPin, Briefcase, Moon, Sun,
   DollarSign, Home, Users, Volume2,
@@ -65,7 +66,7 @@ export default function RoommateProfile() {
   const { user: authUser } = useAuth();
   const { profile: myProfile } = useProfile();
   const { t } = useLanguage();
-  const { profiles: allProfiles } = useAllProfiles();
+  const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles();
   const [imgIndex, setImgIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -83,6 +84,23 @@ export default function RoommateProfile() {
     }
     return { userData: null, fullProfile: null, matchPercent: 0, breakdown: [] };
   }, [id, allProfiles, myProfile]);
+
+  if (profilesLoading && !userData) {
+    return (
+      <div className="min-h-screen bg-background pb-28 desk:pb-8">
+        <Skeleton className="w-full h-[75vh]" />
+        <div className="max-w-lg mx-auto px-4 -mt-5 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-20 rounded-2xl" />
+            <Skeleton className="h-20 rounded-2xl" />
+          </div>
+          <Skeleton className="h-28 rounded-2xl" />
+          <Skeleton className="h-48 rounded-2xl" />
+          <Skeleton className="h-64 rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
 
   if (!userData) {
     return (
@@ -130,6 +148,10 @@ export default function RoommateProfile() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.3 }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src =
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=random&size=800`;
+            }}
           />
         </AnimatePresence>
 
@@ -267,7 +289,7 @@ export default function RoommateProfile() {
             className="bg-card rounded-2xl shadow-card p-4"
           >
             <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("aboutSection")}</h2>
-            <p className="text-sm text-foreground leading-relaxed">{userData.bio}</p>
+            <p className="text-sm text-foreground leading-relaxed line-clamp-4">{userData.bio}</p>
           </motion.div>
         )}
 
