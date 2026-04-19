@@ -190,9 +190,14 @@ export default function ApartmentDetail() {
   useEffect(() => {
     if (!apartmentIsUuid || !id) return;
     supabase.from("apartments").select("*").eq("id", id).maybeSingle().then(({ data }) => {
-      if (data) setDbApartment(dbRowToApartment(data));
+      if (data) {
+        setDbApartment(dbRowToApartment(data));
+        if (!user || user.id !== data.user_id) {
+          (supabase as any).from("apartment_views").insert({ apartment_id: data.id }).then(() => {});
+        }
+      }
     });
-  }, [id, apartmentIsUuid]);
+  }, [id, apartmentIsUuid, user]);
 
   useEffect(() => {
     if (!user || !id) { setSaved(false); return; }

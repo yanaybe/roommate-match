@@ -1,13 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Camera, X, MapPin, Home, Bed, Bath, Ruler, Building, Calendar, Plus, Check, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -26,15 +27,23 @@ const MIME_TO_EXT: Record<string, string> = {
 
 export default function PostApartment() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("id");
+  const isEditMode = Boolean(editId);
+
   const { user } = useAuth();
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
   const STEPS = [t("addPhotos"), t("locationSection"), t("apartmentDetails"), t("availableRoom"), t("amenitiesTitle"), t("reviewYourListing")];
   const [submitting, setSubmitting] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
 
+  // New files selected by the user
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  // Existing URLs retained from the original listing (edit mode only)
+  const [keptImages, setKeptImages] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     title: "",
@@ -66,6 +75,54 @@ export default function PostApartment() {
 
   const update = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
 
+  // Pre-fill form when editing an existing listing
+  useEffect(() => {
+    if (!editId || !user) return;
+    setEditLoading(true);
+    supabase
+      .from("apartments")
+      .select("*")
+      .eq("id", editId)
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) {
+          toast.error("Listing not found or you don't have permission to edit it.");
+          navigate("/");
+          return;
+        }
+        setForm({
+          title: data.title ?? "",
+          description: data.description ?? "",
+          address: data.address ?? "",
+          neighborhood: data.neighborhood ?? "",
+          city: data.city ?? "Tel Aviv",
+          price: data.price ? String(data.price) : "",
+          rooms: data.rooms ? String(data.rooms) : "3",
+          bathrooms: data.bathrooms ? String(data.bathrooms) : "1",
+          size: data.size ? String(data.size) : "",
+          floor: data.floor ? String(data.floor) : "",
+          availableDate: data.available_date ?? "Immediately",
+          roomType: data.room_type ?? "Private",
+          roomDescription: data.room_description ?? "",
+          isFurnished: data.is_furnished ?? false,
+          hasBalcony: data.has_balcony ?? false,
+          hasParking: data.has_parking ?? false,
+          hasElevator: data.has_elevator ?? false,
+          hasAc: data.has_ac ?? false,
+          hasLaundry: data.has_laundry ?? false,
+          hasWifi: data.has_wifi ?? false,
+          hasGym: data.has_gym ?? false,
+          hasSecurity: data.has_security ?? false,
+          hasRooftop: data.has_rooftop ?? false,
+          hasGarden: data.has_garden ?? false,
+          petFriendly: data.pet_friendly ?? false,
+        });
+        setKeptImages(data.images ?? []);
+        setEditLoading(false);
+      });
+  }, [editId, user]);
+
   const handleImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
 
@@ -83,7 +140,7 @@ export default function PostApartment() {
       return;
     }
 
-    if (images.length + files.length > 8) {
+    if (keptImages.length + images.length + files.length > 8) {
       toast.error("Maximum 8 photos allowed");
       e.target.value = "";
       return;
@@ -96,14 +153,20 @@ export default function PostApartment() {
     });
   };
 
-  const removeImage = (idx: number) => {
+  const removeNewImage = (idx: number) => {
     setImages(prev => prev.filter((_, i) => i !== idx));
     setImagePreviews(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const removeKeptImage = (idx: number) => {
+    setKeptImages(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const totalImageCount = keptImages.length + images.length;
+
   const canProceed = () => {
     switch (step) {
-      case 0: return images.length > 0;
+      case 0: return isEditMode ? totalImageCount > 0 : images.length > 0;
       case 1: return form.address && form.city && form.neighborhood;
       case 2: return form.title && form.price && form.size;
       case 3: return form.roomType;
@@ -130,22 +193,21 @@ export default function PostApartment() {
     if (!user) { toast.error("Please sign in first"); return; }
     setSubmitting(true);
     try {
-      // Geocode address
+      // Only re-geocode on create, or if address changed
       const coords = await geocodeAddress(form.address, form.neighborhood, form.city);
 
-      // Upload images
-      const imageUrls: string[] = [];
+      // Upload any new images
+      const newImageUrls: string[] = [];
       for (const file of images) {
         const ext = MIME_TO_EXT[file.type] ?? "jpg";
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error } = await supabase.storage.from("apartment-images").upload(path, file);
         if (error) throw error;
         const { data: urlData } = supabase.storage.from("apartment-images").getPublicUrl(path);
-        imageUrls.push(urlData.publicUrl);
+        newImageUrls.push(urlData.publicUrl);
       }
 
-      const { error } = await supabase.from("apartments").insert({
-        user_id: user.id,
+      const payload = {
         title: form.title,
         description: form.description,
         address: form.address,
@@ -171,15 +233,30 @@ export default function PostApartment() {
         has_rooftop: form.hasRooftop,
         has_garden: form.hasGarden,
         pet_friendly: form.petFriendly,
-        images: imageUrls,
+        images: [...keptImages, ...newImageUrls],
         coordinates: coords ?? undefined,
-      } as any);
+      };
 
-      if (error) throw error;
-      toast.success("Apartment posted successfully! 🎉");
-      navigate("/");
+      if (isEditMode && editId) {
+        const { error } = await supabase
+          .from("apartments")
+          .update(payload as any)
+          .eq("id", editId)
+          .eq("user_id", user.id);
+        if (error) throw error;
+        toast.success("Listing updated! 🎉");
+        navigate(`/apartment/${editId}`);
+      } else {
+        const { error } = await supabase.from("apartments").insert({
+          user_id: user.id,
+          ...payload,
+        } as any);
+        if (error) throw error;
+        toast.success("Apartment posted successfully! 🎉");
+        navigate("/");
+      }
     } catch (err: any) {
-      toast.error(err.message || "Failed to post apartment");
+      toast.error(err.message || "Failed to save apartment");
     } finally {
       setSubmitting(false);
     }
@@ -200,16 +277,51 @@ export default function PostApartment() {
     { key: "isFurnished", label: t("amenityFurnished"), icon: "🛋️" },
   ];
 
+  // Show loading skeleton while fetching existing listing data
+  if (editLoading) {
+    return (
+      <div className="h-dvh flex flex-col bg-background">
+        <div className="shrink-0 bg-background/95 backdrop-blur-lg border-b border-border px-4 pt-3 pb-4 flex items-center gap-3">
+          <Skeleton className="w-9 h-9 rounded-xl" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+        </div>
+        <div className="flex-1 max-w-lg mx-auto w-full px-4 py-5 space-y-4">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <Skeleton className="h-12 w-full rounded-xl" />
+          <Skeleton className="h-12 w-full rounded-xl" />
+          <div className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-12 rounded-xl" />
+            <Skeleton className="h-12 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const pageTitle = isEditMode ? "Edit Listing" : t("postYourApartment");
+  const submitLabel = isEditMode ? "Save Changes" : t("postApartmentBtn");
+  const submittingLabel = isEditMode ? "Saving…" : t("postingApt");
+
+  // First image to show in the review preview
+  const previewCoverUrl = keptImages[0] ?? imagePreviews[0] ?? null;
+
   return (
     <div className="h-dvh flex flex-col bg-background">
       {/* Sticky header + progress */}
       <div className="shrink-0 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-3 pb-2 flex items-center gap-3">
-          <button onClick={() => step > 0 ? setStep(step - 1) : navigate("/create")} className="p-2 rounded-xl hover:bg-muted transition-colors">
+          <button
+            onClick={() => step > 0 ? setStep(step - 1) : (isEditMode ? navigate(-1) : navigate("/create"))}
+            className="p-2 rounded-xl hover:bg-muted transition-colors"
+          >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-foreground text-base">{t("postYourApartment")}</h1>
+            <h1 className="font-bold text-foreground text-base">{pageTitle}</h1>
             <p className="text-xs text-muted-foreground truncate">{t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}</p>
           </div>
         </div>
@@ -233,28 +345,73 @@ export default function PostApartment() {
               <div className="space-y-4">
                 <div>
                   <h2 className="text-xl font-bold text-foreground mb-1">{t("addPhotos")}</h2>
-                  <p className="text-muted-foreground text-sm">{t("uploadPhotosDesc")}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {isEditMode ? "Remove or add photos for your listing. At least one photo is required." : t("uploadPhotosDesc")}
+                  </p>
                 </div>
 
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageAdd} />
 
                 <div className="grid grid-cols-3 gap-3">
-                  {imagePreviews.map((src, i) => (
-                    <div key={i} className="relative aspect-square rounded-2xl overflow-hidden group">
-                      <img src={src} alt="" className="w-full h-full object-cover" />
-                      <button onClick={() => removeImage(i)} className="absolute top-1.5 right-1.5 p-1 bg-destructive rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Existing images (edit mode) */}
+                  {keptImages.map((src, i) => (
+                    <div key={`kept-${i}`} className="relative aspect-square rounded-2xl overflow-hidden group">
+                      <img
+                        src={src}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=200";
+                        }}
+                      />
+                      <button
+                        onClick={() => removeKeptImage(i)}
+                        className="absolute top-1.5 right-1.5 p-1 bg-destructive rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
                         <X className="w-3.5 h-3.5 text-destructive-foreground" />
                       </button>
-                      {i === 0 && <span className="absolute bottom-1.5 ltr:left-1.5 rtl:right-1.5 text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">{t("coverPhoto")}</span>}
+                      {i === 0 && keptImages.length > 0 && (
+                        <span className="absolute bottom-1.5 ltr:left-1.5 rtl:right-1.5 text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">
+                          {t("coverPhoto")}
+                        </span>
+                      )}
                     </div>
                   ))}
-                  {images.length < 8 && (
-                    <button onClick={() => fileInputRef.current?.click()} className="aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-colors">
+
+                  {/* New images being added */}
+                  {imagePreviews.map((src, i) => (
+                    <div key={`new-${i}`} className="relative aspect-square rounded-2xl overflow-hidden group">
+                      <img src={src} alt="" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removeNewImage(i)}
+                        className="absolute top-1.5 right-1.5 p-1 bg-destructive rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3.5 h-3.5 text-destructive-foreground" />
+                      </button>
+                      {keptImages.length === 0 && i === 0 && (
+                        <span className="absolute bottom-1.5 ltr:left-1.5 rtl:right-1.5 text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">
+                          {t("coverPhoto")}
+                        </span>
+                      )}
+                      <span className="absolute top-1.5 ltr:left-1.5 rtl:right-1.5 text-[9px] bg-accent text-accent-foreground px-1.5 py-0.5 rounded-full font-semibold">New</span>
+                    </div>
+                  ))}
+
+                  {totalImageCount < 8 && (
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-colors"
+                    >
                       <Camera className="w-6 h-6 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">{t("addPhoto")}</span>
                     </button>
                   )}
                 </div>
+
+                {totalImageCount > 0 && (
+                  <p className="text-xs text-muted-foreground text-center">{totalImageCount} / 8 photos</p>
+                )}
               </div>
             )}
 
@@ -427,8 +584,16 @@ export default function PostApartment() {
 
                 {/* Preview card */}
                 <div className="bg-card rounded-2xl shadow-card overflow-hidden">
-                  {imagePreviews.length > 0 && (
-                    <img src={imagePreviews[0]} alt="" className="w-full h-48 object-cover" />
+                  {previewCoverUrl && (
+                    <img
+                      src={previewCoverUrl}
+                      alt=""
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800";
+                      }}
+                    />
                   )}
                   <div className="p-4 space-y-3">
                     <h3 className="font-bold text-foreground text-lg">{form.title || "Untitled"}</h3>
@@ -456,6 +621,9 @@ export default function PostApartment() {
                     <div className="flex items-center gap-2 pt-1">
                       <span className="text-xs px-2.5 py-1 bg-accent rounded-full text-accent-foreground">{form.roomType} Room</span>
                       <span className="text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground">📅 {form.availableDate}</span>
+                      {totalImageCount > 0 && (
+                        <span className="text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground">📷 {totalImageCount} photos</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -481,7 +649,10 @@ export default function PostApartment() {
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={submitting} className="rounded-xl flex-1 gradient-primary text-primary-foreground">
-              {submitting ? <><Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" /> {t("postingApt")}</> : <>{t("postApartmentBtn")}</>}
+              {submitting
+                ? <><Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" /> {submittingLabel}</>
+                : submitLabel
+              }
             </Button>
           )}
         </div>
