@@ -231,17 +231,29 @@ export default function Roommates() {
             </AnimatePresence>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-16 px-2">
             <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
               <Heart className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-bold text-foreground mb-1">{t("noMoreProfiles")}</h2>
-            <p className="text-muted-foreground text-sm mb-5">{t("checkBackLater")}</p>
+            <h2 className="text-lg font-bold text-foreground mb-2">You've seen everyone nearby!</h2>
+            <p className="text-muted-foreground text-sm mb-4 max-w-xs">
+              New roommates join every day. Your matches are based on your city — try widening your preferences to see more people.
+            </p>
+            <div className="flex items-center gap-2 mb-6">
+              {myProfile?.city && (
+                <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary text-secondary-foreground px-3 py-1.5 rounded-full">
+                  📍 {myProfile.city}
+                </span>
+              )}
+              <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary text-secondary-foreground px-3 py-1.5 rounded-full">
+                🔄 Refreshes daily
+              </span>
+            </div>
             <div className="flex gap-3">
               <button
                 onClick={handleUndo}
                 disabled={swiped.length === 0}
-                className="flex items-center gap-2 px-5 py-2.5 bg-secondary rounded-xl text-sm font-semibold text-foreground disabled:opacity-50"
+                className="flex items-center gap-2 px-5 py-2.5 bg-secondary rounded-xl text-sm font-semibold text-foreground disabled:opacity-50 hover:bg-secondary/70 transition-colors"
               >
                 <RotateCcw className="w-4 h-4" /> Undo last
               </button>
@@ -252,6 +264,12 @@ export default function Roommates() {
                 Adjust Preferences
               </button>
             </div>
+            <button
+              onClick={() => navigate("/")}
+              className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Browse apartments instead <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 
