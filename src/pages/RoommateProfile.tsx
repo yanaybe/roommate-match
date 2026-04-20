@@ -287,7 +287,7 @@ export default function RoommateProfile() {
             <div>
               <p className="text-[11px] text-muted-foreground">{t("budgetLabel")}</p>
               <p className="text-base font-extrabold text-foreground">₪{userData.budget.toLocaleString()}</p>
-              <p className="text-[10px] text-muted-foreground">{t("perMonth")}</p>
+              <p className="text-xs text-muted-foreground">{t("perMonth")}</p>
             </div>
           </div>
           <div className="bg-card rounded-2xl shadow-elevated p-4 flex items-center gap-3">
@@ -297,7 +297,7 @@ export default function RoommateProfile() {
             <div>
               <p className="text-[11px] text-muted-foreground">{t("roomTypeLabel")}</p>
               <p className="text-base font-extrabold text-foreground">{userData.roomType}</p>
-              <p className="text-[10px] text-muted-foreground">{t("preference")}</p>
+              <p className="text-xs text-muted-foreground">{t("preference")}</p>
             </div>
           </div>
         </motion.div>
@@ -396,7 +396,7 @@ export default function RoommateProfile() {
                 <div key={d.label} className={`flex items-center gap-2.5 p-3 rounded-xl ${d.bg}`}>
                   <d.icon size={15} className={d.color} />
                   <div className="min-w-0">
-                    <p className="text-[10px] text-muted-foreground">{d.label}</p>
+                    <p className="text-xs text-muted-foreground">{d.label}</p>
                     <p className="text-xs font-semibold text-foreground truncate">{d.value}</p>
                   </div>
                 </div>

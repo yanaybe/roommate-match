@@ -202,7 +202,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                 <SlidersHorizontal className="w-4 h-4 text-primary" />
                 <h2 className="text-base font-extrabold text-foreground">{t("filterTitle")}</h2>
                 {activeCount > 0 && (
-                  <span className="gradient-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="gradient-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                     {activeCount}
                   </span>
                 )}

@@ -52,24 +52,24 @@ export default function BottomNav() {
                     <div className="gradient-primary rounded-2xl p-2.5 -mt-3 shadow-elevated">
                       <Icon className="w-5 h-5 text-primary-foreground" />
                     </div>
-                    <span className="text-[10px] font-medium text-muted-foreground">{tab.label}</span>
+                    <span className="text-xs font-medium text-muted-foreground">{tab.label}</span>
                   </>
                 ) : (
                   <>
                     <motion.div
                       animate={{ opacity: isActive ? 1 : 0, scaleX: isActive ? 1 : 0 }}
                       transition={{ duration: 0.2 }}
-                      className="w-6 h-0.5 gradient-primary rounded-full mb-1"
+                      className="w-6 h-0.5 bg-primary rounded-full mb-1"
                     />
                     <div className="relative">
                       <Icon className={`w-5 h-5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`} />
                       {badge > 0 && (
-                        <span className="absolute -top-1.5 -right-2 gradient-primary text-primary-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                        <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
                           {badge}
                         </span>
                       )}
                     </div>
-                    <span className={`text-[10px] font-medium transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                    <span className={`text-xs font-medium transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>
                       {tab.label}
                     </span>
                   </>
@@ -115,7 +115,7 @@ export default function BottomNav() {
                 <div className="relative shrink-0">
                   <Icon className="w-5 h-5" />
                   {badge > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 gradient-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                       {badge}
                     </span>
                   )}
@@ -126,7 +126,7 @@ export default function BottomNav() {
                 {isActive && !isCreate && (
                   <motion.div
                     layoutId="activeTabDesktop"
-                    className="ltr:ml-auto rtl:mr-auto w-1.5 h-5 gradient-primary rounded-full"
+                    className="ltr:ml-auto rtl:mr-auto w-1.5 h-5 bg-primary rounded-full"
                   />
                 )}
               </button>
@@ -148,7 +148,7 @@ export default function BottomNav() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-foreground truncate">{profile.name}</p>
-                <p className="text-[10px] text-muted-foreground truncate">{profile.occupation}</p>
+                <p className="text-xs text-muted-foreground truncate">{profile.occupation}</p>
               </div>
             </button>
           )}

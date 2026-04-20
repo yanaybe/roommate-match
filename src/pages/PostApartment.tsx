@@ -265,14 +265,14 @@ export default function PostApartment() {
 
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageAdd} />
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {imagePreviews.map((src, i) => (
                     <div key={i} className="relative aspect-square rounded-2xl overflow-hidden group">
                       <img src={src} alt="" className="w-full h-full object-cover" />
                       <button onClick={() => removeImage(i)} className="absolute top-1.5 right-1.5 p-1 bg-destructive rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                         <X className="w-3.5 h-3.5 text-destructive-foreground" />
                       </button>
-                      {i === 0 && <span className="absolute bottom-1.5 ltr:left-1.5 rtl:right-1.5 text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">{t("coverPhoto")}</span>}
+                      {i === 0 && <span className="absolute bottom-1.5 ltr:left-1.5 rtl:right-1.5 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">{t("coverPhoto")}</span>}
                     </div>
                   ))}
                   {images.length < 8 && (

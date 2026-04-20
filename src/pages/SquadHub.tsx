@@ -756,7 +756,7 @@ export default function SquadHub() {
                               </div>
                             );
                           })}
-                          <span className="text-[10px] text-muted-foreground ml-1">{aptLikesCount + aptDislikesCount}/{members.length} {t("voted")}</span>
+                          <span className="text-xs text-muted-foreground ml-1">{aptLikesCount + aptDislikesCount}/{members.length} {t("voted")}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -823,7 +823,7 @@ export default function SquadHub() {
                                 : "bg-card text-card-foreground shadow-card rounded-bl-md"
                             }`}>
                               <p className="break-words">{msg.content}</p>
-                              <p className={`text-[10px] mt-0.5 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"} text-right`}>
+                              <p className={`text-xs mt-0.5 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"} text-right`}>
                                 {formatMsgTime(msg.created_at)}
                               </p>
                             </div>

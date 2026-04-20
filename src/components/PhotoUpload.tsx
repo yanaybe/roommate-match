@@ -135,7 +135,7 @@ export default function PhotoUpload({ photos, onChange, maxPhotos = 6 }: PhotoUp
                 ) : (
                   <Plus className="w-6 h-6 text-muted-foreground" />
                 )}
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {photos.length === 0 ? "Add photo" : "Add more"}
                 </span>
               </>

@@ -173,7 +173,7 @@ export default function NotificationsSheet({ open, onOpenChange, t }: Props) {
                       {n.body && (
                         <p className="text-xs text-muted-foreground mt-0.5 truncate">{n.body}</p>
                       )}
-                      <p className="text-[10px] text-muted-foreground/60 mt-1">
+                      <p className="text-xs text-muted-foreground/60 mt-1">
                         {format(new Date(n.created_at), "MMM d, HH:mm")}
                       </p>
                     </div>

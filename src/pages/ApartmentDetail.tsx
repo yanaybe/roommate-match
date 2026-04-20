@@ -150,7 +150,7 @@ function RoommateProfileModal({
 function InfoChip({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-secondary rounded-xl px-3 py-2">
-      <span className="text-muted-foreground text-[10px] block">{label}</span>
+      <span className="text-muted-foreground text-xs block">{label}</span>
       <span className="text-foreground text-sm font-semibold">{value}</span>
     </div>
   );
@@ -394,13 +394,13 @@ export default function ApartmentDetail() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center">
-                <span className="text-primary text-[10px] font-semibold uppercase tracking-wide block mb-0.5">{t("monthlyRent")}</span>
+                <span className="text-primary text-xs font-semibold uppercase tracking-wide block mb-0.5">{t("monthlyRent")}</span>
                 <span className="text-foreground text-lg font-extrabold">₪{apartment.price.toLocaleString()}</span>
               </div>
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center">
                 <Calendar className="w-4 h-4 mx-auto text-primary mb-1" />
                 <span className="text-foreground text-xs font-bold block leading-tight">{apartment.available}</span>
-                <span className="text-muted-foreground text-[10px]">{t("available")}</span>
+                <span className="text-muted-foreground text-xs">{t("available")}</span>
               </div>
             </div>
           </div>
@@ -414,17 +414,17 @@ export default function ApartmentDetail() {
               <div className="bg-card rounded-xl p-3 text-center shadow-card">
                 <Bed className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
                 <span className="text-foreground text-sm font-bold block">{apartment.rooms}</span>
-                <span className="text-muted-foreground text-[10px]">{t("bedroomsLabel")}</span>
+                <span className="text-muted-foreground text-xs">{t("bedroomsLabel")}</span>
               </div>
               <div className="bg-card rounded-xl p-3 text-center shadow-card">
                 <Bath className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
                 <span className="text-foreground text-sm font-bold block">{apartment.bathrooms}</span>
-                <span className="text-muted-foreground text-[10px]">{t("bathroomsLabel")}</span>
+                <span className="text-muted-foreground text-xs">{t("bathroomsLabel")}</span>
               </div>
               <div className="bg-card rounded-xl p-3 text-center shadow-card">
                 <Maximize className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
                 <span className="text-foreground text-sm font-bold block">{apartment.size}</span>
-                <span className="text-muted-foreground text-[10px]">{t("mSquaredTotal")}</span>
+                <span className="text-muted-foreground text-xs">{t("mSquaredTotal")}</span>
               </div>
             </div>
           </div>
@@ -477,14 +477,14 @@ export default function ApartmentDetail() {
                     </div>
                     <p className="text-muted-foreground text-xs">{rm.occupation}</p>
                     <div className="flex gap-1.5 mt-1">
-                      <span className="bg-secondary text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full">
+                      <span className="bg-secondary text-secondary-foreground text-xs px-2 py-0.5 rounded-full">
                         {rm.sleepSchedule}
                       </span>
-                      <span className="bg-secondary text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full">
+                      <span className="bg-secondary text-secondary-foreground text-xs px-2 py-0.5 rounded-full">
                         Clean: {rm.cleanliness}/5
                       </span>
                       {rm.pets && (
-                        <span className="bg-secondary text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full">
+                        <span className="bg-secondary text-secondary-foreground text-xs px-2 py-0.5 rounded-full">
                           🐾 Pets
                         </span>
                       )}

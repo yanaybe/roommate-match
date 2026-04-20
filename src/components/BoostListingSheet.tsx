@@ -128,7 +128,7 @@ export default function BoostListingSheet({ open, onOpenChange, apartmentId, apa
                       {tier.label}
                     </span>
                     {tier.popular && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 gradient-primary text-primary-foreground rounded-full">
+                      <span className="text-xs font-bold px-1.5 py-0.5 gradient-primary text-primary-foreground rounded-full">
                         POPULAR
                       </span>
                     )}

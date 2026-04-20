@@ -176,7 +176,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
             <div className="flex items-center gap-2 mt-4">
               <div className="flex -space-x-2">
                 {avatarColors.slice(0, 4).map((c, i) => (
-                  <div key={i} className={`w-7 h-7 rounded-full ${c} border-2 border-white/30 flex items-center justify-center text-white text-[10px] font-bold`}>
+                  <div key={i} className={`w-7 h-7 rounded-full ${c} border-2 border-white/30 flex items-center justify-center text-white text-xs font-bold`}>
                     {String.fromCharCode(65 + i)}
                   </div>
                 ))}
@@ -214,7 +214,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">Upgrade Gold to see who they are</p>
                 </div>
-                <div className="bg-amber-400/20 text-amber-600 text-[10px] font-extrabold px-2 py-1 rounded-full border border-amber-400/30">
+                <div className="bg-amber-400/20 text-amber-600 text-xs font-extrabold px-2 py-1 rounded-full border border-amber-400/30">
                   GOLD+
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-extrabold text-foreground">Choose your plan</h3>
-                <span className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">Cancel anytime</span>
+                <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">Cancel anytime</span>
               </div>
 
               <div className="space-y-2.5">
@@ -269,13 +269,13 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                         <div className="flex-1 text-left min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm font-extrabold text-foreground">{plan.name}</span>
-                            <span className={`text-[10px] font-semibold ${plan.textColor}`}>{plan.tagline}</span>
+                            <span className={`text-xs font-semibold ${plan.textColor}`}>{plan.tagline}</span>
                           </div>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {plan.features.slice(0, 2).map((f, i) => {
                               const FIcon = f.icon;
                               return (
-                                <span key={i} className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                <span key={i} className="flex items-center gap-0.5 text-xs text-muted-foreground">
                                   <FIcon className="w-2.5 h-2.5" />
                                   {f.text}
                                   {i < 1 && <span className="mx-0.5 opacity-30">·</span>}
@@ -288,7 +288,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                         {/* Price */}
                         <div className="text-right shrink-0">
                           <span className="text-lg font-extrabold text-foreground">₪{plan.price}</span>
-                          <span className="text-[10px] text-muted-foreground block">/mo</span>
+                          <span className="text-xs text-muted-foreground block">/mo</span>
                         </div>
                       </div>
 
@@ -382,7 +382,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                   >
                     <Rocket className="w-5 h-5 text-primary mx-auto mb-1.5" />
                     <p className="text-xs font-extrabold text-foreground">{b.label}</p>
-                    <p className="text-[10px] text-muted-foreground">{b.desc}</p>
+                    <p className="text-xs text-muted-foreground">{b.desc}</p>
                     <p className="text-sm font-extrabold text-primary mt-1">₪{b.price}</p>
                   </button>
                 ))}

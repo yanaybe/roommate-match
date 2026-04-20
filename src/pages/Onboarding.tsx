@@ -98,7 +98,7 @@ function SliderField({ label, value, onChange, min = 1, max = 5, labels }: {
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full accent-primary"
       />
-      <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+      <div className="flex justify-between text-xs text-muted-foreground mt-1">
         {labels ? labels.map((l, i) => <span key={i}>{l}</span>) : Array.from({ length: max - min + 1 }, (_, i) => <span key={i}>{min + i}</span>)}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { Search, SlidersHorizontal, Map, List, ArrowRight } from "lucide-react";
+import { Search, SlidersHorizontal, Map, List, ArrowRight, X } from "lucide-react";
 import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -83,6 +83,17 @@ function dbRowToApartment(row: any): Apartment {
   };
 }
 
+const SQUAD_BANNER_KEY = "squad_banner_dismissed_at";
+const SQUAD_BANNER_TTL = 7 * 24 * 60 * 60 * 1000; // 1 week
+
+function isSquadBannerDismissed() {
+  try {
+    const ts = localStorage.getItem(SQUAD_BANNER_KEY);
+    if (!ts) return false;
+    return Date.now() - parseInt(ts, 10) < SQUAD_BANNER_TTL;
+  } catch { return false; }
+}
+
 export default function Index() {
   const [view, setView] = useState<"list" | "map">("list");
   const [search, setSearch] = useState("");
@@ -90,11 +101,17 @@ export default function Index() {
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [apartmentsLoading, setApartmentsLoading] = useState(true);
+  const [squadBannerDismissed, setSquadBannerDismissed] = useState(isSquadBannerDismissed);
   const { t } = useLanguage();
   const { user } = useAuth();
   const { profile } = useProfile();
   const { squads, loading: squadsLoading } = useMySquads();
   const navigate = useNavigate();
+
+  const dismissSquadBanner = () => {
+    try { localStorage.setItem(SQUAD_BANNER_KEY, String(Date.now())); } catch {}
+    setSquadBannerDismissed(true);
+  };
 
   useEffect(() => {
     supabase
@@ -155,7 +172,7 @@ export default function Index() {
               <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
                 Roo<span className="text-primary">match</span>
               </h1>
-              <p className="text-muted-foreground text-sm">{t("findYourPerfectRoom")}</p>
+              <p className="text-muted-foreground text-sm">Find your perfect roommate or apartment</p>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -187,7 +204,7 @@ export default function Index() {
             >
               <SlidersHorizontal className="w-4 h-4 text-secondary-foreground" />
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 gradient-primary text-primary-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
@@ -214,19 +231,24 @@ export default function Index() {
         </div>
       )}
 
-      {user && profile?.onboarding_complete && !squadsLoading && squads.length === 0 && (
+      {user && profile?.onboarding_complete && !squadsLoading && squads.length === 0 && !squadBannerDismissed && (
         <div className="max-w-5xl mx-auto px-4 pt-3">
-          <button
-            onClick={() => navigate("/create-squad")}
-            className="w-full flex items-center gap-3 p-3.5 bg-gradient-to-r from-violet-500/10 to-pink-500/10 border border-primary/20 rounded-2xl text-left"
-          >
+          <div className="w-full flex items-center gap-3 p-3.5 bg-gradient-to-r from-violet-500/10 to-pink-500/10 border border-primary/20 rounded-2xl">
             <span className="text-2xl">👥</span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-primary">{t("searchingWithFriends")}</p>
               <p className="text-xs text-muted-foreground">{t("createSquadBanner")}</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
-          </button>
+            <button
+              onClick={() => navigate("/create-squad")}
+              className="shrink-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl"
+            >
+              Create
+            </button>
+            <button onClick={dismissSquadBanner} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 

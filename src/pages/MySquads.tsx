@@ -177,12 +177,12 @@ export default function MySquads() {
             >
               {tabId === "my" ? t("mySquadsTab") : t("discoverTab")}
               {tabId === "my" && invites.length > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-destructive text-destructive-foreground">
+                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-destructive text-destructive-foreground">
                   {invites.length}
                 </span>
               )}
               {tabId === "discover" && openSquads.length > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-accent text-accent-foreground">
+                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-accent text-accent-foreground">
                   {openSquads.length}
                 </span>
               )}
@@ -339,12 +339,12 @@ export default function MySquads() {
                           {t("locationFilter")}
                         </label>
                         {allLocations.length > 0 ? (
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="flex overflow-x-auto gap-1.5 pb-1 no-scrollbar">
                             <button
                               onClick={() => setFilterLocation("")}
-                              className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
+                              className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
                                 filterLocation === ""
-                                  ? "gradient-primary text-primary-foreground"
+                                  ? "bg-primary text-primary-foreground"
                                   : "bg-secondary text-muted-foreground hover:text-foreground"
                               }`}
                             >
@@ -354,9 +354,9 @@ export default function MySquads() {
                               <button
                                 key={loc}
                                 onClick={() => setFilterLocation(filterLocation === loc ? "" : loc)}
-                                className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
+                                className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
                                   filterLocation === loc
-                                    ? "gradient-primary text-primary-foreground"
+                                    ? "bg-primary text-primary-foreground"
                                     : "bg-secondary text-muted-foreground hover:text-foreground"
                                 }`}
                               >
@@ -480,7 +480,7 @@ export default function MySquads() {
                           <Users className="w-6 h-6 text-primary-foreground" />
                         </div>
                         <div
-                          className={`absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold text-primary-foreground ${
+                          className={`absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-xs font-bold text-primary-foreground ${
                             squad.matchPercent >= 80
                               ? "bg-accent"
                               : squad.matchPercent >= 60
