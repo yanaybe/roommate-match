@@ -73,7 +73,7 @@ const App = () => (
         <NotificationsProvider>
         <DailyLimitsProvider>
           <Toaster />
-          <Sonner />
+          <Sonner position="top-center" />
           <BrowserRouter>
             <NotificationToaster />
             <BottomNav />

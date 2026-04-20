@@ -126,7 +126,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
         <div className="absolute top-3 right-3 flex flex-col gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); requireAuth(() => toggleSave()); }}
-            className="bg-card/80 backdrop-blur-sm p-2 rounded-full"
+            className="bg-card/80 backdrop-blur-sm p-2 rounded-full hover:scale-105 active:scale-95 transition-transform"
           >
             <Bookmark className={`w-4 h-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} />
           </button>
@@ -225,7 +225,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
                 navigate("/chats");
               }
             }); }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground transition-all"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground transition-all hover:scale-[1.02] active:scale-95"
           >
             <MessageCircle className="w-4 h-4" />
             Message

@@ -101,6 +101,7 @@ export default function Index() {
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [apartmentsLoading, setApartmentsLoading] = useState(true);
+  const [gridKey, setGridKey] = useState(0);
   const [squadBannerDismissed, setSquadBannerDismissed] = useState(isSquadBannerDismissed);
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -122,6 +123,7 @@ export default function Index() {
         if (error) { console.error("Failed to load apartments:", error); }
         setApartments((data ?? []).map(dbRowToApartment));
         setApartmentsLoading(false);
+        setGridKey(1);
       });
   }, []);
 
@@ -261,7 +263,7 @@ export default function Index() {
               ))}
             </div>
           ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div key={gridKey} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.map((apt, i) => (
                 <ApartmentCard key={apt.id} apartment={apt} index={i} />
               ))}

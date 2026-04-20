@@ -79,7 +79,7 @@ function OptionButton({ label, selected, onClick }: { label: string; selected: b
       type="button"
       onClick={onClick}
       className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-        selected ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+        selected ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/70"
       }`}
     >
       {label}
@@ -111,7 +111,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
       type="button"
       onClick={() => onChange(!value)}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-        value ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+        value ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/70"
       }`}
     >
       {value && <Check className="w-4 h-4" />}
@@ -506,6 +506,7 @@ export default function Onboarding() {
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("bioLbl")}</label>
               <textarea value={form.bio} onChange={(e) => update("bio", e.target.value)} placeholder={t("bioPlaceholder")} rows={3} maxLength={200} className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+              <p className="text-xs text-muted-foreground text-right mt-1">{form.bio.length}/200</p>
             </div>
           </div>
         );
