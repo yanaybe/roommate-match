@@ -202,7 +202,7 @@ export default function Roommates() {
 
       <div className="flex-1 max-w-lg mx-auto w-full px-4 pt-4">
         {profilesLoading ? (
-          <div className="relative w-full aspect-[3/4] max-h-[520px]">
+          <div className="relative w-full aspect-[3/4] max-h-[min(520px,65dvh)]">
             <Skeleton className="absolute inset-0 rounded-3xl" />
             <div className="absolute bottom-6 left-6 right-6 space-y-2">
               <Skeleton className="h-7 w-2/3 rounded-xl" />
@@ -214,7 +214,7 @@ export default function Roommates() {
             </div>
           </div>
         ) : remaining.length > 0 ? (
-          <div className="relative w-full aspect-[3/4] max-h-[520px]">
+          <div className="relative w-full aspect-[3/4] max-h-[min(520px,65dvh)]">
             <AnimatePresence>
               {visibleCards
                 .slice()
@@ -241,7 +241,7 @@ export default function Roommates() {
               <button
                 onClick={handleUndo}
                 disabled={swiped.length === 0}
-                className="flex items-center gap-2 px-5 py-2.5 bg-secondary rounded-xl text-sm font-semibold text-foreground disabled:opacity-40"
+                className="flex items-center gap-2 px-5 py-2.5 bg-secondary rounded-xl text-sm font-semibold text-foreground disabled:opacity-50"
               >
                 <RotateCcw className="w-4 h-4" /> Undo last
               </button>
@@ -260,7 +260,7 @@ export default function Roommates() {
             <button
               onClick={handleUndo}
               disabled={swiped.length === 0}
-              className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center shadow-card disabled:opacity-30 transition-opacity"
+              className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center shadow-card disabled:opacity-50 transition-opacity"
             >
               <RotateCcw className="w-5 h-5 text-muted-foreground" />
             </button>

@@ -133,8 +133,12 @@ function FilterRow({
 
 // ────────────────────────────────────────────────────────────────────────────
 
+const TABS = ["Basics", "Vibe", "Amenities"] as const;
+type Tab = typeof TABS[number];
+
 export default function FilterModal({ open, onClose, filters, onApply }: FilterModalProps) {
   const [local, setLocal] = useState<Filters>(filters);
+  const [activeTab, setActiveTab] = useState<Tab>("Basics");
   const { t } = useLanguage();
 
   const update = <K extends keyof Filters>(key: K, val: Filters[K]) =>
@@ -211,258 +215,283 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
               </button>
             </div>
 
+            {/* ── Tab bar ── */}
+            <div className="shrink-0 flex gap-1 px-5 pb-3">
+              {TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                    activeTab === tab
+                      ? "gradient-primary text-primary-foreground shadow-sm"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
             {/* ── Scrollable body ── */}
             <div className="flex-1 overflow-y-auto overscroll-contain">
               <div className="px-5 pb-4 space-y-5">
 
-                {/* Budget */}
-                <div>
-                  <SectionLabel>💰 {t("budgetMonthly")}</SectionLabel>
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
-                      <span className="text-xs text-muted-foreground shrink-0">₪</span>
-                      <input
-                        type="number"
-                        value={local.budgetMin}
-                        onChange={(e) => update("budgetMin", Number(e.target.value))}
-                        placeholder="Min"
-                        className="flex-1 bg-transparent text-foreground text-sm font-medium focus:outline-none w-0"
-                      />
+                {/* ── BASICS TAB ── */}
+                {activeTab === "Basics" && <>
+                  {/* Budget */}
+                  <div>
+                    <SectionLabel>💰 {t("budgetMonthly")}</SectionLabel>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
+                        <span className="text-xs text-muted-foreground shrink-0">₪</span>
+                        <input
+                          type="number"
+                          value={local.budgetMin}
+                          onChange={(e) => update("budgetMin", Number(e.target.value))}
+                          placeholder="Min"
+                          className="flex-1 bg-transparent text-foreground text-sm font-medium focus:outline-none w-0"
+                        />
+                      </div>
+                      <div className="w-4 h-px bg-border shrink-0" />
+                      <div className="flex-1 flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
+                        <span className="text-xs text-muted-foreground shrink-0">₪</span>
+                        <input
+                          type="number"
+                          value={local.budgetMax}
+                          onChange={(e) => update("budgetMax", Number(e.target.value))}
+                          placeholder="Max"
+                          className="flex-1 bg-transparent text-foreground text-sm font-medium focus:outline-none w-0"
+                        />
+                      </div>
                     </div>
-                    <div className="w-4 h-px bg-border shrink-0" />
-                    <div className="flex-1 flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
-                      <span className="text-xs text-muted-foreground shrink-0">₪</span>
-                      <input
-                        type="number"
-                        value={local.budgetMax}
-                        onChange={(e) => update("budgetMax", Number(e.target.value))}
-                        placeholder="Max"
-                        className="flex-1 bg-transparent text-foreground text-sm font-medium focus:outline-none w-0"
+                  </div>
+
+                  {/* Rooms */}
+                  <div>
+                    <SectionLabel>🛏 {t("numberOfRooms")}</SectionLabel>
+                    <div className="flex gap-1.5">
+                      {[
+                        { label: t("optAny"), min: 1, max: 10 },
+                        { label: "1", min: 1, max: 1 },
+                        { label: "2", min: 2, max: 2 },
+                        { label: "3", min: 3, max: 3 },
+                        { label: "4", min: 4, max: 4 },
+                        { label: "5+", min: 5, max: 10 },
+                      ].map((opt) => {
+                        const selected = local.roomsMin === opt.min && local.roomsMax === opt.max;
+                        return (
+                          <button
+                            key={opt.label}
+                            onClick={() => { update("roomsMin", opt.min); update("roomsMax", opt.max); }}
+                            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                              selected
+                                ? "gradient-primary text-primary-foreground shadow-sm"
+                                : "bg-secondary text-muted-foreground"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Size + Match */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <SectionLabel>📐 {t("minimumSize")}</SectionLabel>
+                      <div className="flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
+                        <input
+                          type="number"
+                          value={local.sizeMin || ""}
+                          onChange={(e) => update("sizeMin", Number(e.target.value))}
+                          placeholder="0"
+                          className="flex-1 bg-transparent text-foreground text-sm font-medium focus:outline-none w-0"
+                        />
+                        <span className="text-xs text-muted-foreground shrink-0">m²</span>
+                      </div>
+                    </div>
+                    <div>
+                      <SectionLabel>
+                        ✨ {t("minimumMatchPct")}{" "}
+                        <span className="text-primary normal-case tracking-normal font-bold">{local.matchMin}%</span>
+                      </SectionLabel>
+                      <div className="flex items-center gap-2 pt-1.5">
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          step={5}
+                          value={local.matchMin}
+                          onChange={(e) => update("matchMin", Number(e.target.value))}
+                          className="flex-1 accent-primary h-1.5"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Room type */}
+                  <div>
+                    <SectionLabel>🚪 {t("roomType")}</SectionLabel>
+                    <div className="flex gap-2">
+                      {(["any", "private", "shared"] as const).map((opt) => (
+                        <Chip
+                          key={opt}
+                          label={opt === "any" ? t("optAny") : opt === "private" ? t("optPrivate") : t("optSharedOk")}
+                          selected={local.roomType === opt}
+                          onClick={() => update("roomType", opt)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Furnished */}
+                  <div>
+                    <SectionLabel>🛋 {t("furnishedLbl")}</SectionLabel>
+                    <div className="flex gap-2">
+                      {(["any", "yes", "no"] as const).map((opt) => (
+                        <Chip
+                          key={opt}
+                          label={opt === "any" ? t("optAny") : opt === "yes" ? t("optYes") : t("optNo")}
+                          selected={local.furnished === opt}
+                          onClick={() => update("furnished", opt)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>}
+
+                {/* ── VIBE TAB ── */}
+                {activeTab === "Vibe" && <>
+                  {/* Lifestyle rows */}
+                  <div>
+                    <SectionLabel>🌿 {t("lifestylePreferences")}</SectionLabel>
+                    <div className="bg-secondary/50 rounded-2xl px-3 py-2 space-y-2">
+                      <FilterRow
+                        emoji="🚬"
+                        label={t("smokingLbl")}
+                        options={[
+                          { value: "any", label: t("optAny") },
+                          { value: "no", label: t("optNo") },
+                          { value: "yes", label: t("optYes") },
+                        ]}
+                        value={local.smoking}
+                        onChange={(v) => update("smoking", v as Filters["smoking"])}
+                      />
+                      <div className="h-px bg-border/50" />
+                      <FilterRow
+                        emoji="🐾"
+                        label={t("petsLbl")}
+                        options={[
+                          { value: "any", label: t("optAny") },
+                          { value: "no", label: t("optNo") },
+                          { value: "yes", label: t("optYes") },
+                        ]}
+                        value={local.pets}
+                        onChange={(v) => update("pets", v as Filters["pets"])}
+                      />
+                      <div className="h-px bg-border/50" />
+                      <FilterRow
+                        emoji="🏠"
+                        label={t("wfhFilter")}
+                        options={[
+                          { value: "any", label: t("optAny") },
+                          { value: "yes", label: t("optYes") },
+                          { value: "no", label: t("optNo") },
+                        ]}
+                        value={local.wfh}
+                        onChange={(v) => update("wfh", v as Filters["wfh"])}
                       />
                     </div>
                   </div>
-                </div>
 
-                {/* Rooms */}
-                <div>
-                  <SectionLabel>🛏 {t("numberOfRooms")}</SectionLabel>
-                  <div className="flex gap-1.5">
-                    {[
-                      { label: t("optAny"), min: 1, max: 10 },
-                      { label: "1", min: 1, max: 1 },
-                      { label: "2", min: 2, max: 2 },
-                      { label: "3", min: 3, max: 3 },
-                      { label: "4", min: 4, max: 4 },
-                      { label: "5+", min: 5, max: 10 },
-                    ].map((opt) => {
-                      const selected = local.roomsMin === opt.min && local.roomsMax === opt.max;
-                      return (
+                  {/* Religious level */}
+                  <div>
+                    <SectionLabel>🕍 {t("religiousLevelFilter")}</SectionLabel>
+                    <div className="flex flex-wrap gap-2">
+                      {(["any", "secular", "traditional", "religious"] as const).map((opt) => (
+                        <Chip
+                          key={opt}
+                          label={
+                            opt === "any" ? t("optAny") :
+                            opt === "secular" ? t("optSecular") :
+                            opt === "traditional" ? t("optTrad") :
+                            t("optReligious")
+                          }
+                          selected={local.religiousLevel === opt}
+                          onClick={() => update("religiousLevel", opt)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sleep schedule */}
+                  <div>
+                    <SectionLabel>🌙 {t("sleepScheduleFilter")}</SectionLabel>
+                    <div className="flex gap-2 flex-wrap">
+                      {([
+                        { value: "any" as const, label: t("optAny") },
+                        { value: "early" as const, label: `🌅 ${t("optEarlyBird")}` },
+                        { value: "night" as const, label: `🦉 ${t("optNightOwl")}` },
+                        { value: "flexible" as const, label: `〜 ${t("optFlexible")}` },
+                      ]).map((opt) => (
+                        <Chip
+                          key={opt.value}
+                          label={opt.label}
+                          selected={local.sleepSchedule === opt.value}
+                          onClick={() => update("sleepSchedule", opt.value)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Cleanliness slider */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <SectionLabel>✨ {t("minCleanliness")}</SectionLabel>
+                      <span className="text-xs font-bold text-primary -mt-0.5">
+                        {"⭐".repeat(local.cleanlinessMin)}
+                        {"☆".repeat(5 - local.cleanlinessMin)}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      step={1}
+                      value={local.cleanlinessMin}
+                      onChange={(e) => update("cleanlinessMin", Number(e.target.value))}
+                      className="w-full accent-primary"
+                    />
+                    <div className="flex justify-between mt-1">
+                      <span className="text-xs text-muted-foreground">{t("sliderRelaxed")}</span>
+                      <span className="text-xs text-muted-foreground">{t("spotless")}</span>
+                    </div>
+                  </div>
+                </>}
+
+                {/* ── AMENITIES TAB ── */}
+                {activeTab === "Amenities" && (
+                  <div>
+                    <SectionLabel>🏠 {t("amenitiesLabel")}</SectionLabel>
+                    <div className="flex flex-wrap gap-2">
+                      {allAmenities.map(({ key, emoji }) => (
                         <button
-                          key={opt.label}
-                          onClick={() => { update("roomsMin", opt.min); update("roomsMax", opt.max); }}
-                          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                            selected
+                          key={key}
+                          onClick={() => toggleAmenity(key)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 hover:brightness-95 ${
+                            local.amenities.includes(key)
                               ? "gradient-primary text-primary-foreground shadow-sm"
                               : "bg-secondary text-muted-foreground"
                           }`}
                         >
-                          {opt.label}
+                          <span>{emoji}</span>
+                          {key}
                         </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Size + Match side by side */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <SectionLabel>📐 {t("minimumSize")}</SectionLabel>
-                    <div className="flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
-                      <input
-                        type="number"
-                        value={local.sizeMin || ""}
-                        onChange={(e) => update("sizeMin", Number(e.target.value))}
-                        placeholder="0"
-                        className="flex-1 bg-transparent text-foreground text-sm font-medium focus:outline-none w-0"
-                      />
-                      <span className="text-xs text-muted-foreground shrink-0">m²</span>
+                      ))}
                     </div>
                   </div>
-                  <div>
-                    <SectionLabel>
-                      ✨ {t("minimumMatchPct")}{" "}
-                      <span className="text-primary normal-case tracking-normal font-bold">{local.matchMin}%</span>
-                    </SectionLabel>
-                    <div className="flex items-center gap-2 pt-1.5">
-                      <input
-                        type="range"
-                        min={0}
-                        max={100}
-                        step={5}
-                        value={local.matchMin}
-                        onChange={(e) => update("matchMin", Number(e.target.value))}
-                        className="flex-1 accent-primary h-1.5"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Room type */}
-                <div>
-                  <SectionLabel>🚪 {t("roomType")}</SectionLabel>
-                  <div className="flex gap-2">
-                    {(["any", "private", "shared"] as const).map((opt) => (
-                      <Chip
-                        key={opt}
-                        label={opt === "any" ? t("optAny") : opt === "private" ? t("optPrivate") : t("optSharedOk")}
-                        selected={local.roomType === opt}
-                        onClick={() => update("roomType", opt)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Furnished */}
-                <div>
-                  <SectionLabel>🛋 {t("furnishedLbl")}</SectionLabel>
-                  <div className="flex gap-2">
-                    {(["any", "yes", "no"] as const).map((opt) => (
-                      <Chip
-                        key={opt}
-                        label={opt === "any" ? t("optAny") : opt === "yes" ? t("optYes") : t("optNo")}
-                        selected={local.furnished === opt}
-                        onClick={() => update("furnished", opt)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Lifestyle rows */}
-                <div>
-                  <SectionLabel>🌿 {t("lifestylePreferences")}</SectionLabel>
-                  <div className="bg-secondary/50 rounded-2xl px-3 py-2 space-y-2">
-                    <FilterRow
-                      emoji="🚬"
-                      label={t("smokingLbl")}
-                      options={[
-                        { value: "any", label: t("optAny") },
-                        { value: "no", label: t("optNo") },
-                        { value: "yes", label: t("optYes") },
-                      ]}
-                      value={local.smoking}
-                      onChange={(v) => update("smoking", v as Filters["smoking"])}
-                    />
-                    <div className="h-px bg-border/50" />
-                    <FilterRow
-                      emoji="🐾"
-                      label={t("petsLbl")}
-                      options={[
-                        { value: "any", label: t("optAny") },
-                        { value: "no", label: t("optNo") },
-                        { value: "yes", label: t("optYes") },
-                      ]}
-                      value={local.pets}
-                      onChange={(v) => update("pets", v as Filters["pets"])}
-                    />
-                    <div className="h-px bg-border/50" />
-                    <FilterRow
-                      emoji="🏠"
-                      label={t("wfhFilter")}
-                      options={[
-                        { value: "any", label: t("optAny") },
-                        { value: "yes", label: t("optYes") },
-                        { value: "no", label: t("optNo") },
-                      ]}
-                      value={local.wfh}
-                      onChange={(v) => update("wfh", v as Filters["wfh"])}
-                    />
-                  </div>
-                </div>
-
-                {/* Religious level */}
-                <div>
-                  <SectionLabel>🕍 {t("religiousLevelFilter")}</SectionLabel>
-                  <div className="flex flex-wrap gap-2">
-                    {(["any", "secular", "traditional", "religious"] as const).map((opt) => (
-                      <Chip
-                        key={opt}
-                        label={
-                          opt === "any" ? t("optAny") :
-                          opt === "secular" ? t("optSecular") :
-                          opt === "traditional" ? t("optTrad") :
-                          t("optReligious")
-                        }
-                        selected={local.religiousLevel === opt}
-                        onClick={() => update("religiousLevel", opt)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sleep schedule */}
-                <div>
-                  <SectionLabel>🌙 {t("sleepScheduleFilter")}</SectionLabel>
-                  <div className="flex gap-2 flex-wrap">
-                    {([
-                      { value: "any" as const, label: t("optAny") },
-                      { value: "early" as const, label: `🌅 ${t("optEarlyBird")}` },
-                      { value: "night" as const, label: `🦉 ${t("optNightOwl")}` },
-                      { value: "flexible" as const, label: `〜 ${t("optFlexible")}` },
-                    ]).map((opt) => (
-                      <Chip
-                        key={opt.value}
-                        label={opt.label}
-                        selected={local.sleepSchedule === opt.value}
-                        onClick={() => update("sleepSchedule", opt.value)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Cleanliness slider */}
-                <div>
-                  <div className="flex items-center justify-between mb-2.5">
-                    <SectionLabel>✨ {t("minCleanliness")}</SectionLabel>
-                    <span className="text-xs font-bold text-primary -mt-0.5">
-                      {"⭐".repeat(local.cleanlinessMin)}
-                      {"☆".repeat(5 - local.cleanlinessMin)}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={1}
-                    max={5}
-                    step={1}
-                    value={local.cleanlinessMin}
-                    onChange={(e) => update("cleanlinessMin", Number(e.target.value))}
-                    className="w-full accent-primary"
-                  />
-                  <div className="flex justify-between mt-1">
-                    <span className="text-[10px] text-muted-foreground">{t("sliderRelaxed")}</span>
-                    <span className="text-[10px] text-muted-foreground">{t("spotless")}</span>
-                  </div>
-                </div>
-
-                {/* Amenities */}
-                <div>
-                  <SectionLabel>🏠 {t("amenitiesLabel")}</SectionLabel>
-                  <div className="flex flex-wrap gap-2">
-                    {allAmenities.map(({ key, emoji }) => (
-                      <button
-                        key={key}
-                        onClick={() => toggleAmenity(key)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
-                          local.amenities.includes(key)
-                            ? "gradient-primary text-primary-foreground shadow-sm"
-                            : "bg-secondary text-muted-foreground"
-                        }`}
-                      >
-                        <span>{emoji}</span>
-                        {key}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                )}
 
               </div>
             </div>

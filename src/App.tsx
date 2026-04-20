@@ -44,7 +44,7 @@ function HomeRoute() {
   if (!user) return <Landing />;
   if (!user.email_confirmed_at) return <Navigate to="/verify-email" replace />;
   if (!profile?.onboarding_complete) return <Navigate to="/onboarding" replace />;
-  return <div className="desk:ltr:pl-64 desk:rtl:pr-64"><Index /></div>;
+  return <div className="desk:ltr:pl-64 desk:rtl:pr-64"><div className="desk:max-w-[1400px] desk:mx-auto"><Index /></div></div>;
 }
 
 function AuthedLayout() {
@@ -52,7 +52,7 @@ function AuthedLayout() {
   if (loading) return null;
   if (!user) return <Navigate to="/auth" replace />;
   if (!user.email_confirmed_at) return <Navigate to="/verify-email" replace />;
-  return <div className="desk:ltr:pl-64 desk:rtl:pr-64"><Outlet /></div>;
+  return <div className="desk:ltr:pl-64 desk:rtl:pr-64"><div className="desk:max-w-[1400px] desk:mx-auto"><Outlet /></div></div>;
 }
 
 // Routes inside this layout additionally require a completed onboarding profile.

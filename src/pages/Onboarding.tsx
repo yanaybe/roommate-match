@@ -749,7 +749,7 @@ export default function Onboarding() {
               }
             }}
             disabled={!canProceed() || saving}
-            className="flex-1 flex items-center justify-center gap-1 py-3 gradient-primary text-primary-foreground rounded-xl font-bold text-sm disabled:opacity-40"
+            className="flex-1 flex items-center justify-center gap-1 py-3 gradient-primary text-primary-foreground rounded-xl font-bold text-sm disabled:opacity-50"
           >
             {step < STEPS.length - 1 ? (
               <>{t("nextBtn")} <ArrowRight className="w-4 h-4" /></>

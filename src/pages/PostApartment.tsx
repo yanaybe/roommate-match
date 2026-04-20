@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Camera, X, MapPin, Home, Bed, Bath, Ruler, Building, Calendar, Plus, Check, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
+
+const DRAFT_KEY = "post_apartment_draft";
 
 const CITIES = ["Tel Aviv", "Jerusalem", "Haifa", "Beer Sheva", "Netanya", "Herzliya", "Ramat Gan", "Rishon LeZion", "Petah Tikva", "Ashdod"];
 
@@ -36,7 +38,7 @@ export default function PostApartment() {
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
-  const [form, setForm] = useState({
+  const defaultForm = {
     title: "",
     description: "",
     address: "",
@@ -62,7 +64,31 @@ export default function PostApartment() {
     hasRooftop: false,
     hasGarden: false,
     petFriendly: false,
-  });
+  };
+
+  const loadDraft = () => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw) as { form: typeof defaultForm; step: number };
+    } catch {
+      return null;
+    }
+  };
+
+  const draft = loadDraft();
+  const [form, setForm] = useState(draft?.form ?? defaultForm);
+
+  useEffect(() => {
+    if (draft?.step && draft.step > 0) setStep(draft.step);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, step }));
+    } catch {}
+  }, [form, step]);
 
   const update = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
 
@@ -176,6 +202,7 @@ export default function PostApartment() {
       } as any);
 
       if (error) throw error;
+      localStorage.removeItem(DRAFT_KEY);
       toast.success("Apartment posted successfully! 🎉");
       navigate("/");
     } catch (err: any) {
@@ -481,7 +508,9 @@ export default function PostApartment() {
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={submitting} className="rounded-xl flex-1 gradient-primary text-primary-foreground">
-              {submitting ? <><Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" /> {t("postingApt")}</> : <>{t("postApartmentBtn")}</>}
+              {submitting
+                ? <><Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" /> {step === STEPS.length - 1 ? "Publishing…" : t("postingApt")}</>
+                : <>{t("postApartmentBtn")}</>}
             </Button>
           )}
         </div>

@@ -850,7 +850,7 @@ export default function SquadHub() {
                 <button
                   onClick={sendMessage}
                   disabled={!newMsg.trim()}
-                  className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center disabled:opacity-40 transition-opacity"
+                  className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center disabled:opacity-50 transition-opacity"
                 >
                   <Send className="w-4 h-4 text-primary-foreground" />
                 </button>

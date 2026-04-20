@@ -18,9 +18,9 @@ interface Props {
 }
 
 const BADGES = [
-  { key: "emailVerified" as const, icon: Mail,   label: "Email",  color: "text-blue-500",  bg: "bg-blue-500/10"  },
-  { key: "phoneVerified" as const, icon: Phone,  label: "Phone",  color: "text-green-500", bg: "bg-green-500/10" },
-  { key: "hasPhotos"     as const, icon: Camera, label: "Photos", color: "text-purple-500",bg: "bg-purple-500/10"},
+  { key: "emailVerified" as const, icon: Mail,   label: "Email",  color: "badge-info-text",    bg: "badge-info-bg"    },
+  { key: "phoneVerified" as const, icon: Phone,  label: "Phone",  color: "badge-success-text", bg: "badge-success-bg" },
+  { key: "hasPhotos"     as const, icon: Camera, label: "Photos", color: "badge-verified-text", bg: "badge-verified-bg"},
 ];
 
 export default function VerificationBadges({ status, size = "md" }: Props) {

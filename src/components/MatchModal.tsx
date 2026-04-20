@@ -143,6 +143,12 @@ export default function MatchModal({ user, matchPercent, onClose }: MatchModalPr
               <MessageCircle className="w-5 h-5" />
             </button>
           </div>
+          <button
+            onClick={() => { onClose(); navigate("/chats"); }}
+            className="w-full mt-2 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            Go to Chats →
+          </button>
         </motion.div>
       </motion.div>
     </AnimatePresence>

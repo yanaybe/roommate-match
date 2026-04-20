@@ -48,9 +48,12 @@ export default function BottomNav() {
                 className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full cursor-pointer"
               >
                 {isCreate ? (
-                  <div className="gradient-primary rounded-2xl p-2.5 -mt-4 shadow-elevated">
-                    <Icon className="w-5 h-5 text-primary-foreground" />
-                  </div>
+                  <>
+                    <div className="gradient-primary rounded-2xl p-2.5 -mt-3 shadow-elevated">
+                      <Icon className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <span className="text-[10px] font-medium text-muted-foreground">{tab.label}</span>
+                  </>
                 ) : (
                   <>
                     <motion.div

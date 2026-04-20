@@ -40,6 +40,10 @@
     --match-medium: 38 92% 55%;
     --match-low: 0 72% 58%;
 
+    --badge-info: 217 91% 60%;
+    --badge-success: 142 71% 45%;
+    --badge-verified: 271 81% 66%;
+
     --gradient-primary: linear-gradient(135deg, hsl(12, 80%, 58%), hsl(340, 72%, 58%));
     --gradient-card: linear-gradient(180deg, hsla(0, 0%, 100%, 1), hsla(0, 0%, 100%, 0.95));
     --shadow-card: 0 2px 20px -4px hsla(220, 20%, 10%, 0.08);
@@ -75,6 +79,9 @@
     --border: 220 16% 18%;
     --input: 220 16% 18%;
     --ring: 12 80% 58%;
+    --badge-info: 217 91% 65%;
+    --badge-success: 142 71% 50%;
+    --badge-verified: 271 81% 72%;
     --sidebar-background: 220 20% 7%;
     --sidebar-foreground: 220 14% 96%;
     --sidebar-primary: 12 80% 58%;
@@ -140,4 +147,10 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+  .badge-info-bg { background-color: hsl(var(--badge-info) / 0.12); }
+  .badge-info-text { color: hsl(var(--badge-info)); }
+  .badge-success-bg { background-color: hsl(var(--badge-success) / 0.12); }
+  .badge-success-text { color: hsl(var(--badge-success)); }
+  .badge-verified-bg { background-color: hsl(var(--badge-verified) / 0.12); }
+  .badge-verified-text { color: hsl(var(--badge-verified)); }
 }

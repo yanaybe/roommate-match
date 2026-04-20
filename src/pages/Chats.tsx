@@ -635,7 +635,7 @@ export default function Chats() {
             maxLength={2000}
             className="flex-1 bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <button onClick={sendMessage} disabled={!newMessage.trim()} className="gradient-primary p-2.5 rounded-full disabled:opacity-40">
+          <button onClick={sendMessage} disabled={!newMessage.trim()} className="gradient-primary p-2.5 rounded-full disabled:opacity-50">
             <Send className="w-4 h-4 text-primary-foreground" />
           </button>
         </div>

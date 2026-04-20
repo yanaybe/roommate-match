@@ -6,9 +6,10 @@ import {
   DollarSign, Home, Users, Volume2,
   UtensilsCrossed, Dumbbell,
   Wine, PartyPopper, Clock, BookOpen, Smile,
-  MoreVertical, Ban, Flag, Sparkles
+  MoreVertical, Ban, Flag, Sparkles, Heart, X
 } from "lucide-react";
 import MatchBadge from "@/components/MatchBadge";
+import MatchModal from "@/components/MatchModal";
 import { type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
@@ -19,6 +20,8 @@ import { toast } from "sonner";
 import { useBlockReport } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useDailyLimits } from "@/hooks/useDailyLimits";
+import { isUUID } from "@/lib/profileUtils";
 
 function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
   const photos = (p as any).photos as string[] | undefined;
@@ -69,7 +72,10 @@ export default function RoommateProfile() {
   const [imgIndex, setImgIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
+  const [likeLoading, setLikeLoading] = useState(false);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(id);
+  const { canLike, likesLimit, recordLike, openPremiumSheet } = useDailyLimits();
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -115,8 +121,46 @@ export default function RoommateProfile() {
   if (userData.sleepSchedule === "Night owl") vibes.push(t("nightOwlLabel"));
   else vibes.push(t("earlyBirdLabel"));
 
+  const handleLike = async () => {
+    if (!authUser || isOwnProfile) return;
+    if (!canLike) {
+      toast.error(`You've reached your ${likesLimit} daily likes. Upgrade to like more.`);
+      openPremiumSheet();
+      return;
+    }
+    if (!isUUID(userData!.id)) {
+      toast.info("Demo profile — likes available with real users!");
+      navigate(-1);
+      return;
+    }
+    setLikeLoading(true);
+    try {
+      await supabase.from("liked_profiles").upsert(
+        { user_id: authUser.id, liked_user_id: userData!.id },
+        { onConflict: "user_id,liked_user_id" }
+      );
+      const { data: mutual } = await supabase
+        .from("liked_profiles")
+        .select("id")
+        .eq("user_id", userData!.id)
+        .eq("liked_user_id", authUser.id)
+        .maybeSingle();
+      recordLike();
+      if (mutual) {
+        setMatchedUser(userData);
+      } else {
+        toast.success(`You liked ${userData!.name}! 💛`);
+        navigate(-1);
+      }
+    } catch {
+      toast.error("Failed to like. Please try again.");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background pb-28 desk:pb-8">
+    <div className="min-h-screen bg-background pb-36 desk:pb-8">
 
       {/* ── Photo hero ── */}
       <div className="relative w-full h-[75vh] overflow-hidden">
@@ -441,6 +485,37 @@ export default function RoommateProfile() {
         targetName={userData.name}
         onSubmit={(reason, details) => reportUser(reason, details)}
       />
+
+      {matchedUser && (
+        <MatchModal
+          user={matchedUser}
+          matchPercent={matchPercent}
+          onClose={() => { setMatchedUser(null); navigate(-1); }}
+        />
+      )}
+
+      {/* Sticky Like / Pass footer */}
+      {authUser && !isOwnProfile && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 desk:ltr:pl-64 desk:rtl:pr-64 safe-bottom">
+          <div className="bg-card/95 backdrop-blur-xl border-t border-border px-5 py-3 flex gap-3 max-w-lg mx-auto">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-border bg-secondary text-foreground font-bold text-sm active:scale-95 transition-transform hover:border-destructive/40 hover:text-destructive"
+            >
+              <X className="w-5 h-5" />
+              Pass
+            </button>
+            <button
+              onClick={handleLike}
+              disabled={likeLoading}
+              className="flex-2 flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl gradient-primary text-primary-foreground font-bold text-sm shadow-elevated active:scale-95 transition-transform disabled:opacity-50"
+            >
+              <Heart className="w-5 h-5" />
+              {likeLoading ? "Liking…" : `Like ${userData.name}`}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
