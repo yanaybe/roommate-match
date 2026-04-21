@@ -1,4 +1,4 @@
-import { Search, SlidersHorizontal, Map, List, ArrowRight, X } from "lucide-react";
+import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw } from "lucide-react";
 import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -102,6 +102,7 @@ export default function Index() {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [apartmentsLoading, setApartmentsLoading] = useState(true);
   const [gridKey, setGridKey] = useState(0);
+  const [newApartments, setNewApartments] = useState<Apartment[]>([]);
   const [squadBannerDismissed, setSquadBannerDismissed] = useState(isSquadBannerDismissed);
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -126,6 +127,35 @@ export default function Index() {
         setGridKey(1);
       });
   }, []);
+
+  // Real-time subscription — collect new inserts into a pending banner
+  useEffect(() => {
+    const channel = supabase
+      .channel("apartments:realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "apartments" },
+        (payload) => {
+          const apt = dbRowToApartment(payload.new);
+          setNewApartments((prev) => {
+            // avoid duplicates if initial load races with realtime
+            if (prev.some((a) => a.id === apt.id)) return prev;
+            return [apt, ...prev];
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const showNewListings = () => {
+    setApartments((prev) => {
+      const deduped = newApartments.filter((a) => !prev.some((p) => p.id === a.id));
+      return [...deduped, ...prev];
+    });
+    setNewApartments([]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const filtered = useMemo(() => {
     return apartments.filter((apt) => {
@@ -217,6 +247,19 @@ export default function Index() {
 
       {/* content below sticky header — clipped so nothing bleeds horizontally */}
       <div className="w-full" style={{ overflowX: "clip" }}>
+
+      {newApartments.length > 0 && (
+        <div className="max-w-5xl mx-auto px-4 pt-3">
+          <button
+            onClick={showNewListings}
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-2xl text-sm font-bold shadow-elevated active:scale-[0.98] transition-transform"
+          >
+            <RefreshCw className="w-4 h-4" />
+            {newApartments.length} new listing{newApartments.length !== 1 ? "s" : ""} — tap to show
+          </button>
+        </div>
+      )}
+
       {user && profile && !profile.onboarding_complete && (
         <div className="max-w-5xl mx-auto px-4 pt-3">
           <button

@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Camera, X, Plus, Loader2 } from "lucide-react";
+import { Camera, X, Plus, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -81,6 +81,14 @@ export default function PhotoUpload({ photos, onChange, maxPhotos = 6 }: PhotoUp
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const movePhoto = (index: number, dir: -1 | 1) => {
+    const next = index + dir;
+    if (next < 0 || next >= photos.length) return;
+    const arr = [...photos];
+    [arr[index], arr[next]] = [arr[next], arr[index]];
+    onChange(arr);
+  };
+
   const handleRemove = async (index: number) => {
     const url = photos[index];
     // Extract file path from URL
@@ -103,19 +111,39 @@ export default function PhotoUpload({ photos, onChange, maxPhotos = 6 }: PhotoUp
       <div className="grid grid-cols-3 gap-2">
         {/* Existing photos */}
         {photos.map((url, i) => (
-          <div key={i} className="relative aspect-square rounded-2xl overflow-hidden bg-secondary group">
+          <div key={url} className="relative aspect-square rounded-2xl overflow-hidden bg-secondary group">
             <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
             {i === 0 && (
               <span className="absolute top-1.5 left-1.5 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                 Main
               </span>
             )}
+            {/* Delete */}
             <button
               onClick={() => handleRemove(i)}
               className="absolute top-1.5 right-1.5 w-6 h-6 bg-foreground/70 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <X className="w-3.5 h-3.5 text-background" />
             </button>
+            {/* Reorder arrows — always visible on mobile, hover on desktop */}
+            {photos.length > 1 && (
+              <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1 opacity-100 desk:opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => movePhoto(i, -1)}
+                  disabled={i === 0}
+                  className="w-6 h-6 bg-foreground/70 rounded-full flex items-center justify-center disabled:opacity-30"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 text-background" />
+                </button>
+                <button
+                  onClick={() => movePhoto(i, 1)}
+                  disabled={i === photos.length - 1}
+                  className="w-6 h-6 bg-foreground/70 rounded-full flex items-center justify-center disabled:opacity-30"
+                >
+                  <ChevronRight className="w-3.5 h-3.5 text-background" />
+                </button>
+              </div>
+            )}
           </div>
         ))}
 

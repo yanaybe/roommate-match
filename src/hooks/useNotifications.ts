@@ -68,7 +68,19 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          setNotifications((prev) => [payload.new as AppNotification, ...prev]);
+          const notif = payload.new as AppNotification;
+          setNotifications((prev) => [notif, ...prev]);
+          // Fire a native browser notification if permission granted and page not focused
+          if (
+            typeof Notification !== "undefined" &&
+            Notification.permission === "granted" &&
+            document.visibilityState !== "visible"
+          ) {
+            new Notification(notif.title, {
+              body: notif.body ?? undefined,
+              icon: "/favicon.ico",
+            });
+          }
         }
       )
       .on(
