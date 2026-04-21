@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
 import { useLanguage } from "@/hooks/useLanguage";
+import { getSquadStatusColor } from "@/lib/statusColors";
 
 type Tab = "my" | "discover";
 
@@ -34,6 +35,13 @@ export default function MySquads() {
   const { invites, refetch: refetchInvites } = useMyInvites();
   const { squads: openSquads, loading: discoverLoading, refetch: refetchDiscover } = useDiscoverSquads();
   const [tab, setTab] = useState<Tab>("my");
+
+  // First-time users with no squads land on Discover so they see content immediately
+  useEffect(() => {
+    if (!loading && squads.length === 0 && invites.length === 0) {
+      setTab("discover");
+    }
+  }, [loading, squads.length, invites.length]);
   const [requesting, setRequesting] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -217,7 +225,9 @@ export default function MySquads() {
                             {inv.squad?.name ?? "Squad"}
                           </p>
                           <p className="text-muted-foreground text-xs">
-                            {t("invitedBy")} {inv.inviter_profile?.name ?? "someone"}
+                            {(inv.squad as any)?.creator_id === user.id
+                              ? `${inv.inviter_profile?.name ?? "Someone"} wants to join`
+                              : `${t("invitedBy")} ${inv.inviter_profile?.name ?? "someone"}`}
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -285,15 +295,7 @@ export default function MySquads() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-card-foreground text-sm truncate">{squad.name}</h3>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span
-                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                            squad.status === "active"
-                              ? "bg-accent/20 text-accent"
-                              : squad.status === "forming"
-                                ? "bg-primary/20 text-primary"
-                                : "bg-secondary text-muted-foreground"
-                          }`}
-                        >
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getSquadStatusColor(squad.status)}`}>
                           {squad.status.charAt(0).toUpperCase() + squad.status.slice(1)}
                         </span>
                         {squad.creator_id === user?.id && <Crown className="w-3 h-3 text-primary" />}

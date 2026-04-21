@@ -34,6 +34,7 @@ export default function PostApartment() {
   const [step, setStep] = useState(0);
   const STEPS = [t("addPhotos"), t("locationSection"), t("apartmentDetails"), t("availableRoom"), t("amenitiesTitle"), t("reviewYourListing")];
   const [submitting, setSubmitting] = useState(false);
+  const [submitPhase, setSubmitPhase] = useState<"locating" | "uploading" | "publishing">("locating");
 
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -157,9 +158,12 @@ export default function PostApartment() {
     setSubmitting(true);
     try {
       // Geocode address
+      setSubmitPhase("locating");
       const coords = await geocodeAddress(form.address, form.neighborhood, form.city);
+      if (!coords) toast("Could not pinpoint address — listing will use city center coordinates");
 
       // Upload images
+      setSubmitPhase("uploading");
       const imageUrls: string[] = [];
       for (const file of images) {
         const ext = MIME_TO_EXT[file.type] ?? "jpg";
@@ -170,6 +174,7 @@ export default function PostApartment() {
         imageUrls.push(urlData.publicUrl);
       }
 
+      setSubmitPhase("publishing");
       const { error } = await supabase.from("apartments").insert({
         user_id: user.id,
         title: form.title,
@@ -508,9 +513,11 @@ export default function PostApartment() {
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={submitting} className="rounded-xl flex-1 gradient-primary text-primary-foreground">
-              {submitting
-                ? <><Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" /> {step === STEPS.length - 1 ? "Publishing…" : t("postingApt")}</>
-                : <>{t("postApartmentBtn")}</>}
+              {submitting ? (
+                <><Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />
+                  {submitPhase === "locating" ? "Locating address…" : submitPhase === "uploading" ? "Uploading photos…" : "Publishing…"}
+                </>
+              ) : <>{t("postApartmentBtn")}</>}
             </Button>
           )}
         </div>

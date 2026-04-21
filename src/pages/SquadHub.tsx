@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import MatchBadge from "@/components/MatchBadge";
 import SwipeCard from "@/components/SwipeCard";
 import { type UserProfile } from "@/data/mockData";
+import { getSquadStatusColor } from "@/lib/statusColors";
 
 type Tab = "members" | "discover" | "apartments" | "chat";
 
@@ -457,9 +458,7 @@ export default function SquadHub() {
             <div className="flex-1">
               <h1 className="text-lg font-extrabold text-foreground">{squad.name}</h1>
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  squad.status === "active" ? "bg-accent/20 text-accent" : squad.status === "forming" ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"
-                }`}>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getSquadStatusColor(squad.status)}`}>
                   {squad.status.charAt(0).toUpperCase() + squad.status.slice(1)}
                 </span>
                 <span className="text-muted-foreground text-xs">{members.length}/{squad.target_size} {t("membersTab").toLowerCase()}</span>

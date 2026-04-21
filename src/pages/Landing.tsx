@@ -301,7 +301,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <motion.div
             variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-            className="bg-card rounded-3xl shadow-elevated overflow-hidden"
+            className="bg-card rounded-2xl shadow-elevated overflow-hidden"
           >
             <div className="p-8 sm:p-10">
               <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-bold px-3 py-1.5 rounded-full mb-4">
