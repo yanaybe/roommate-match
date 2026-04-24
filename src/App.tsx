@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, Outlet } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,28 +12,28 @@ import { NotificationsProvider } from "@/hooks/useNotifications";
 import NotificationToaster from "@/components/NotificationToaster";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
-import Index from "./pages/Index";
-import Roommates from "./pages/Roommates";
-import CreateApartment from "./pages/CreateApartment";
-import Chats from "./pages/Chats";
-import Profile from "./pages/Profile";
-import Auth from "./pages/Auth";
-import Onboarding from "./pages/Onboarding";
-import ApartmentDetail from "./pages/ApartmentDetail";
-import PostApartment from "./pages/PostApartment";
-import CreateSquad from "./pages/CreateSquad";
-import SquadHub from "./pages/SquadHub";
-import MySquads from "./pages/MySquads";
-import NotFound from "./pages/NotFound";
-import VerifyEmail from "./pages/VerifyEmail";
-import Settings from "./pages/Settings";
-import TermsOfService from "./pages/TermsOfService";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import ContactSupport from "./pages/ContactSupport";
-import HelpCenter from "./pages/HelpCenter";
-import RoommateProfile from "./pages/RoommateProfile";
-import BillingHistory from "./pages/BillingHistory";
-import Landing from "./pages/Landing";
+const Index = lazy(() => import("./pages/Index"));
+const Roommates = lazy(() => import("./pages/Roommates"));
+const CreateApartment = lazy(() => import("./pages/CreateApartment"));
+const Chats = lazy(() => import("./pages/Chats"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const ApartmentDetail = lazy(() => import("./pages/ApartmentDetail"));
+const PostApartment = lazy(() => import("./pages/PostApartment"));
+const CreateSquad = lazy(() => import("./pages/CreateSquad"));
+const SquadHub = lazy(() => import("./pages/SquadHub"));
+const MySquads = lazy(() => import("./pages/MySquads"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const Settings = lazy(() => import("./pages/Settings"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const ContactSupport = lazy(() => import("./pages/ContactSupport"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+const RoommateProfile = lazy(() => import("./pages/RoommateProfile"));
+const BillingHistory = lazy(() => import("./pages/BillingHistory"));
+const Landing = lazy(() => import("./pages/Landing"));
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
@@ -94,6 +95,7 @@ const App = () => (
             <ScrollToTop />
             <NotificationToaster />
             <BottomNav />
+            <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public — no auth, no sidebar */}
               <Route path="/" element={<HomeRoute />} />
@@ -127,6 +129,7 @@ const App = () => (
                 </Route>
               </Route>
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </DailyLimitsProvider>
         </NotificationsProvider>
