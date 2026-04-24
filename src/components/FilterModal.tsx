@@ -475,6 +475,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
 
                 {/* ── AMENITIES TAB ── */}
                 {activeTab === "Amenities" && (
+                  <>
                   <div>
                     <SectionLabel>🏠 {t("amenitiesLabel")}</SectionLabel>
                     <div className="flex flex-wrap gap-2">
@@ -511,7 +512,8 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                       />
                     </div>
                   </div>
-                </div>
+                </>
+                )}
 
                 {/* Listing type */}
                 <div>
