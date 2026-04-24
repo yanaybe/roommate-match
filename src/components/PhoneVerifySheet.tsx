@@ -59,7 +59,7 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
       // Mark phone as verified in profile
       await supabase
         .from("profiles")
-        .update({ phone_verified: true, phone_number: cleaned })
+        .update({ phone_verified: true, phone_number: cleaned } as any)
         .eq("user_id", user!.id);
 
       setStep("done");

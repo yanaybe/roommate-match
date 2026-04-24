@@ -161,7 +161,7 @@ export default function PostApartment() {
           hasGarden: data.has_garden ?? false,
           petFriendly: data.pet_friendly ?? false,
         });
-        setListingType((data.listing_type === "entire_place" ? "entire_place" : "room") as "room" | "entire_place");
+        setListingType(((data as any).listing_type === "entire_place" ? "entire_place" : "room") as "room" | "entire_place");
         setKeptImages(data.images ?? []);
         setEditLoading(false);
       });
