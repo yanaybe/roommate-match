@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ThumbsUp, ChevronLeft, ChevronRight, Share2, UserPlus, Loader2, LogOut } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ThumbsUp, ChevronLeft, ChevronRight, Share2, UserPlus, Loader2, LogOut, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useSquadDetail } from "@/hooks/useSquad";
@@ -75,6 +75,8 @@ export default function SquadHub() {
   const [requesting, setRequesting] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isMember = user ? members.some((m) => m.user_id === user.id) : false;
   const isCreator = user && squad ? squad.creator_id === user.id : false;
@@ -96,6 +98,41 @@ export default function SquadHub() {
     } finally {
       setLeaving(false);
       setLeaveOpen(false);
+    }
+  };
+
+  const handleDeleteSquad = async () => {
+    if (!user || !id || !squad || !isCreator) return;
+    setDeleting(true);
+    try {
+      // Notify all members except the creator
+      const recipients = members
+        .map((m) => m.user_id)
+        .filter((uid) => uid !== user.id);
+      await Promise.all(
+        recipients.map((uid) =>
+          supabase.functions.invoke("notify", {
+            body: {
+              user_id: uid,
+              type: "squad_deleted",
+              title: `The squad "${squad.name}" was deleted`,
+              body: "The squad creator has deleted this squad.",
+              actor_id: user.id,
+              reference_id: id,
+            },
+          })
+        )
+      );
+
+      const { error } = await supabase.from("squads").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Squad deleted");
+      navigate("/my-squads");
+    } catch {
+      toast.error("Failed to delete squad");
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
     }
   };
 
@@ -513,6 +550,15 @@ export default function SquadHub() {
                   title="Leave squad"
                 >
                   <LogOut className="w-4 h-4 text-destructive" />
+                </button>
+              )}
+              {isCreator && (
+                <button
+                  onClick={() => setDeleteOpen(true)}
+                  className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center"
+                  title="Delete squad"
+                >
+                  <Trash2 className="w-4 h-4 text-destructive" />
                 </button>
               )}
             </div>

@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const BodySchema = z.object({
   user_id: z.string().uuid(),
-  type: z.enum(["match", "squad_invite"]),
+  type: z.enum(["match", "squad_invite", "squad_deleted"]),
   title: z.string().min(1).max(500),
   body: z.string().max(1000).nullable().optional(),
   actor_id: z.string().uuid().nullable().optional(),
