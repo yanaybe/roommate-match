@@ -329,7 +329,7 @@ export default function Onboarding() {
       photos: currentForm.photos,
       onboarding_complete: false,
     };
-    await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
+    await supabase.from("profiles").upsert(payload as any, { onConflict: "user_id" });
   };
 
   const handleSubmit = async () => {

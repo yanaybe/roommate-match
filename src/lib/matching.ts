@@ -1,7 +1,7 @@
 // Matching algorithm based on user profiles
 
 export interface ProfileData {
-  name?: string;
+  name: string;
   age: number | null;
   city: string;
   occupation: string;
