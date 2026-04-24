@@ -51,7 +51,7 @@ export default function BottomNav() {
               >
                 {isCreate ? (
                   <>
-                    <div className="gradient-primary rounded-2xl p-2.5 -mt-3 shadow-elevated">
+                    <div className="gradient-primary rounded-xl p-1.5 shadow-md mb-0.5">
                       <Icon className="w-5 h-5 text-primary-foreground" />
                     </div>
                     <span className="text-xs font-medium text-muted-foreground">{tab.label}</span>
