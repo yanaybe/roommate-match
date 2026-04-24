@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ThumbsUp, ChevronLeft, ChevronRight, Share2, UserPlus, Loader2 } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle, Home, Send, Heart, X, Crown, MapPin, Check, CheckCheck, Sparkles, Bath, Maximize, BedDouble, ThumbsDown, ThumbsUp, ChevronLeft, ChevronRight, Share2, UserPlus, Loader2, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useSquadDetail } from "@/hooks/useSquad";
@@ -13,6 +13,16 @@ import MatchBadge from "@/components/MatchBadge";
 import SwipeCard from "@/components/SwipeCard";
 import { type UserProfile } from "@/data/mockData";
 import { getSquadStatusColor } from "@/lib/statusColors";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Tab = "members" | "discover" | "apartments" | "chat";
 
@@ -63,8 +73,31 @@ export default function SquadHub() {
 
   // Share + join state
   const [requesting, setRequesting] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   const isMember = user ? members.some((m) => m.user_id === user.id) : false;
+  const isCreator = user && squad ? squad.creator_id === user.id : false;
+
+  const handleLeaveSquad = async () => {
+    if (!user || !id) return;
+    setLeaving(true);
+    try {
+      const { error } = await supabase
+        .from("squad_members")
+        .delete()
+        .eq("squad_id", id)
+        .eq("user_id", user.id);
+      if (error) throw error;
+      toast.success("You left the squad");
+      navigate("/my-squads");
+    } catch {
+      toast.error("Failed to leave squad");
+    } finally {
+      setLeaving(false);
+      setLeaveOpen(false);
+    }
+  };
 
   const handleShare = () => {
     const url = window.location.href;
@@ -473,6 +506,15 @@ export default function SquadHub() {
               >
                 <Share2 className="w-4 h-4 text-secondary-foreground" />
               </button>
+              {isMember && !isCreator && (
+                <button
+                  onClick={() => setLeaveOpen(true)}
+                  className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center"
+                  title="Leave squad"
+                >
+                  <LogOut className="w-4 h-4 text-destructive" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -858,6 +900,26 @@ export default function SquadHub() {
           </motion.div>
         )}
       </div>
+      <AlertDialog open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave squad?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to leave this squad? You'll lose access to its chat and shared apartments.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={leaving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLeaveSquad}
+              disabled={leaving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {leaving ? "Leaving..." : "Leave"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
