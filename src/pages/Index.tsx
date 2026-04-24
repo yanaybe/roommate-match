@@ -1,4 +1,4 @@
-import { Search, SlidersHorizontal, Map, List, ArrowRight } from "lucide-react";
+import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw } from "lucide-react";
 import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -83,6 +83,17 @@ function dbRowToApartment(row: any): Apartment {
   };
 }
 
+const SQUAD_BANNER_KEY = "squad_banner_dismissed_at";
+const SQUAD_BANNER_TTL = 7 * 24 * 60 * 60 * 1000; // 1 week
+
+function isSquadBannerDismissed() {
+  try {
+    const ts = localStorage.getItem(SQUAD_BANNER_KEY);
+    if (!ts) return false;
+    return Date.now() - parseInt(ts, 10) < SQUAD_BANNER_TTL;
+  } catch { return false; }
+}
+
 export default function Index() {
   const [view, setView] = useState<"list" | "map">("list");
   const [search, setSearch] = useState("");
@@ -90,11 +101,19 @@ export default function Index() {
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [apartmentsLoading, setApartmentsLoading] = useState(true);
+  const [gridKey, setGridKey] = useState(0);
+  const [newApartments, setNewApartments] = useState<Apartment[]>([]);
+  const [squadBannerDismissed, setSquadBannerDismissed] = useState(isSquadBannerDismissed);
   const { t } = useLanguage();
   const { user } = useAuth();
   const { profile } = useProfile();
   const { squads, loading: squadsLoading } = useMySquads();
   const navigate = useNavigate();
+
+  const dismissSquadBanner = () => {
+    try { localStorage.setItem(SQUAD_BANNER_KEY, String(Date.now())); } catch {}
+    setSquadBannerDismissed(true);
+  };
 
   useEffect(() => {
     supabase
@@ -105,8 +124,38 @@ export default function Index() {
         if (error) { console.error("Failed to load apartments:", error); }
         setApartments((data ?? []).map(dbRowToApartment));
         setApartmentsLoading(false);
+        setGridKey(1);
       });
   }, []);
+
+  // Real-time subscription — collect new inserts into a pending banner
+  useEffect(() => {
+    const channel = supabase
+      .channel("apartments:realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "apartments" },
+        (payload) => {
+          const apt = dbRowToApartment(payload.new);
+          setNewApartments((prev) => {
+            // avoid duplicates if initial load races with realtime
+            if (prev.some((a) => a.id === apt.id)) return prev;
+            return [apt, ...prev];
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const showNewListings = () => {
+    setApartments((prev) => {
+      const deduped = newApartments.filter((a) => !prev.some((p) => p.id === a.id));
+      return [...deduped, ...prev];
+    });
+    setNewApartments([]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const filtered = useMemo(() => {
     return apartments.filter((apt) => {
@@ -155,7 +204,7 @@ export default function Index() {
               <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
                 Roo<span className="text-primary">match</span>
               </h1>
-              <p className="text-muted-foreground text-sm">{t("findYourPerfectRoom")}</p>
+              <p className="text-muted-foreground text-sm">Find your perfect roommate or apartment</p>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -187,7 +236,7 @@ export default function Index() {
             >
               <SlidersHorizontal className="w-4 h-4 text-secondary-foreground" />
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 gradient-primary text-primary-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
@@ -198,6 +247,19 @@ export default function Index() {
 
       {/* content below sticky header — clipped so nothing bleeds horizontally */}
       <div className="w-full" style={{ overflowX: "clip" }}>
+
+      {newApartments.length > 0 && (
+        <div className="max-w-5xl mx-auto px-4 pt-3">
+          <button
+            onClick={showNewListings}
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-2xl text-sm font-bold shadow-elevated active:scale-[0.98] transition-transform"
+          >
+            <RefreshCw className="w-4 h-4" />
+            {newApartments.length} new listing{newApartments.length !== 1 ? "s" : ""} — tap to show
+          </button>
+        </div>
+      )}
+
       {user && profile && !profile.onboarding_complete && (
         <div className="max-w-5xl mx-auto px-4 pt-3">
           <button
@@ -214,19 +276,24 @@ export default function Index() {
         </div>
       )}
 
-      {user && profile?.onboarding_complete && !squadsLoading && squads.length === 0 && (
+      {user && profile?.onboarding_complete && !squadsLoading && squads.length === 0 && !squadBannerDismissed && (
         <div className="max-w-5xl mx-auto px-4 pt-3">
-          <button
-            onClick={() => navigate("/create-squad")}
-            className="w-full flex items-center gap-3 p-3.5 bg-gradient-to-r from-violet-500/10 to-pink-500/10 border border-primary/20 rounded-2xl text-left"
-          >
+          <div className="w-full flex items-center gap-3 p-3.5 bg-gradient-to-r from-violet-500/10 to-pink-500/10 border border-primary/20 rounded-2xl">
             <span className="text-2xl">👥</span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-primary">{t("searchingWithFriends")}</p>
               <p className="text-xs text-muted-foreground">{t("createSquadBanner")}</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
-          </button>
+            <button
+              onClick={() => navigate("/create-squad")}
+              className="shrink-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl"
+            >
+              Create
+            </button>
+            <button onClick={dismissSquadBanner} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -239,7 +306,7 @@ export default function Index() {
               ))}
             </div>
           ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div key={gridKey} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.map((apt, i) => (
                 <ApartmentCard key={apt.id} apartment={apt} index={i} />
               ))}

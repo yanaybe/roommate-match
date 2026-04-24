@@ -79,7 +79,7 @@ function OptionButton({ label, selected, onClick }: { label: string; selected: b
       type="button"
       onClick={onClick}
       className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-        selected ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+        selected ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/70"
       }`}
     >
       {label}
@@ -98,7 +98,7 @@ function SliderField({ label, value, onChange, min = 1, max = 5, labels }: {
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full accent-primary"
       />
-      <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+      <div className="flex justify-between text-xs text-muted-foreground mt-1">
         {labels ? labels.map((l, i) => <span key={i}>{l}</span>) : Array.from({ length: max - min + 1 }, (_, i) => <span key={i}>{min + i}</span>)}
       </div>
     </div>
@@ -111,7 +111,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
       type="button"
       onClick={() => onChange(!value)}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-        value ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+        value ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/70"
       }`}
     >
       {value && <Check className="w-4 h-4" />}
@@ -506,6 +506,7 @@ export default function Onboarding() {
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("bioLbl")}</label>
               <textarea value={form.bio} onChange={(e) => update("bio", e.target.value)} placeholder={t("bioPlaceholder")} rows={3} maxLength={200} className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+              <p className="text-xs text-muted-foreground text-right mt-1">{form.bio.length}/200</p>
             </div>
           </div>
         );
@@ -749,7 +750,7 @@ export default function Onboarding() {
               }
             }}
             disabled={!canProceed() || saving}
-            className="flex-1 flex items-center justify-center gap-1 py-3 gradient-primary text-primary-foreground rounded-xl font-bold text-sm disabled:opacity-40"
+            className="flex-1 flex items-center justify-center gap-1 py-3 gradient-primary text-primary-foreground rounded-xl font-bold text-sm disabled:opacity-50"
           >
             {step < STEPS.length - 1 ? (
               <>{t("nextBtn")} <ArrowRight className="w-4 h-4" /></>

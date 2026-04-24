@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import MatchBadge from "@/components/MatchBadge";
 import SwipeCard from "@/components/SwipeCard";
 import { type UserProfile } from "@/data/mockData";
+import { getSquadStatusColor } from "@/lib/statusColors";
 
 type Tab = "members" | "discover" | "apartments" | "chat";
 
@@ -457,9 +458,7 @@ export default function SquadHub() {
             <div className="flex-1">
               <h1 className="text-lg font-extrabold text-foreground">{squad.name}</h1>
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  squad.status === "active" ? "bg-accent/20 text-accent" : squad.status === "forming" ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"
-                }`}>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getSquadStatusColor(squad.status)}`}>
                   {squad.status.charAt(0).toUpperCase() + squad.status.slice(1)}
                 </span>
                 <span className="text-muted-foreground text-xs">{members.length}/{squad.target_size} {t("membersTab").toLowerCase()}</span>
@@ -756,7 +755,7 @@ export default function SquadHub() {
                               </div>
                             );
                           })}
-                          <span className="text-[10px] text-muted-foreground ml-1">{aptLikesCount + aptDislikesCount}/{members.length} {t("voted")}</span>
+                          <span className="text-xs text-muted-foreground ml-1">{aptLikesCount + aptDislikesCount}/{members.length} {t("voted")}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -823,7 +822,7 @@ export default function SquadHub() {
                                 : "bg-card text-card-foreground shadow-card rounded-bl-md"
                             }`}>
                               <p className="break-words">{msg.content}</p>
-                              <p className={`text-[10px] mt-0.5 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"} text-right`}>
+                              <p className={`text-xs mt-0.5 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"} text-right`}>
                                 {formatMsgTime(msg.created_at)}
                               </p>
                             </div>
@@ -850,7 +849,7 @@ export default function SquadHub() {
                 <button
                   onClick={sendMessage}
                   disabled={!newMsg.trim()}
-                  className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center disabled:opacity-40 transition-opacity"
+                  className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center disabled:opacity-50 transition-opacity"
                 >
                   <Send className="w-4 h-4 text-primary-foreground" />
                 </button>

@@ -86,7 +86,7 @@ function InsightCard({
           onClick={onUpgrade}
         >
           <Lock size={18} className="text-primary mb-1" />
-          <span className="text-[10px] font-semibold text-primary">Upgrade</span>
+          <span className="text-xs font-semibold text-primary">Upgrade</span>
         </div>
       )}
       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mb-2">

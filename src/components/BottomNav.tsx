@@ -1,4 +1,4 @@
-import { Home, Users, Plus, MessageCircle, User } from "lucide-react";
+import { Home, Users, Plus, MessageCircle, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
@@ -6,6 +6,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useSidebar } from "@/hooks/useSidebar";
 
 export default function BottomNav() {
   const location = useLocation();
@@ -15,6 +16,7 @@ export default function BottomNav() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { collapsed, toggle } = useSidebar();
 
   const tabs = [
     { path: "/", icon: Home, label: t("navRooms") },
@@ -48,25 +50,28 @@ export default function BottomNav() {
                 className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full cursor-pointer"
               >
                 {isCreate ? (
-                  <div className="gradient-primary rounded-2xl p-2.5 -mt-4 shadow-elevated">
-                    <Icon className="w-5 h-5 text-primary-foreground" />
-                  </div>
+                  <>
+                    <div className="gradient-primary rounded-2xl p-2.5 -mt-3 shadow-elevated">
+                      <Icon className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground">{tab.label}</span>
+                  </>
                 ) : (
                   <>
                     <motion.div
                       animate={{ opacity: isActive ? 1 : 0, scaleX: isActive ? 1 : 0 }}
                       transition={{ duration: 0.2 }}
-                      className="w-6 h-0.5 gradient-primary rounded-full mb-1"
+                      className="w-6 h-0.5 bg-primary rounded-full mb-1"
                     />
                     <div className="relative">
                       <Icon className={`w-5 h-5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`} />
                       {badge > 0 && (
-                        <span className="absolute -top-1.5 -right-2 gradient-primary text-primary-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                        <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
                           {badge}
                         </span>
                       )}
                     </div>
-                    <span className={`text-[10px] font-medium transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                    <span className={`text-xs font-medium transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>
                       {tab.label}
                     </span>
                   </>
@@ -78,17 +83,27 @@ export default function BottomNav() {
       </nav>
 
       {/* ── Desktop: left sidebar ── */}
-      <aside className="hidden desk:flex fixed top-0 bottom-0 w-64 z-50 bg-card/95 backdrop-blur-xl border-border flex-col ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l">
+      <aside
+        className={`hidden desk:flex fixed top-0 bottom-0 z-50 bg-card/95 backdrop-blur-xl border-border flex-col ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l transition-all duration-200 overflow-hidden ${
+          collapsed ? "w-14" : "w-64"
+        }`}
+      >
         {/* Logo */}
-        <div className="px-6 py-6 border-b border-border/50">
-          <span className="text-2xl font-extrabold text-foreground tracking-tight">
-            Roo<span className="text-primary">match</span>
-          </span>
-          <p className="text-xs text-muted-foreground mt-0.5">Find your perfect roommate</p>
+        <div className={`border-b border-border/50 flex items-center shrink-0 ${collapsed ? "px-0 py-6 justify-center" : "px-6 py-6 justify-between"}`}>
+          {collapsed ? (
+            <span className="text-2xl font-extrabold text-primary">R</span>
+          ) : (
+            <div>
+              <span className="text-2xl font-extrabold text-foreground tracking-tight">
+                Roo<span className="text-primary">match</span>
+              </span>
+              <p className="text-xs text-muted-foreground mt-0.5">Find your perfect roommate</p>
+            </div>
+          )}
         </div>
 
         {/* Nav items */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className={`flex-1 py-4 space-y-1 overflow-y-auto ${collapsed ? "px-1" : "px-3"}`}>
           {tabs.map((tab) => {
             const isActive = location.pathname === tab.path;
             const Icon = tab.icon;
@@ -101,7 +116,10 @@ export default function BottomNav() {
               <button
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
+                title={collapsed ? tab.label : undefined}
+                className={`w-full flex items-center rounded-xl transition-all text-left ${
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3"
+                } ${
                   isCreate
                     ? "gradient-primary text-primary-foreground shadow-md mt-2"
                     : isActive
@@ -112,19 +130,23 @@ export default function BottomNav() {
                 <div className="relative shrink-0">
                   <Icon className="w-5 h-5" />
                   {badge > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 gradient-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                       {badge}
                     </span>
                   )}
                 </div>
-                <span className={`text-sm font-semibold ${isCreate ? "text-primary-foreground" : ""}`}>
-                  {tab.label}
-                </span>
-                {isActive && !isCreate && (
-                  <motion.div
-                    layoutId="activeTabDesktop"
-                    className="ltr:ml-auto rtl:mr-auto w-1.5 h-5 gradient-primary rounded-full"
-                  />
+                {!collapsed && (
+                  <>
+                    <span className={`text-sm font-semibold ${isCreate ? "text-primary-foreground" : ""}`}>
+                      {tab.label}
+                    </span>
+                    {isActive && !isCreate && (
+                      <motion.div
+                        layoutId="activeTabDesktop"
+                        className="ltr:ml-auto rtl:mr-auto w-1.5 h-5 bg-primary rounded-full"
+                      />
+                    )}
+                  </>
                 )}
               </button>
             );
@@ -132,26 +154,47 @@ export default function BottomNav() {
         </nav>
 
         {/* Footer */}
-        <div className="px-3 py-4 border-t border-border/50">
+        <div className={`py-4 border-t border-border/50 ${collapsed ? "px-1" : "px-3"}`}>
           {profile && (
             <button
               onClick={() => navigate("/profile")}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary transition-colors text-left mb-2"
+              title={collapsed ? profile.name : undefined}
+              className={`w-full flex items-center rounded-xl hover:bg-secondary transition-colors text-left mb-2 ${
+                collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"
+              }`}
             >
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shrink-0">
                 {profile.avatar_url
                   ? <img src={profile.avatar_url} alt={profile.name} className="w-full h-full object-cover" />
                   : <span className="text-primary text-sm font-bold">{profile.name.charAt(0).toUpperCase()}</span>}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-foreground truncate">{profile.name}</p>
-                <p className="text-[10px] text-muted-foreground truncate">{profile.occupation}</p>
-              </div>
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-foreground truncate">{profile.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{profile.occupation}</p>
+                </div>
+              )}
             </button>
           )}
-          <p className="text-[11px] text-muted-foreground/60 text-center">
-            © 2026 Roomatch
-          </p>
+
+          {/* Collapse toggle */}
+          <button
+            onClick={toggle}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={`w-full flex items-center rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors py-2 ${
+              collapsed ? "justify-center px-0" : "gap-2 px-3"
+            }`}
+          >
+            {collapsed
+              ? <ChevronRight className="w-4 h-4" />
+              : <><ChevronLeft className="w-4 h-4" /><span className="text-xs font-medium">Collapse</span></>}
+          </button>
+
+          {!collapsed && (
+            <p className="text-[11px] text-muted-foreground/60 text-center mt-2">
+              © 2026 Roomatch
+            </p>
+          )}
         </div>
       </aside>
     </>

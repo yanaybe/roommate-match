@@ -126,7 +126,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
         <div className="absolute top-3 right-3 flex flex-col gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); requireAuth(() => toggleSave()); }}
-            className="bg-card/80 backdrop-blur-sm p-2 rounded-full"
+            className="bg-card/80 backdrop-blur-sm p-2 rounded-full hover:scale-105 active:scale-95 transition-transform"
           >
             <Bookmark className={`w-4 h-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} />
           </button>
@@ -160,7 +160,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Room / month</div>
+            <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Room / month</div>
             <span className="text-lg font-extrabold text-primary">₪{apartment.price.toLocaleString()}</span>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
         </div>
 
         <div className="flex items-center gap-3 flex-wrap text-muted-foreground text-xs border-t border-border/40 pt-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">Apt:</span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">Apt:</span>
           <span className="flex items-center gap-1 shrink-0"><Bed className="w-3.5 h-3.5" /> {apartment.rooms} bed</span>
           <span className="flex items-center gap-1 shrink-0"><Bath className="w-3.5 h-3.5" /> {apartment.bathrooms} bath</span>
           <span className="flex items-center gap-1 shrink-0"><Maximize className="w-3.5 h-3.5" /> {apartment.size}m²</span>
@@ -225,7 +225,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
                 navigate("/chats");
               }
             }); }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground transition-all"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground transition-all hover:scale-[1.02] active:scale-95"
           >
             <MessageCircle className="w-4 h-4" />
             Message

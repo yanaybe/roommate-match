@@ -291,7 +291,7 @@ export default function CreateSquad() {
             <button
               onClick={() => setStep(step + 1)}
               disabled={!canProceed()}
-              className="flex-1 gradient-primary text-primary-foreground py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40"
+              className="flex-1 gradient-primary text-primary-foreground py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {t("continueBtn")} <ArrowRight className="w-4 h-4" />
             </button>
@@ -299,7 +299,7 @@ export default function CreateSquad() {
             <button
               onClick={handleSubmit}
               disabled={saving || !canProceed()}
-              className="flex-1 gradient-primary text-primary-foreground py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40"
+              className="flex-1 gradient-primary text-primary-foreground py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {saving ? t("creating") : t("createSquadBtn")}
             </button>

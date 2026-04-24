@@ -593,7 +593,7 @@ export default function Chats() {
                 <div className={`max-w-[75%] px-3.5 py-2 rounded-2xl ${isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-secondary text-secondary-foreground rounded-bl-md"}`}>
                   <p className="text-sm leading-relaxed">{msg.content}</p>
                   <div className={`flex items-center justify-end gap-1 mt-0.5 ${isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-                    <span className="text-[10px]">{formatTime(msg.created_at)}</span>
+                    <span className="text-xs">{formatTime(msg.created_at)}</span>
                     {isMine && (msg.is_read ? <CheckCheck className="w-3.5 h-3.5 text-blue-400" /> : <CheckCheck className="w-3.5 h-3.5" />)}
                   </div>
                 </div>
@@ -635,7 +635,7 @@ export default function Chats() {
             maxLength={2000}
             className="flex-1 bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <button onClick={sendMessage} disabled={!newMessage.trim()} className="gradient-primary p-2.5 rounded-full disabled:opacity-40">
+          <button onClick={sendMessage} disabled={!newMessage.trim()} className="gradient-primary p-2.5 rounded-full disabled:opacity-50">
             <Send className="w-4 h-4 text-primary-foreground" />
           </button>
         </div>

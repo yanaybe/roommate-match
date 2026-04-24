@@ -171,7 +171,7 @@ export default function BillingHistory() {
                         <span className={`text-sm font-bold ${tx.status === "refunded" ? "line-through text-muted-foreground" : "text-foreground"}`}>
                           {tx.amount}
                         </span>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.color}`}>
+                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${status.color}`}>
                           <StatusIcon size={10} />
                           {t(status.labelKey)}
                         </span>

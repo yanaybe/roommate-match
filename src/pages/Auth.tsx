@@ -120,15 +120,33 @@ export default function Auth() {
               required
               className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            <input
-              type="password"
-              placeholder={t("passwordPlaceholder")}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+            <div className="space-y-1">
+              <input
+                type="password"
+                placeholder={t("passwordPlaceholder")}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!email) { toast.error("Enter your email address first"); return; }
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                      redirectTo: `${window.location.origin}/auth`,
+                    });
+                    if (error) toast.error(error.message);
+                    else toast.success("Password reset email sent — check your inbox");
+                  }}
+                  className="text-xs text-primary font-semibold hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            </div>
             <button
               type="submit"
               disabled={loading}

@@ -16,8 +16,8 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
   const navigate = useNavigate();
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
-  const likeOpacity = useTransform(x, [0, 100], [0, 1]);
-  const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
+  const likeOpacity = useTransform(x, [30, 100], [0, 1]);
+  const nopeOpacity = useTransform(x, [-100, -30], [1, 0]);
   const [photoIndex, setPhotoIndex] = useState(0);
 
   const photos = user.photos?.length ? user.photos : [user.avatar];
@@ -125,7 +125,7 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
             {user.phoneVerified && (
               <div className="flex items-center gap-1 bg-green-500/20 border border-green-500/30 px-1.5 py-0.5 rounded-full">
                 <Phone className="w-2.5 h-2.5 text-green-400" />
-                <span className="text-[10px] font-bold text-green-400">Verified</span>
+                <span className="text-xs font-bold text-green-400">Verified</span>
               </div>
             )}
           </div>

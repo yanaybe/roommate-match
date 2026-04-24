@@ -135,7 +135,7 @@ export default function ContactSupport() {
                 ) : (
                   <motion.button key="send" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={handleSubmit}
                     disabled={sending || !message.trim()}
-                    className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity">
+                    className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:opacity-90 transition-opacity">
                     {sending ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
                     {sending ? t("sending") : t("send")}
                   </motion.button>

@@ -283,7 +283,7 @@ export default function Landing() {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-bold text-foreground text-sm">{f.title}</h3>
                     {f.badge && (
-                      <span className="gradient-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                      <span className="gradient-primary text-primary-foreground text-xs font-bold px-1.5 py-0.5 rounded-full">
                         {f.badge}
                       </span>
                     )}
@@ -301,7 +301,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <motion.div
             variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-            className="bg-card rounded-3xl shadow-elevated overflow-hidden"
+            className="bg-card rounded-2xl shadow-elevated overflow-hidden"
           >
             <div className="p-8 sm:p-10">
               <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-bold px-3 py-1.5 rounded-full mb-4">
@@ -358,7 +358,7 @@ export default function Landing() {
               }`}
             >
               {plan.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-extrabold px-3 py-1 rounded-full">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs font-extrabold px-3 py-1 rounded-full">
                   MOST POPULAR
                 </div>
               )}

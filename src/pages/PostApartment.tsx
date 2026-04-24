@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Camera, X, MapPin, Home, Bed, Bath, Ruler, Building, Calendar, Plus, Check, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
+
+const DRAFT_KEY = "post_apartment_draft";
 
 const CITIES = ["Tel Aviv", "Jerusalem", "Haifa", "Beer Sheva", "Netanya", "Herzliya", "Ramat Gan", "Rishon LeZion", "Petah Tikva", "Ashdod"];
 
@@ -32,11 +34,12 @@ export default function PostApartment() {
   const [step, setStep] = useState(0);
   const STEPS = [t("addPhotos"), t("locationSection"), t("apartmentDetails"), t("availableRoom"), t("amenitiesTitle"), t("reviewYourListing")];
   const [submitting, setSubmitting] = useState(false);
+  const [submitPhase, setSubmitPhase] = useState<"locating" | "uploading" | "publishing">("locating");
 
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
-  const [form, setForm] = useState({
+  const defaultForm = {
     title: "",
     description: "",
     address: "",
@@ -62,7 +65,31 @@ export default function PostApartment() {
     hasRooftop: false,
     hasGarden: false,
     petFriendly: false,
-  });
+  };
+
+  const loadDraft = () => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw) as { form: typeof defaultForm; step: number };
+    } catch {
+      return null;
+    }
+  };
+
+  const draft = loadDraft();
+  const [form, setForm] = useState(draft?.form ?? defaultForm);
+
+  useEffect(() => {
+    if (draft?.step && draft.step > 0) setStep(draft.step);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, step }));
+    } catch {}
+  }, [form, step]);
 
   const update = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
 
@@ -131,9 +158,12 @@ export default function PostApartment() {
     setSubmitting(true);
     try {
       // Geocode address
+      setSubmitPhase("locating");
       const coords = await geocodeAddress(form.address, form.neighborhood, form.city);
+      if (!coords) toast("Could not pinpoint address — listing will use city center coordinates");
 
       // Upload images
+      setSubmitPhase("uploading");
       const imageUrls: string[] = [];
       for (const file of images) {
         const ext = MIME_TO_EXT[file.type] ?? "jpg";
@@ -144,6 +174,7 @@ export default function PostApartment() {
         imageUrls.push(urlData.publicUrl);
       }
 
+      setSubmitPhase("publishing");
       const { error } = await supabase.from("apartments").insert({
         user_id: user.id,
         title: form.title,
@@ -176,6 +207,7 @@ export default function PostApartment() {
       } as any);
 
       if (error) throw error;
+      localStorage.removeItem(DRAFT_KEY);
       toast.success("Apartment posted successfully! 🎉");
       navigate("/");
     } catch (err: any) {
@@ -238,14 +270,14 @@ export default function PostApartment() {
 
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageAdd} />
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {imagePreviews.map((src, i) => (
                     <div key={i} className="relative aspect-square rounded-2xl overflow-hidden group">
                       <img src={src} alt="" className="w-full h-full object-cover" />
                       <button onClick={() => removeImage(i)} className="absolute top-1.5 right-1.5 p-1 bg-destructive rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                         <X className="w-3.5 h-3.5 text-destructive-foreground" />
                       </button>
-                      {i === 0 && <span className="absolute bottom-1.5 ltr:left-1.5 rtl:right-1.5 text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">{t("coverPhoto")}</span>}
+                      {i === 0 && <span className="absolute bottom-1.5 ltr:left-1.5 rtl:right-1.5 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">{t("coverPhoto")}</span>}
                     </div>
                   ))}
                   {images.length < 8 && (
@@ -481,7 +513,11 @@ export default function PostApartment() {
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={submitting} className="rounded-xl flex-1 gradient-primary text-primary-foreground">
-              {submitting ? <><Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" /> {t("postingApt")}</> : <>{t("postApartmentBtn")}</>}
+              {submitting ? (
+                <><Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />
+                  {submitPhase === "locating" ? "Locating address…" : submitPhase === "uploading" ? "Uploading photos…" : "Publishing…"}
+                </>
+              ) : <>{t("postApartmentBtn")}</>}
             </Button>
           )}
         </div>

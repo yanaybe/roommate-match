@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { Heart, Users, CheckCheck, MessageCircle, Bell } from "lucide-react";
+import { Heart, Users, CheckCheck, MessageCircle, Bell, BellRing } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -40,6 +40,18 @@ export default function NotificationsSheet({ open, onOpenChange, t }: Props) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
+  const [pushPermission, setPushPermission] = useState<NotificationPermission>(
+    typeof Notification !== "undefined" ? Notification.permission : "default"
+  );
+
+  const requestPushPermission = async () => {
+    if (typeof Notification === "undefined") return;
+    const result = await Notification.requestPermission();
+    setPushPermission(result);
+    if (result === "granted") toast.success("Browser notifications enabled");
+    else if (result === "denied") toast.error("Notifications blocked — enable them in browser settings");
+  };
+
   const [prefs, setPrefs] = useState<NotifPrefs>({
     notify_on_match: true,
     notify_on_message: true,
@@ -142,6 +154,44 @@ export default function NotificationsSheet({ open, onOpenChange, t }: Props) {
             </div>
           </div>
 
+          {/* Browser push permission */}
+          {typeof Notification !== "undefined" && (
+            <div className="mb-5">
+              <div className="flex items-center gap-2 mb-3">
+                <BellRing className="w-4 h-4 text-muted-foreground" />
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                  Browser notifications
+                </p>
+              </div>
+              <div className="bg-card rounded-2xl shadow-card px-4 py-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {pushPermission === "granted" ? "Enabled" : "Get notified when away"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {pushPermission === "granted"
+                      ? "You'll see alerts even when the tab isn't focused"
+                      : pushPermission === "denied"
+                      ? "Blocked in browser settings — change there to enable"
+                      : "Receive alerts when this tab is in the background"}
+                  </p>
+                </div>
+                {pushPermission !== "denied" && (
+                  <button
+                    onClick={pushPermission === "granted" ? undefined : requestPushPermission}
+                    className={`shrink-0 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors ${
+                      pushPermission === "granted"
+                        ? "bg-accent/20 text-accent cursor-default"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90"
+                    }`}
+                  >
+                    {pushPermission === "granted" ? "On" : "Enable"}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {notifications.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-4xl mb-3">🔔</div>
@@ -173,7 +223,7 @@ export default function NotificationsSheet({ open, onOpenChange, t }: Props) {
                       {n.body && (
                         <p className="text-xs text-muted-foreground mt-0.5 truncate">{n.body}</p>
                       )}
-                      <p className="text-[10px] text-muted-foreground/60 mt-1">
+                      <p className="text-xs text-muted-foreground/60 mt-1">
                         {format(new Date(n.created_at), "MMM d, HH:mm")}
                       </p>
                     </div>
