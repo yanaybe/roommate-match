@@ -35,15 +35,24 @@ import Landing from "./pages/Landing";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
+import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-primary animate-spin" />
+    </div>
+  );
+}
 
 function HomeRoute() {
   const { user, loading } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { collapsed } = useSidebar();
   const offsetClass = collapsed ? "desk:ltr:pl-14 desk:rtl:pr-14" : "desk:ltr:pl-64 desk:rtl:pr-64";
-  if (loading || profileLoading) return null;
+  if (loading || profileLoading) return <PageLoader />;
   if (!user) return <Landing />;
   if (!user.email_confirmed_at) return <Navigate to="/verify-email" replace />;
   if (!profile?.onboarding_complete) return <Navigate to="/onboarding" replace />;
@@ -54,7 +63,7 @@ function AuthedLayout() {
   const { user, loading } = useAuth();
   const { collapsed } = useSidebar();
   const offsetClass = collapsed ? "desk:ltr:pl-14 desk:rtl:pr-14" : "desk:ltr:pl-64 desk:rtl:pr-64";
-  if (loading) return null;
+  if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!user.email_confirmed_at) return <Navigate to="/verify-email" replace />;
   return <div className={`transition-all duration-200 ${offsetClass}`}><div className="desk:max-w-[1400px] desk:mx-auto"><Outlet /></div></div>;
@@ -64,7 +73,7 @@ function AuthedLayout() {
 // Unauthenticated / unverified users are already caught by the parent AuthedLayout.
 function OnboardedLayout() {
   const { profile, loading: profileLoading } = useProfile();
-  if (profileLoading) return null;
+  if (profileLoading) return <PageLoader />;
   if (!profile?.onboarding_complete) return <Navigate to="/onboarding" replace />;
   return <Outlet />;
 }
