@@ -10,6 +10,7 @@ import { DailyLimitsProvider } from "@/hooks/useDailyLimits";
 import { NotificationsProvider } from "@/hooks/useNotifications";
 import NotificationToaster from "@/components/NotificationToaster";
 import BottomNav from "@/components/BottomNav";
+import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import Roommates from "./pages/Roommates";
 import CreateApartment from "./pages/CreateApartment";
@@ -90,6 +91,7 @@ const App = () => (
           <Toaster />
           <Sonner position="top-center" />
           <BrowserRouter>
+            <ScrollToTop />
             <NotificationToaster />
             <BottomNav />
             <Routes>
