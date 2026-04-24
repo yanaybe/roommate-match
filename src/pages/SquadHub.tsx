@@ -900,6 +900,26 @@ export default function SquadHub() {
           </motion.div>
         )}
       </div>
+      <AlertDialog open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave squad?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to leave this squad? You'll lose access to its chat and shared apartments.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={leaving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLeaveSquad}
+              disabled={leaving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {leaving ? "Leaving..." : "Leave"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
