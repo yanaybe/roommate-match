@@ -70,6 +70,17 @@ export function useBlockReport(targetUserId?: string) {
     async (reason: ReportReason, details?: string) => {
       if (!user || !targetUserId) return false;
       setLoading(true);
+      const oneDayAgo = new Date(Date.now() - 86_400_000).toISOString();
+      const { count: recentReports } = await supabase
+        .from("reports")
+        .select("id", { count: "exact", head: true })
+        .eq("reporter_id", user.id)
+        .gte("created_at", oneDayAgo);
+      if ((recentReports ?? 0) >= 10) {
+        setLoading(false);
+        toast.error("You've submitted too many reports today. Try again tomorrow.");
+        return false;
+      }
       const { error } = await supabase.from("reports").insert({
         reporter_id: user.id,
         target_type: "user",

@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, ImagePlus } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, ImagePlus, Building2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import PremiumSheet from "@/components/PremiumSheet";
 import PreferencesSheet from "@/components/profile/PreferencesSheet";
 import ActivitySheet from "@/components/profile/ActivitySheet";
 import NotificationsSheet from "@/components/profile/NotificationsSheet";
 import PhotoManagementSheet from "@/components/profile/PhotoManagementSheet";
+import MyListingsSheet from "@/components/profile/MyListingsSheet";
 import VerificationBadges from "@/components/VerificationBadges";
 import PhoneVerifySheet from "@/components/PhoneVerifySheet";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,11 +16,12 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 
-const getMenuItems = (t: (key: string) => string) => [
+const getMenuItems = (t: (key: string) => string, hasListings: boolean) => [
   { icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" },
   { icon: ShieldCheck, label: t("getVerified"), desc: t("addPhoneBadge"), accent: false, action: "verify" },
   { icon: ImagePlus, label: "Manage Photos", desc: "Reorder or update your profile photos", accent: false, action: "photos" },
   { icon: Bookmark, label: t("myActivity"), desc: t("myActivityDesc"), accent: false, action: "activity" },
+  ...(hasListings ? [{ icon: Building2, label: "My Listings", desc: "View and edit your posted apartments", accent: false, action: "listings" }] : []),
   { icon: Sparkles, label: t("preferences"), desc: t("preferencesDesc"), accent: false, action: "preferences" },
   { icon: Bell, label: t("notifications"), desc: t("notificationsDesc"), action: "notifications" },
   { icon: Settings, label: t("settings"), desc: t("settingsDesc"), action: "settings" },
@@ -35,6 +38,15 @@ export default function Profile() {
   const [premiumOpen, setPremiumOpen] = useState(false);
   const [phoneVerifyOpen, setPhoneVerifyOpen] = useState(false);
   const [photosOpen, setPhotosOpen] = useState(false);
+  const [hasListings, setHasListings] = useState(false);
+  const [listingsOpen, setListingsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("apartments").select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => setHasListings((count ?? 0) > 0));
+  }, [user]);
 
   if (!user) {
     return (
@@ -56,8 +68,25 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pb-28 desk:pb-8">
-        <p className="text-muted-foreground text-sm">{t("loadingProfile")}</p>
+      <div className="min-h-screen bg-background pb-28 desk:pb-8">
+        <div className="max-w-2xl mx-auto px-4 pt-12 desk:pt-8">
+          <div className="flex flex-col items-center text-center mb-6">
+            <Skeleton className="w-24 h-24 rounded-full mb-4" />
+            <Skeleton className="h-6 w-36 mb-2 rounded-xl" />
+            <Skeleton className="h-4 w-48 rounded-xl" />
+          </div>
+          <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3.5 border-b border-border/50 last:border-0">
+                <Skeleton className="w-8 h-8 rounded-lg shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-3 w-48 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -91,6 +120,7 @@ export default function Profile() {
     if (action === "settings") navigate("/settings");
     if (action === "verify") setPhoneVerifyOpen(true);
     if (action === "photos") setPhotosOpen(true);
+    if (action === "listings") setListingsOpen(true);
   };
 
   const verificationStatus = {
@@ -138,7 +168,7 @@ export default function Profile() {
         </motion.div>
 
         <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-4">
-          {getMenuItems(t).map((item, i) => {
+          {getMenuItems(t, hasListings).map((item, i) => {
             const Icon = item.icon;
             return (
               <motion.button
@@ -174,6 +204,7 @@ export default function Profile() {
       <PreferencesSheet open={prefsOpen} onOpenChange={setPrefsOpen} profile={profile} t={t} />
       <ActivitySheet open={activityOpen} onOpenChange={setActivityOpen} user={user} t={t} />
       <NotificationsSheet open={notificationsOpen} onOpenChange={setNotificationsOpen} user={user} profile={profile} t={t} />
+      <MyListingsSheet open={listingsOpen} onOpenChange={setListingsOpen} user={user} t={t} isPremium={(profile as any)?.is_premium ?? false} />
       <PremiumSheet open={premiumOpen} onOpenChange={setPremiumOpen} />
       <PhoneVerifySheet open={phoneVerifyOpen} onOpenChange={setPhoneVerifyOpen} onVerified={() => window.location.reload()} />
       <PhotoManagementSheet

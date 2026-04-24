@@ -328,7 +328,7 @@ export default function Chats() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !activeConv || !user) return;
 
-    // ── Rate limiting: max 5 messages per 3 seconds ───────────────────────────
+    // ── Rate limiting: client-side burst guard (UX) ──────────────────────────
     const now = Date.now();
     const WINDOW_MS = 3000;
     const MAX_IN_WINDOW = 5;
@@ -340,6 +340,18 @@ export default function Chats() {
       return;
     }
     recentSendTimestamps.current.push(now);
+
+    // ── Rate limiting: server-side check (bypass-proof) ──────────────────────
+    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+    const { count: recentCount } = await supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("sender_id", user.id)
+      .gte("created_at", oneMinuteAgo);
+    if ((recentCount ?? 0) >= 30) {
+      toast.error("You're sending too many messages. Please wait a minute.");
+      return;
+    }
 
     // ── Sanitize content (strip control chars + bidi overrides) ──────────────
     const content = sanitizeText(newMessage);
@@ -377,9 +389,14 @@ export default function Chats() {
 
   const deleteConversation = async (convId: string) => {
     if (!user) return;
-    // Verify the current user is actually a participant in this conversation
-    const isParticipant = conversations.some((c) => c.id === convId);
-    if (!isParticipant) return;
+    // Verify ownership server-side — client state can be spoofed
+    const { data: participation } = await supabase
+      .from("conversation_participants")
+      .select("user_id")
+      .eq("conversation_id", convId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!participation) return;
     // Delete read receipts, messages, participation, then conversation
     const { data: msgs } = await supabase
       .from("messages")

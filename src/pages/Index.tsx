@@ -80,6 +80,7 @@ function dbRowToApartment(row: any): Apartment {
     amenities,
     available: row.available_date,
     isBoosted: (row.is_featured === true && (!row.featured_until || new Date(row.featured_until) > new Date())) ?? false,
+    listingType: (row.listing_type ?? "room") as "room" | "entire_place",
   };
 }
 
@@ -173,6 +174,7 @@ export default function Index() {
       if (filters.amenities.length > 0) {
         if (!filters.amenities.every((a) => apt.amenities.includes(a))) return false;
       }
+      if (filters.listingType !== "any" && apt.listingType !== filters.listingType) return false;
       return true;
     });
   }, [search, filters, apartments]);
@@ -192,6 +194,7 @@ export default function Index() {
     if (filters.cleanlinessMin > 1) c++;
     if (filters.wfh !== "any") c++;
     if (filters.furnished !== "any") c++;
+    if (filters.listingType !== "any") c++;
     return c;
   })();
 
@@ -209,7 +212,7 @@ export default function Index() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setView(view === "list" ? "map" : "list")}
-                className="bg-secondary p-2.5 rounded-xl"
+                className="bg-secondary p-2.5 rounded-xl hover:bg-secondary/80 active:scale-95 transition-all"
               >
                 {view === "list" ? (
                   <Map className="w-4 h-4 text-secondary-foreground" />
@@ -232,7 +235,7 @@ export default function Index() {
             </div>
             <button
               onClick={() => setFiltersOpen(true)}
-              className="bg-secondary p-2.5 rounded-xl relative"
+              className="bg-secondary p-2.5 rounded-xl relative hover:bg-secondary/80 active:scale-95 transition-all"
             >
               <SlidersHorizontal className="w-4 h-4 text-secondary-foreground" />
               {activeFilterCount > 0 && (
@@ -313,19 +316,26 @@ export default function Index() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
-                <Search className="w-7 h-7 text-muted-foreground" />
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-5">
+                <Search className="w-9 h-9 text-primary" />
               </div>
-              <h2 className="font-bold text-foreground mb-1">{t("noResultsFound")}</h2>
-              <p className="text-muted-foreground text-sm">{t("tryAdjusting")}</p>
-              {JSON.stringify(filters) !== JSON.stringify(defaultFilters) && (
+              <h2 className="text-xl font-extrabold text-foreground mb-2">{t("noResultsFound")}</h2>
+              <p className="text-muted-foreground text-sm mb-6 max-w-xs">{t("tryAdjusting")}</p>
+              {JSON.stringify(filters) !== JSON.stringify(defaultFilters) ? (
                 <button
                   onClick={() => setFilters(defaultFilters)}
-                  className="mt-4 gradient-primary text-primary-foreground px-6 py-2.5 rounded-xl font-semibold text-sm cursor-pointer"
+                  className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
                 >
                   {t("clearFilters")}
                 </button>
-              )}
+              ) : search.trim() ? (
+                <button
+                  onClick={() => setSearch("")}
+                  className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
+                >
+                  Clear search
+                </button>
+              ) : null}
             </div>
           )
         ) : (

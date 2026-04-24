@@ -1,5 +1,5 @@
-import { MessageCircle, Bookmark, MapPin, Bed, Bath, Maximize, Calendar } from "lucide-react";
-import { motion } from "framer-motion";
+import { MessageCircle, Bookmark, MapPin, Bed, Bath, Maximize, Calendar, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
@@ -10,6 +10,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyLimits } from "@/hooks/useDailyLimits";
 
+const FALLBACK_APARTMENT = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800";
+const avatarFallback = (name: string) =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=80`;
+
 const getMockSavedApartmentKey = (userId: string, apartmentId: string) => `saved_apartment:${userId}:${apartmentId}`;
 
 interface ApartmentCardProps {
@@ -19,6 +23,7 @@ interface ApartmentCardProps {
 
 export default function ApartmentCard({ apartment, index }: ApartmentCardProps) {
   const [imgIndex, setImgIndex] = useState(0);
+  const [messaging, setMessaging] = useState(false);
   const { requireAuth } = useRequireAuth();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -91,12 +96,54 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
     }
   };
 
+  const handleMessage = async () => {
+    if (!user) return;
+    if (isUuid && (apartment as any).user_id && (apartment as any).user_id !== user.id) {
+      setMessaging(true);
+      try {
+        const { data: existing } = await supabase
+          .from("conversation_participants")
+          .select("conversation_id")
+          .eq("user_id", user.id);
+
+        let existingConvId: string | null = null;
+        if (existing) {
+          for (const p of existing) {
+            const { data: other } = await supabase
+              .from("conversation_participants")
+              .select("user_id")
+              .eq("conversation_id", p.conversation_id)
+              .eq("user_id", (apartment as any).user_id)
+              .maybeSingle();
+            if (other) {
+              existingConvId = p.conversation_id;
+              break;
+            }
+          }
+        }
+
+        if (!existingConvId) {
+          await supabase.rpc("create_conversation_with_participant", {
+            other_user_id: (apartment as any).user_id,
+          });
+        }
+        navigate("/chats");
+      } catch {
+        toast.error("Could not start conversation");
+      } finally {
+        setMessaging(false);
+      }
+    } else {
+      navigate("/chats");
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.06, 0.3), duration: 0.3 }}
-      className="bg-card rounded-2xl shadow-card overflow-hidden cursor-pointer"
+      className="bg-card rounded-2xl shadow-card overflow-hidden cursor-pointer group hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-200"
       onClick={() => navigate(`/apartment/${apartment.id}`)}
     >
       {/* Image */}
@@ -104,19 +151,25 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
         <img
           src={apartment.images[imgIndex]}
           alt={apartment.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_APARTMENT; }}
         />
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
           {apartment.images.map((_, i) => (
             <button
               key={i}
               onClick={(e) => { e.stopPropagation(); setImgIndex(i); }}
-              className={`w-1.5 h-1.5 rounded-full transition-all ${i === imgIndex ? "bg-primary-foreground w-4" : "bg-primary-foreground/50"}`}
+              className={`h-1.5 rounded-full transition-all ${i === imgIndex ? "bg-primary-foreground w-4" : "bg-primary-foreground/50 w-1.5"}`}
             />
           ))}
         </div>
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           <MatchBadge percent={apartment.matchPercent} size="md" />
+          {apartment.listingType === "entire_place" && (
+            <span className="bg-background/90 backdrop-blur text-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+              🏠 Entire Apt
+            </span>
+          )}
         </div>
         {apartment.isBoosted && (
           <div className="absolute top-3 right-14 gradient-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full">
@@ -128,7 +181,17 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             onClick={(e) => { e.stopPropagation(); requireAuth(() => toggleSave()); }}
             className="bg-card/80 backdrop-blur-sm p-2 rounded-full hover:scale-105 active:scale-95 transition-transform"
           >
-            <Bookmark className={`w-4 h-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} />
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={saved ? "saved" : "unsaved"}
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.6, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <Bookmark className={`w-4 h-4 transition-colors ${saved ? "fill-primary text-primary" : "text-foreground"}`} />
+              </motion.div>
+            </AnimatePresence>
           </button>
         </div>
         <div className="absolute bottom-3 right-3 flex -space-x-2">
@@ -143,6 +206,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
                 src={rm.avatar}
                 alt={rm.name}
                 className="w-8 h-8 rounded-full border-2 border-card object-cover hover:scale-110 transition-transform"
+                onError={(e) => { (e.target as HTMLImageElement).src = avatarFallback(rm.name); }}
               />
             </button>
           ))}
@@ -159,8 +223,8 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
               <span className="truncate">{apartment.location}</span>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Room / month</div>
+          <div className="text-right shrink-0">
+            <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{apartment.listingType === "entire_place" ? "Apt" : "Room"} / month</div>
             <span className="text-lg font-extrabold text-primary">₪{apartment.price.toLocaleString()}</span>
           </div>
         </div>
@@ -185,54 +249,16 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
 
         <div className="flex gap-2 pt-2">
           <button
-            onClick={(e) => { e.stopPropagation(); requireAuth(async () => {
-              if (!user) return;
-              if (isUuid && (apartment as any).user_id && (apartment as any).user_id !== user.id) {
-                try {
-                  const { data: existing } = await supabase
-                    .from("conversation_participants")
-                    .select("conversation_id")
-                    .eq("user_id", user.id);
-                  
-                  let existingConvId: string | null = null;
-                  if (existing) {
-                    for (const p of existing) {
-                      const { data: other } = await supabase
-                        .from("conversation_participants")
-                        .select("user_id")
-                        .eq("conversation_id", p.conversation_id)
-                        .eq("user_id", (apartment as any).user_id)
-                        .maybeSingle();
-                      if (other) {
-                        existingConvId = p.conversation_id;
-                        break;
-                      }
-                    }
-                  }
-
-                  if (existingConvId) {
-                    navigate("/chats");
-                  } else {
-                    await supabase.rpc("create_conversation_with_participant", {
-                      other_user_id: (apartment as any).user_id,
-                    });
-                    navigate("/chats");
-                  }
-                } catch {
-                  toast.error("Could not start conversation");
-                }
-              } else {
-                navigate("/chats");
-              }
-            }); }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground transition-all hover:scale-[1.02] active:scale-95"
+            onClick={(e) => { e.stopPropagation(); requireAuth(() => handleMessage()); }}
+            disabled={messaging}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-70"
           >
-            <MessageCircle className="w-4 h-4" />
-            Message
+            {messaging ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
+            {messaging ? "Opening…" : "Message"}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); navigate(`/apartment/${apartment.id}`); }}
-            className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98] transition-all"
           >
             Details
           </button>

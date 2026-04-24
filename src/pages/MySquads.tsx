@@ -84,13 +84,25 @@ export default function MySquads() {
     if (!user) return;
     // Verify the invite is actually addressed to the current user
     if (invite.invitee_id !== user.id) return;
+    // Check current member count from DB to prevent race condition overfill
+    const { count: currentMemberCount } = await supabase
+      .from("squad_members")
+      .select("id", { count: "exact", head: true })
+      .eq("squad_id", invite.squad_id)
+      .eq("status", "joined");
+    if (invite.squad?.target_size && (currentMemberCount ?? 0) >= invite.squad.target_size) {
+      toast.error("This squad is already full.");
+      refetchInvites();
+      return;
+    }
     await supabase.from("squad_members").insert({
       squad_id: invite.squad_id,
       user_id: user.id,
       status: "joined",
       role: "member",
     });
-    await supabase.from("squad_invites").update({ status: "accepted" }).eq("id", invite.id);
+    // Filter by invitee_id so the DB rejects acceptance if the invite isn't addressed to this user
+    await supabase.from("squad_invites").update({ status: "accepted" }).eq("id", invite.id).eq("invitee_id", user.id);
 
     const { data: members } = await supabase
       .from("squad_members")

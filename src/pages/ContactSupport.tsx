@@ -38,6 +38,17 @@ export default function ContactSupport() {
     if (!message.trim()) { toast.error(t("pleaseWriteMessage")); return; }
     if (!user) { toast.error(t("pleaseLogIn")); return; }
     setSending(true);
+    const oneDayAgo = new Date(Date.now() - 86_400_000).toISOString();
+    const { count: recentSupport } = await supabase
+      .from("support_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", oneDayAgo);
+    if ((recentSupport ?? 0) >= 5) {
+      setSending(false);
+      toast.error(t("tooManySupportMessages") || "You've sent too many messages today. Please try again tomorrow.");
+      return;
+    }
     const { error } = await supabase.from("support_messages").insert({ user_id: user.id, category, message: message.trim() });
     setSending(false);
     if (error) { toast.error(t("failedToSend")); }
