@@ -506,6 +506,15 @@ export default function SquadHub() {
               >
                 <Share2 className="w-4 h-4 text-secondary-foreground" />
               </button>
+              {isMember && !isCreator && (
+                <button
+                  onClick={() => setLeaveOpen(true)}
+                  className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center"
+                  title="Leave squad"
+                >
+                  <LogOut className="w-4 h-4 text-destructive" />
+                </button>
+              )}
             </div>
           </div>
 
