@@ -11,6 +11,8 @@ export interface FullProfile extends ProfileData {
   avatar_url: string | null;
   onboarding_complete: boolean;
   created_at: string;
+  phone_verified?: boolean;
+  phone_number?: string | null;
 }
 
 export function useProfile() {
