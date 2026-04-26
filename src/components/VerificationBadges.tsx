@@ -1,14 +1,7 @@
-// Verification badges shown on profile cards and roommate profiles.
-// emailVerified: Supabase enforces email confirmation before onboarding,
-//   so any completed profile is considered email-verified.
-// phoneVerified: profile.phone_verified from DB.
-// hasPhotos: profile has at least one photo.
-
-import { Mail, Phone, Camera } from "lucide-react";
+import { Mail, Camera } from "lucide-react";
 
 export interface VerificationStatus {
   emailVerified: boolean;
-  phoneVerified: boolean;
   hasPhotos: boolean;
 }
 
@@ -18,9 +11,8 @@ interface Props {
 }
 
 const BADGES = [
-  { key: "emailVerified" as const, icon: Mail,   label: "Email",  color: "badge-info-text",    bg: "badge-info-bg"    },
-  { key: "phoneVerified" as const, icon: Phone,  label: "Phone",  color: "badge-success-text", bg: "badge-success-bg" },
-  { key: "hasPhotos"     as const, icon: Camera, label: "Photos", color: "badge-verified-text", bg: "badge-verified-bg"},
+  { key: "emailVerified" as const, icon: Mail,   label: "Email",  color: "badge-info-text",     bg: "badge-info-bg"     },
+  { key: "hasPhotos"     as const, icon: Camera, label: "Photos", color: "badge-verified-text",  bg: "badge-verified-bg" },
 ];
 
 export default function VerificationBadges({ status, size = "md" }: Props) {

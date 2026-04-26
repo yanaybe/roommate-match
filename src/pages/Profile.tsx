@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, Building2 } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, Pencil, Building2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PremiumSheet from "@/components/PremiumSheet";
 import PreferencesSheet from "@/components/profile/PreferencesSheet";
@@ -8,7 +8,6 @@ import ActivitySheet from "@/components/profile/ActivitySheet";
 import NotificationsSheet from "@/components/profile/NotificationsSheet";
 import MyListingsSheet from "@/components/profile/MyListingsSheet";
 import VerificationBadges from "@/components/VerificationBadges";
-import PhoneVerifySheet from "@/components/PhoneVerifySheet";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +16,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 const getMenuItems = (t: (key: string) => string, hasListings: boolean) => [
   { icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" },
-  { icon: ShieldCheck, label: t("getVerified"), desc: t("addPhoneBadge"), accent: false, action: "verify" },
   { icon: Bookmark, label: t("myActivity"), desc: t("myActivityDesc"), accent: false, action: "activity" },
   ...(hasListings ? [{ icon: Building2, label: "My Listings", desc: "View and edit your posted apartments", accent: false, action: "listings" }] : []),
   { icon: Sparkles, label: t("preferences"), desc: t("preferencesDesc"), accent: false, action: "preferences" },
@@ -34,7 +32,6 @@ export default function Profile() {
   const [activityOpen, setActivityOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [premiumOpen, setPremiumOpen] = useState(false);
-  const [phoneVerifyOpen, setPhoneVerifyOpen] = useState(false);
   const [hasListings, setHasListings] = useState(false);
   const [listingsOpen, setListingsOpen] = useState(false);
 
@@ -115,13 +112,11 @@ export default function Profile() {
     if (action === "notifications") setNotificationsOpen(true);
     if (action === "premium") setPremiumOpen(true);
     if (action === "settings") navigate("/settings");
-    if (action === "verify") setPhoneVerifyOpen(true);
     if (action === "listings") setListingsOpen(true);
   };
 
   const verificationStatus = {
-    emailVerified: true, // enforced by Supabase before onboarding
-    phoneVerified: (profile as any)?.phone_verified ?? false,
+    emailVerified: true,
     hasPhotos: !!(profile?.avatar_url),
   };
 
@@ -202,7 +197,6 @@ export default function Profile() {
       <NotificationsSheet open={notificationsOpen} onOpenChange={setNotificationsOpen} user={user} profile={profile} t={t} />
       <MyListingsSheet open={listingsOpen} onOpenChange={setListingsOpen} user={user} t={t} isPremium={(profile as any)?.is_premium ?? false} />
       <PremiumSheet open={premiumOpen} onOpenChange={setPremiumOpen} />
-      <PhoneVerifySheet open={phoneVerifyOpen} onOpenChange={setPhoneVerifyOpen} onVerified={() => window.location.reload()} />
     </div>
   );
 }

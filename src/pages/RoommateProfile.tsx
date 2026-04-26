@@ -281,7 +281,6 @@ export default function RoommateProfile() {
                   <VerificationBadges
                     status={{
                       emailVerified: true,
-                      phoneVerified: (fullProfile as any).phone_verified ?? false,
                       hasPhotos: !!fullProfile.avatar_url,
                     }}
                     size="sm"

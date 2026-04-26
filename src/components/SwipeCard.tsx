@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Briefcase, Moon, Sun, Sparkles, MapPin, ChevronLeft, ChevronRight, Phone } from "lucide-react";
+import { Briefcase, Moon, Sun, Sparkles, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
@@ -126,12 +126,6 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
             <h2 className="text-primary-foreground font-extrabold text-2xl">
               {user.name}, {user.age}
             </h2>
-            {user.phoneVerified && (
-              <div className="flex items-center gap-1 bg-green-500/20 border border-green-500/30 px-1.5 py-0.5 rounded-full">
-                <Phone className="w-2.5 h-2.5 text-green-400" />
-                <span className="text-xs font-bold text-green-400">Verified</span>
-              </div>
-            )}
           </div>
           <div className="flex items-center gap-1.5 text-primary-foreground/80 text-sm mt-1">
             <MapPin className="w-3.5 h-3.5" />
