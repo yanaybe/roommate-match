@@ -324,6 +324,9 @@ export type Database = {
           lifestyle_vibe: string
           name: string
           noise_level: number
+          notify_on_match: boolean
+          notify_on_message: boolean
+          notify_on_squad_invite: boolean
           occupation: string
           onboarding_complete: boolean
           partying: string
@@ -361,6 +364,9 @@ export type Database = {
           lifestyle_vibe?: string
           name?: string
           noise_level?: number
+          notify_on_match?: boolean
+          notify_on_message?: boolean
+          notify_on_squad_invite?: boolean
           occupation?: string
           onboarding_complete?: boolean
           partying?: string
@@ -398,6 +404,9 @@ export type Database = {
           lifestyle_vibe?: string
           name?: string
           noise_level?: number
+          notify_on_match?: boolean
+          notify_on_message?: boolean
+          notify_on_squad_invite?: boolean
           occupation?: string
           onboarding_complete?: boolean
           partying?: string
