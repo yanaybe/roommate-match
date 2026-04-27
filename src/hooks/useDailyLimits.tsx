@@ -70,6 +70,9 @@ export function DailyLimitsProvider({ children }: { children: ReactNode }) {
     ]).then(([likesRes, savesRes]) => {
       setLikesUsed(likesRes.count ?? 0);
       setSavesUsed(savesRes.count ?? 0);
+    }).catch(() => {
+      setLikesUsed(0);
+      setSavesUsed(0);
     });
   }, [user]);
 

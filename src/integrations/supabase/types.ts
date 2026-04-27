@@ -317,6 +317,7 @@ export type Database = {
           created_at: string
           desired_room_type: string
           fitness: string
+          gender: string | null
           gender_preference: string
           guests: string
           id: string
@@ -357,6 +358,7 @@ export type Database = {
           created_at?: string
           desired_room_type?: string
           fitness?: string
+          gender?: string | null
           gender_preference?: string
           guests?: string
           id?: string
@@ -397,6 +399,7 @@ export type Database = {
           created_at?: string
           desired_room_type?: string
           fitness?: string
+          gender?: string | null
           gender_preference?: string
           guests?: string
           id?: string
