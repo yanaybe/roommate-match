@@ -37,6 +37,7 @@ const Landing = lazy(() => import("./pages/Landing"));
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,7 @@ const App = () => (
           <Toaster />
           <Sonner position="top-center" />
           <BrowserRouter>
+            <ErrorBoundary>
             <ScrollToTop />
             <NotificationToaster />
             <BottomNav />
@@ -130,6 +132,7 @@ const App = () => (
               </Route>
             </Routes>
             </Suspense>
+            </ErrorBoundary>
           </BrowserRouter>
         </DailyLimitsProvider>
         </NotificationsProvider>

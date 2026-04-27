@@ -278,6 +278,7 @@ export default function ApartmentDetail() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
               className="w-full h-full object-cover"
+              loading="lazy"
               onError={(e) => {
                 (e.target as HTMLImageElement).src =
                   "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800";
@@ -297,7 +298,17 @@ export default function ApartmentDetail() {
           </button>
 
           <div className="absolute top-4 right-4 flex gap-2">
-            <button className="bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg">
+            <button
+              onClick={() => {
+                const url = window.location.href;
+                if (navigator.share) {
+                  navigator.share({ title: apartment?.title, url }).catch(() => {});
+                } else {
+                  navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info(`Copy: ${url}`));
+                }
+              }}
+              className="bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg"
+            >
               <Share2 className="w-4 h-4 text-foreground" />
             </button>
             <button
@@ -392,6 +403,7 @@ export default function ApartmentDetail() {
                   src={img}
                   alt=""
                   className="w-full h-full object-cover"
+                  loading="lazy"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src =
                       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800";

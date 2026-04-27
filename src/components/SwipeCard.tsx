@@ -56,6 +56,7 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
           alt={user.name}
           className="w-full h-full object-cover"
           draggable={false}
+          loading="lazy"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&size=600`;

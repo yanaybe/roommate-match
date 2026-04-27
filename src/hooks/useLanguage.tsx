@@ -553,6 +553,19 @@ const translations: Record<Language, Record<string, string>> = {
     squadStatus_draft: "Draft",
     squadStatus_forming: "Forming",
     squadStatus_active: "Active",
+
+    // Who Liked Me
+    whoLikedMe: "Who Liked Me",
+    whoLikedMeDesc: "See who's interested in you",
+    noLikesReceived: "No likes received yet",
+    noLikesReceivedDesc: "When someone likes your profile, they'll appear here",
+
+    // Squad – Members' Saves
+    membersSaves: "Members' Saves",
+    squadPicks: "Squad Picks",
+    noMembersSaved: "No saved apartments yet",
+    noMembersSavedDesc: "Members haven't saved any apartments yet",
+    savedBy: "Saved by",
   },
   he: {
     // Settings
@@ -1091,6 +1104,19 @@ const translations: Record<Language, Record<string, string>> = {
     squadStatus_draft: "טיוטה",
     squadStatus_forming: "בהתהוות",
     squadStatus_active: "פעיל",
+
+    // Who Liked Me
+    whoLikedMe: "מי עשה לי לייק",
+    whoLikedMeDesc: "ראה מי מתעניין בך",
+    noLikesReceived: "עדיין לא קיבלת לייקים",
+    noLikesReceivedDesc: "כשמישהו לוחץ לייק על הפרופיל שלך, הוא יופיע כאן",
+
+    // Squad – Members' Saves
+    membersSaves: "שמורות של חברים",
+    squadPicks: "בחירות הסקווד",
+    noMembersSaved: "עדיין אין דירות שמורות",
+    noMembersSavedDesc: "החברים עדיין לא שמרו דירות",
+    savedBy: "נשמר על ידי",
   },
   fr: {
     // Settings
@@ -1629,6 +1655,19 @@ const translations: Record<Language, Record<string, string>> = {
     squadStatus_draft: "Brouillon",
     squadStatus_forming: "En formation",
     squadStatus_active: "Actif",
+
+    // Who Liked Me
+    whoLikedMe: "Qui m'a aimé",
+    whoLikedMeDesc: "Voir qui s'intéresse à vous",
+    noLikesReceived: "Aucun like reçu pour l'instant",
+    noLikesReceivedDesc: "Quand quelqu'un aime votre profil, il apparaîtra ici",
+
+    // Squad – Members' Saves
+    membersSaves: "Sauvegardes des membres",
+    squadPicks: "Sélections du squad",
+    noMembersSaved: "Pas encore d'appartements sauvegardés",
+    noMembersSavedDesc: "Les membres n'ont pas encore sauvegardé d'appartements",
+    savedBy: "Sauvegardé par",
   },
 };
 

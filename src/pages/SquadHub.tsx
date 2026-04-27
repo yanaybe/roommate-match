@@ -58,8 +58,27 @@ export default function SquadHub() {
   const [tab, setTab] = useState<Tab>("members");
 
   // Real apartments state
-  const [apartments, setApartments] = useState<any[]>([]);
+  type ApartmentRow = {
+    id: string;
+    title: string | null;
+    price: number;
+    rooms: number;
+    bathrooms: number;
+    size: number;
+    images: string[] | null;
+    city: string | null;
+    neighborhood: string | null;
+    pet_friendly: boolean;
+    is_featured: boolean;
+    featured_until: string | null;
+    user_id: string;
+    matchPercent?: number;
+  };
+  const [apartments, setApartments] = useState<ApartmentRow[]>([]);
   const [apartmentsLoading, setApartmentsLoading] = useState(false);
+  const [aptView, setAptView] = useState<"squad" | "saved">("squad");
+  const [memberSaves, setMemberSaves] = useState<{ saver: string; apartment: ApartmentRow }[]>([]);
+  const [memberSavesLoading, setMemberSavesLoading] = useState(false);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<any[]>([]);
@@ -254,11 +273,32 @@ export default function SquadHub() {
       }
 
       const { data } = await query;
-      setApartments(data ?? []);
+      setApartments((data ?? []) as ApartmentRow[]);
       setApartmentsLoading(false);
     };
     if (tab === "apartments" && squad) fetchApartments();
   }, [tab, squad]);
+
+  // Fetch apartments saved by squad members
+  useEffect(() => {
+    if (tab !== "apartments" || aptView !== "saved" || members.length === 0) return;
+    setMemberSavesLoading(true);
+    const memberIds = members.map((m) => m.user_id);
+    supabase
+      .from("saved_apartments")
+      .select("user_id, apartments(*)")
+      .in("user_id", memberIds)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        const rows = (data ?? []).flatMap((row: any) => {
+          if (!row.apartments) return [];
+          const saver = members.find((m) => m.user_id === row.user_id)?.profile?.name ?? "Member";
+          return [{ saver, apartment: row.apartments as ApartmentRow }];
+        });
+        setMemberSaves(rows);
+        setMemberSavesLoading(false);
+      });
+  }, [tab, aptView, members]);
 
   // Calculate squad-apartment compatibility
   const apartmentsWithMatch = useMemo(() => {
@@ -733,11 +773,71 @@ export default function SquadHub() {
                 <h2 className="font-bold text-foreground mb-1">{t("squadNotReadyYet")}</h2>
                 <p className="text-muted-foreground text-sm">{t("fillSquadToUnlock")}</p>
               </div>
-            ) : apartmentsLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <p className="text-muted-foreground text-sm">{t("loadingApartments")}</p>
-              </div>
-            ) : visibleApartments.length === 0 ? (
+            ) : (
+              <>
+                {/* View toggle */}
+                <div className="flex bg-secondary rounded-xl p-1 mb-4">
+                  {(["squad", "saved"] as const).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setAptView(v)}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        aptView === v ? "gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {v === "squad" ? t("squadPicks") : t("membersSaves")}
+                    </button>
+                  ))}
+                </div>
+
+                {aptView === "saved" ? (
+                  memberSavesLoading ? (
+                    <div className="flex items-center justify-center py-16">
+                      <p className="text-muted-foreground text-sm">{t("loading")}</p>
+                    </div>
+                  ) : memberSaves.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
+                        <Home className="w-7 h-7 text-muted-foreground" />
+                      </div>
+                      <h2 className="font-bold text-foreground mb-1">{t("noMembersSaved")}</h2>
+                      <p className="text-muted-foreground text-sm">{t("noMembersSavedDesc")}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {memberSaves.map(({ saver, apartment: apt }, idx) => (
+                        <motion.div
+                          key={`${apt.id}-${idx}`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-card rounded-2xl shadow-card overflow-hidden cursor-pointer"
+                          onClick={() => navigate(`/apartment/${apt.id}`)}
+                        >
+                          {apt.images?.[0] ? (
+                            <img src={apt.images[0]} alt={apt.title ?? ""} className="w-full h-36 object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-36 bg-secondary flex items-center justify-center">
+                              <Home className="w-7 h-7 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="p-3">
+                            <p className="font-bold text-card-foreground text-sm">{apt.title || "Apartment"}</p>
+                            <p className="text-muted-foreground text-xs flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3" />{apt.neighborhood}{apt.city ? `, ${apt.city}` : ""}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              ₪{apt.price?.toLocaleString()}/mo · {t("savedBy")} <span className="font-semibold text-foreground">{saver}</span>
+                            </p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )
+                ) : apartmentsLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <p className="text-muted-foreground text-sm">{t("loadingApartments")}</p>
+                  </div>
+                ) : visibleApartments.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
                   <Home className="w-7 h-7 text-muted-foreground" />
@@ -766,7 +866,7 @@ export default function SquadHub() {
                       {/* Image with match badge */}
                       <div className="relative">
                         {apt.images?.[0] ? (
-                          <img src={apt.images[0]} alt={apt.title} className="w-full h-44 object-cover" />
+                          <img src={apt.images[0]} alt={apt.title} className="w-full h-44 object-cover" loading="lazy" />
                         ) : (
                           <div className="w-full h-44 bg-secondary flex items-center justify-center">
                             <Home className="w-8 h-8 text-muted-foreground" />
@@ -836,7 +936,7 @@ export default function SquadHub() {
                                 vote?.liked ? "border-accent bg-accent/10" : vote && !vote.liked ? "border-destructive bg-destructive/10" : "border-border bg-secondary"
                               }`}>
                                 {m.profile?.avatar_url ? (
-                                  <img src={m.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                                  <img src={m.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" loading="lazy" />
                                 ) : (
                                   <span className="text-[8px] font-bold text-muted-foreground">{m.profile?.name?.charAt(0)?.toUpperCase() ?? "?"}</span>
                                 )}
@@ -850,6 +950,8 @@ export default function SquadHub() {
                   );
                 })}
               </div>
+                )}
+              </>
             )}
           </motion.div>
         )}
@@ -891,7 +993,7 @@ export default function SquadHub() {
                             <div className="w-7 h-7 rounded-full shrink-0 mt-auto">
                               {showSender ? (
                                 senderProfile?.avatar_url ? (
-                                  <img src={senderProfile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
+                                  <img src={senderProfile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" loading="lazy" />
                                 ) : (
                                   <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
                                     <span className="text-primary text-xs font-bold">{senderProfile?.name?.charAt(0)?.toUpperCase() ?? "?"}</span>

@@ -152,6 +152,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
           src={apartment.images[imgIndex]}
           alt={apartment.title}
           className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+          loading="lazy"
           onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_APARTMENT; }}
         />
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
@@ -206,6 +207,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
                 src={rm.avatar}
                 alt={rm.name}
                 className="w-8 h-8 rounded-full border-2 border-card object-cover hover:scale-110 transition-transform"
+                loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).src = avatarFallback(rm.name); }}
               />
             </button>

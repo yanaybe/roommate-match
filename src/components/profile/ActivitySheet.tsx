@@ -7,6 +7,38 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
+interface SavedApartmentRow {
+  id: string;
+  apartments: {
+    id: string;
+    title: string | null;
+    neighborhood: string | null;
+    city: string | null;
+    price: number;
+    images: string[] | null;
+  } | null;
+}
+
+interface LikedProfile {
+  user_id: string;
+  name: string;
+  age: number | null;
+  occupation: string | null;
+  city: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+}
+
+interface SquadInviteRow {
+  id: string;
+  squads: {
+    name: string | null;
+    preferred_locations: string[] | null;
+    budget_min: number | null;
+    budget_max: number | null;
+  } | null;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -17,9 +49,9 @@ interface Props {
 export default function ActivitySheet({ open, onOpenChange, user, t }: Props) {
   const navigate = useNavigate();
   const [activityTab, setActivityTab] = useState<"saved" | "liked" | "squads">("saved");
-  const [savedApartments, setSavedApartments] = useState<any[]>([]);
-  const [likedProfiles, setLikedProfiles] = useState<any[]>([]);
-  const [pendingSquads, setPendingSquads] = useState<any[]>([]);
+  const [savedApartments, setSavedApartments] = useState<SavedApartmentRow[]>([]);
+  const [likedProfiles, setLikedProfiles] = useState<LikedProfile[]>([]);
+  const [pendingSquads, setPendingSquads] = useState<SquadInviteRow[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
 
   useEffect(() => {
@@ -33,28 +65,28 @@ export default function ActivitySheet({ open, onOpenChange, user, t }: Props) {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      setSavedApartments(saves || []);
+      setSavedApartments((saves || []) as SavedApartmentRow[]);
 
       const { data: likes } = await supabase
         .from("liked_profiles")
-        .select("*")
+        .select("user_id, liked_user_id")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      const likedUserIds = (likes || []).map((l: any) => l.liked_user_id);
+      const likedUserIds = (likes || []).map((l) => l.liked_user_id);
       const dbProfiles = likedUserIds.length > 0
-        ? (await supabase.from("profiles").select("*").in("user_id", likedUserIds)).data ?? []
+        ? (await supabase.from("profiles").select("user_id, name, age, occupation, city, bio, avatar_url").in("user_id", likedUserIds)).data ?? []
         : [];
 
-      setLikedProfiles(dbProfiles);
+      setLikedProfiles(dbProfiles as LikedProfile[]);
 
       const { data: invites } = await supabase
         .from("squad_invites")
-        .select("*, squads(*)")
+        .select("id, squads(name, preferred_locations, budget_min, budget_max)")
         .eq("inviter_id", user.id)
         .eq("status", "pending");
 
-      setPendingSquads(invites || []);
+      setPendingSquads((invites || []) as SquadInviteRow[]);
       setActivityLoading(false);
     };
 
@@ -110,7 +142,7 @@ export default function ActivitySheet({ open, onOpenChange, user, t }: Props) {
                     className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
                   >
                     {item.apartments?.images?.[0] && (
-                      <img src={item.apartments.images[0]} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                      <img src={item.apartments.images[0]} alt="" className="w-16 h-16 rounded-xl object-cover" loading="lazy" />
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-card-foreground truncate">{item.apartments?.title || "Apartment"}</p>
@@ -131,16 +163,16 @@ export default function ActivitySheet({ open, onOpenChange, user, t }: Props) {
               </div>
             ) : (
               <div className="space-y-3">
-                {likedProfiles.map((p: any) => (
+                {likedProfiles.map((p) => (
                   <motion.div
-                    key={p.id}
+                    key={p.user_id}
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card"
                   >
                     <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
                       {p.avatar_url ? (
-                        <img src={p.avatar_url} alt={p.name} className="w-full h-full object-cover" />
+                        <img src={p.avatar_url} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
                       ) : (
                         <span className="text-primary text-lg font-bold">{p.name?.charAt(0)?.toUpperCase()}</span>
                       )}
@@ -164,7 +196,7 @@ export default function ActivitySheet({ open, onOpenChange, user, t }: Props) {
               </div>
             ) : (
               <div className="space-y-3">
-                {pendingSquads.map((invite: any) => (
+                {pendingSquads.map((invite) => (
                   <motion.div
                     key={invite.id}
                     initial={{ opacity: 0, y: 5 }}
