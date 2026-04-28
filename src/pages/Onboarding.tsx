@@ -172,8 +172,8 @@ export default function Onboarding() {
       return;
     }
     if (!isEdit && !user.email_confirmed_at) {
-      toast("📧 Please verify your email first", {
-        description: "You need to verify your email before setting up your profile",
+      toast(t("pleaseVerifyEmailFirst"), {
+        description: t("verifyEmailBeforeProfile"),
       });
       navigate("/verify-email", { replace: true });
     }
@@ -227,45 +227,45 @@ export default function Onboarding() {
     if (step === 1) {
       const name = form.name.trim();
       if (!name) {
-        e.name = "Name is required";
+        e.name = t("nameRequired");
       } else if (name.length < 2) {
-        e.name = "Name must be at least 2 characters";
+        e.name = t("nameMin2");
       } else if (name.length > 50) {
-        e.name = "Name must be under 50 characters";
+        e.name = t("nameMax50");
       } else if (!/^[\p{L}\s''\-]+$/u.test(name)) {
-        e.name = "Name can only contain letters and spaces";
+        e.name = t("nameLettersOnly");
       }
 
       const age = Number(form.age);
       if (!form.age.trim()) {
-        e.age = "Age is required";
+        e.age = t("ageRequired");
       } else if (!Number.isInteger(age) || age < 16 || age > 100) {
-        e.age = "Age must be between 16 and 100";
+        e.age = t("ageBetween16and100");
       }
 
       const city = form.city.trim();
       if (!city) {
-        e.city = "City is required";
+        e.city = t("cityRequired");
       } else if (city.length < 2) {
-        e.city = "Please enter a valid city name";
+        e.city = t("validCityName");
       } else if (/\d/.test(city)) {
-        e.city = "City name cannot contain numbers";
+        e.city = t("cityNoNumbers");
       }
 
       const occ = form.occupation.trim();
       if (!occ) {
-        e.occupation = "Occupation is required";
+        e.occupation = t("occupationRequired");
       } else if (occ.length < 2) {
-        e.occupation = "Please enter at least 2 characters";
+        e.occupation = t("atLeast2Chars");
       }
 
       const budget = Number(form.budget);
       if (!form.budget.trim()) {
-        e.budget = "Budget is required";
+        e.budget = t("budgetRequired");
       } else if (isNaN(budget) || budget < 500) {
-        e.budget = "Budget must be at least ₪500";
+        e.budget = t("budgetMin500");
       } else if (budget > 100000) {
-        e.budget = "Please enter a realistic budget (under ₪100,000)";
+        e.budget = t("budgetMax100k");
       }
     }
 
@@ -273,13 +273,13 @@ export default function Onboarding() {
       const minAge = Number(form.preferred_age_min);
       const maxAge = Number(form.preferred_age_max);
       if (!Number.isInteger(minAge) || minAge < 16 || minAge > 100) {
-        e.preferred_age_min = "Must be between 16 and 100";
+        e.preferred_age_min = t("ageBetween16and100");
       }
       if (!Number.isInteger(maxAge) || maxAge < 16 || maxAge > 100) {
-        e.preferred_age_max = "Must be between 16 and 100";
+        e.preferred_age_max = t("ageBetween16and100");
       }
       if (!e.preferred_age_min && !e.preferred_age_max && minAge >= maxAge) {
-        e.preferred_age_max = "Max age must be greater than min age";
+        e.preferred_age_max = t("maxAgeGreaterThanMin");
       }
     }
 
@@ -348,22 +348,22 @@ export default function Onboarding() {
     const maxAge = Math.max(minAge + 1, Math.min(100, parseInt(form.preferred_age_max) || 40));
 
     if (safeName.length < 2) {
-      toast.error("Name must be at least 2 characters");
+      toast.error(t("nameMin2"));
       return;
     }
     if (isNaN(ageNum) || ageNum < 16 || ageNum > 100) {
-      toast.error("Please enter a valid age (16–100)");
+      toast.error(t("validAge"));
       return;
     }
     if (isNaN(budgetNum) || budgetNum < 500) {
-      toast.error("Please enter a valid budget (minimum ₪500)");
+      toast.error(t("validBudget"));
       return;
     }
 
     // Validate avatar URL is safe (https only, no javascript: / data: URIs)
     const avatarUrl = form.photos[0] || null;
     if (avatarUrl && !isSafeImageUrl(avatarUrl)) {
-      toast.error("Invalid photo URL detected");
+      toast.error(t("invalidPhotoUrl"));
       return;
     }
 
@@ -408,9 +408,9 @@ export default function Onboarding() {
       .upsert(payload, { onConflict: "user_id" });
     setSaving(false);
     if (error) {
-      toast.error("Failed to save profile: " + error.message);
+      toast.error(t("failedToSaveProfile") + error.message);
     } else {
-      toast.success(isEdit ? "Preferences updated! ✨" : "Profile created! Welcome to Roomatch 🎉");
+      toast.success(isEdit ? t("preferencesUpdated") : t("profileCreated"));
       navigate(isEdit ? "/profile" : "/", { replace: true });
     }
   };

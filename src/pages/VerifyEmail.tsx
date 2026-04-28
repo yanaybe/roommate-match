@@ -3,12 +3,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Mail, RefreshCw, ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Mail, RefreshCw, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function VerifyEmail() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resending, setResending] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -53,7 +55,7 @@ export default function VerifyEmail() {
       const { data } = await supabase.auth.getUser();
       if (data.user?.email_confirmed_at && !redirectingRef.current) {
         clearInterval(interval);
-        toast.success("Email verified! 🎉");
+        toast.success(t("emailVerifiedToast"));
         await supabase.auth.refreshSession();
         handleVerifiedRedirect();
       }
@@ -80,7 +82,7 @@ export default function VerifyEmail() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Verification email sent!");
+      toast.success(t("verificationEmailSentToast"));
       setResendCooldown(60);
     }
   };
@@ -122,7 +124,7 @@ export default function VerifyEmail() {
             transition={{ delay: 0.3 }}
             className="text-2xl font-extrabold text-foreground tracking-tight mb-2"
           >
-            Email Verified! ✨
+            {t("emailVerifiedTitle")}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
@@ -130,7 +132,7 @@ export default function VerifyEmail() {
             transition={{ delay: 0.5 }}
             className="text-muted-foreground text-sm"
           >
-            Setting up your profile…
+            {t("settingUpProfile")}
           </motion.p>
           <motion.div
             initial={{ opacity: 0 }}
@@ -164,10 +166,10 @@ export default function VerifyEmail() {
         </motion.div>
 
         <h1 className="text-2xl font-extrabold text-foreground tracking-tight mb-2">
-          Check your email
+          {t("checkYourEmail")}
         </h1>
         <p className="text-muted-foreground text-sm mb-1">
-          We sent a verification link to
+          {t("weSentVerificationLink")}
         </p>
         <p className="text-foreground font-semibold text-sm mb-6">
           {user?.email}
@@ -177,19 +179,19 @@ export default function VerifyEmail() {
           <div className="flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
             <p className="text-sm text-muted-foreground">
-              Open the email and click <span className="font-semibold text-foreground">"Verify Email"</span>
+              {t("openEmailAndClick")} <span className="font-semibold text-foreground">{t("verifyEmailBtnText")}</span>
             </p>
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
             <p className="text-sm text-muted-foreground">
-              You'll be redirected back here automatically
+              {t("redirectedAutomatically")}
             </p>
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-muted-foreground/40 mt-0.5 shrink-0" />
             <p className="text-sm text-muted-foreground">
-              Check your spam folder if you don't see it
+              {t("checkSpamFolder")}
             </p>
           </div>
         </div>
@@ -206,8 +208,8 @@ export default function VerifyEmail() {
             <RefreshCw className="w-4 h-4" />
           )}
           {resendCooldown > 0
-            ? `Resend in ${resendCooldown}s`
-            : "Resend verification email"}
+            ? t("resendIn").replace("{seconds}", String(resendCooldown))
+            : t("resendVerificationEmail")}
         </button>
 
         {/* Change email */}
@@ -216,7 +218,7 @@ export default function VerifyEmail() {
           className="w-full text-muted-foreground text-sm py-2 flex items-center justify-center gap-1 hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Sign up with a different email
+          {t("signUpDifferentEmail")}
         </button>
       </motion.div>
     </div>
