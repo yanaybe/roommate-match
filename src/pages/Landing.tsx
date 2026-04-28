@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Home, Users, MessageCircle, Zap, Star, Shield,
-  ChevronRight, Heart, MapPin, Check, Sparkles
+  ChevronRight, Heart, MapPin, Check, Sparkles, Globe
 } from "lucide-react";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, languages } from "@/hooks/useLanguage";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -20,7 +21,8 @@ const PREVIEW_LISTINGS = [
 
 export default function Landing() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language, setLanguage, languageInfo } = useLanguage();
+  const [langOpen, setLangOpen] = useState(false);
 
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
@@ -74,7 +76,7 @@ export default function Landing() {
   const SQUAD_STEPS = [t("squadStep1"), t("squadStep2"), t("squadStep3"), t("squadStep4")];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" onClick={() => setLangOpen(false)}>
 
       {/* ── Nav ── */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -83,6 +85,43 @@ export default function Landing() {
             Room<span className="text-primary">Match</span>
           </span>
           <div className="flex items-center gap-3">
+            {/* Language switcher */}
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setLangOpen((o) => !o)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <Globe className="w-4 h-4" />
+                <span>{languageInfo.shortCode}</span>
+              </button>
+              <AnimatePresence>
+                {langOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-1 w-36 bg-card border border-border rounded-2xl shadow-elevated overflow-hidden z-50"
+                  >
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => { setLanguage(lang.code); setLangOpen(false); }}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors ${
+                          language === lang.code
+                            ? "bg-primary/10 text-primary font-semibold"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <span>{lang.nativeLabel}</span>
+                        {language === lang.code && <Check className="w-3.5 h-3.5" />}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button
               onClick={() => navigate("/auth")}
               className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
