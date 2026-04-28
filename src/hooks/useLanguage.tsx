@@ -569,6 +569,57 @@ const translations: Record<Language, Record<string, string>> = {
     noMembersSaved: "No saved apartments yet",
     noMembersSavedDesc: "Members haven't saved any apartments yet",
     savedBy: "Saved by",
+
+    // Auth
+    forgotPassword: "Forgot password?",
+    enterEmailFirst: "Enter your email address first",
+    passwordResetSent: "Password reset email sent — check your inbox",
+    passwordRequired: "Password is required",
+    passwordsDoNotMatch: "Passwords do not match",
+    confirmPasswordPlaceholder: "Confirm password",
+    weakPasswordLabel: "Weak",
+    fairPasswordLabel: "Fair",
+    strongPasswordLabel: "Strong",
+    heroFindPerfectRoommate: "Find your perfect roommate",
+    heroSubtitle: "Join thousands of people finding their ideal living situation",
+    featureSmart: "Smart compatibility matching",
+    featureChat: "Chat directly with roommates",
+    featureVerified: "Verified profiles & safe community",
+
+    // ErrorBoundary
+    somethingWentWrong: "Something went wrong",
+
+    // Index
+    failedToLoadApartments: "Failed to load apartments",
+
+    // ContactSupport labels
+    contactPhone: "Phone",
+    contactEmail: "Email",
+    contactInstagram: "Instagram",
+    contactFacebook: "Facebook",
+
+    // SquadHub
+    leftSquad: "You left the squad",
+    failedToLeaveSquad: "Failed to leave squad",
+    squadDeleted: "Squad deleted",
+    failedToDeleteSquad: "Failed to delete squad",
+    squadLinkCopied: "Squad link copied! Share it with friends 🔗",
+    joinRequestSent: "Join request sent to the squad owner! 🙌",
+    failedToSendRequest: "Failed to send request",
+    invitedToSquad: "Invited {name} to join!",
+    failedToSendInvite: "Failed to send invite",
+    leaveSquadTitle: "Leave squad?",
+    leaveSquadDesc: "Are you sure you want to leave this squad? You'll lose access to its chat and shared apartments.",
+    leave: "Leave",
+    leaving: "Leaving...",
+    deleteSquadTitle: "Delete squad?",
+    deleteSquadDesc: "Are you sure you want to delete this squad? This action cannot be undone, and all members will be notified.",
+    deleting: "Deleting...",
+    unknownMember: "Unknown",
+    squadApprovedChat: "🔥 Squad approved! Chat opened with the apartment owner!",
+    squadApprovedLeader: "🔥 Squad approved this listing! The leader can now chat with the owner!",
+    goToChat: "Go to Chat",
+    listingRemovedByVote: "Listing removed — majority voted it down",
   },
   he: {
     // Settings
@@ -1123,6 +1174,57 @@ const translations: Record<Language, Record<string, string>> = {
     noMembersSaved: "עדיין אין דירות שמורות",
     noMembersSavedDesc: "החברים עדיין לא שמרו דירות",
     savedBy: "נשמר על ידי",
+
+    // Auth
+    forgotPassword: "שכחת סיסמה?",
+    enterEmailFirst: "הזן את כתובת האימייל שלך קודם",
+    passwordResetSent: "מייל לאיפוס סיסמה נשלח — בדוק את תיבת הדואר",
+    passwordRequired: "סיסמה נדרשת",
+    passwordsDoNotMatch: "הסיסמאות אינן תואמות",
+    confirmPasswordPlaceholder: "אשר סיסמה",
+    weakPasswordLabel: "חלשה",
+    fairPasswordLabel: "בינונית",
+    strongPasswordLabel: "חזקה",
+    heroFindPerfectRoommate: "מצא את השותף המושלם",
+    heroSubtitle: "הצטרף לאלפי אנשים שמוצאים את מצב המגורים האידיאלי שלהם",
+    featureSmart: "התאמה חכמה לפי תאימות",
+    featureChat: "שוחח ישירות עם שותפים פוטנציאליים",
+    featureVerified: "פרופילים מאומתים וקהילה בטוחה",
+
+    // ErrorBoundary
+    somethingWentWrong: "משהו השתבש",
+
+    // Index
+    failedToLoadApartments: "טעינת הדירות נכשלה",
+
+    // ContactSupport labels
+    contactPhone: "טלפון",
+    contactEmail: "אימייל",
+    contactInstagram: "אינסטגרם",
+    contactFacebook: "פייסבוק",
+
+    // SquadHub
+    leftSquad: "עזבת את הסקוואד",
+    failedToLeaveSquad: "עזיבת הסקוואד נכשלה",
+    squadDeleted: "הסקוואד נמחק",
+    failedToDeleteSquad: "מחיקת הסקוואד נכשלה",
+    squadLinkCopied: "קישור הסקוואד הועתק! שתף אותו עם חברים 🔗",
+    joinRequestSent: "בקשת הצטרפות נשלחה לבעל הסקוואד! 🙌",
+    failedToSendRequest: "שליחת הבקשה נכשלה",
+    invitedToSquad: "הוזמנ/ה {name} להצטרף!",
+    failedToSendInvite: "שליחת ההזמנה נכשלה",
+    leaveSquadTitle: "לעזוב את הסקוואד?",
+    leaveSquadDesc: "האם אתה בטוח שברצונך לעזוב את הסקוואד? תאבד גישה לצ'אט ולדירות המשותפות.",
+    leave: "עזוב",
+    leaving: "עוזב...",
+    deleteSquadTitle: "למחוק את הסקוואד?",
+    deleteSquadDesc: "האם אתה בטוח שברצונך למחוק את הסקוואד? פעולה זו אינה ניתנת לביטול, וכל החברים יקבלו הודעה.",
+    deleting: "מוחק...",
+    unknownMember: "לא ידוע",
+    squadApprovedChat: "🔥 הסקוואד אישר! נפתח צ'אט עם בעל הדירה!",
+    squadApprovedLeader: "🔥 הסקוואד אישר את המודעה! המנהיג יכול עכשיו לשוחח עם הבעלים!",
+    goToChat: "עבור לצ'אט",
+    listingRemovedByVote: "המודעה הוסרה — הרוב הצביע נגד",
   },
   fr: {
     // Settings
@@ -1677,6 +1779,57 @@ const translations: Record<Language, Record<string, string>> = {
     noMembersSaved: "Pas encore d'appartements sauvegardés",
     noMembersSavedDesc: "Les membres n'ont pas encore sauvegardé d'appartements",
     savedBy: "Sauvegardé par",
+
+    // Auth
+    forgotPassword: "Mot de passe oublié ?",
+    enterEmailFirst: "Entrez d'abord votre adresse e-mail",
+    passwordResetSent: "E-mail de réinitialisation envoyé — vérifiez votre boîte",
+    passwordRequired: "Le mot de passe est requis",
+    passwordsDoNotMatch: "Les mots de passe ne correspondent pas",
+    confirmPasswordPlaceholder: "Confirmer le mot de passe",
+    weakPasswordLabel: "Faible",
+    fairPasswordLabel: "Moyen",
+    strongPasswordLabel: "Fort",
+    heroFindPerfectRoommate: "Trouvez votre colocataire idéal",
+    heroSubtitle: "Rejoignez des milliers de personnes qui trouvent leur logement idéal",
+    featureSmart: "Correspondance intelligente par compatibilité",
+    featureChat: "Discutez directement avec les colocataires",
+    featureVerified: "Profils vérifiés & communauté sûre",
+
+    // ErrorBoundary
+    somethingWentWrong: "Une erreur s'est produite",
+
+    // Index
+    failedToLoadApartments: "Échec du chargement des appartements",
+
+    // ContactSupport labels
+    contactPhone: "Téléphone",
+    contactEmail: "E-mail",
+    contactInstagram: "Instagram",
+    contactFacebook: "Facebook",
+
+    // SquadHub
+    leftSquad: "Vous avez quitté le squad",
+    failedToLeaveSquad: "Impossible de quitter le squad",
+    squadDeleted: "Squad supprimé",
+    failedToDeleteSquad: "Impossible de supprimer le squad",
+    squadLinkCopied: "Lien du squad copié ! Partagez-le avec vos amis 🔗",
+    joinRequestSent: "Demande envoyée au créateur du squad ! 🙌",
+    failedToSendRequest: "Échec de l'envoi de la demande",
+    invitedToSquad: "{name} invité(e) à rejoindre !",
+    failedToSendInvite: "Échec de l'envoi de l'invitation",
+    leaveSquadTitle: "Quitter le squad ?",
+    leaveSquadDesc: "Êtes-vous sûr de vouloir quitter ce squad ? Vous perdrez l'accès au chat et aux appartements partagés.",
+    leave: "Quitter",
+    leaving: "Départ...",
+    deleteSquadTitle: "Supprimer le squad ?",
+    deleteSquadDesc: "Êtes-vous sûr de vouloir supprimer ce squad ? Cette action est irréversible et tous les membres seront notifiés.",
+    deleting: "Suppression...",
+    unknownMember: "Inconnu",
+    squadApprovedChat: "🔥 Squad approuvé ! Chat ouvert avec le propriétaire !",
+    squadApprovedLeader: "🔥 Le squad a approuvé cette annonce ! Le leader peut maintenant contacter le propriétaire !",
+    goToChat: "Aller au chat",
+    listingRemovedByVote: "Annonce retirée — majorité contre",
   },
 };
 

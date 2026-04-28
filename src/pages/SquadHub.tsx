@@ -110,10 +110,10 @@ export default function SquadHub() {
         .eq("squad_id", id)
         .eq("user_id", user.id);
       if (error) throw error;
-      toast.success("You left the squad");
+      toast.success(t("leftSquad"));
       navigate("/my-squads");
     } catch {
-      toast.error("Failed to leave squad");
+      toast.error(t("failedToLeaveSquad"));
     } finally {
       setLeaving(false);
       setLeaveOpen(false);
@@ -145,10 +145,10 @@ export default function SquadHub() {
 
       const { error } = await supabase.from("squads").delete().eq("id", id);
       if (error) throw error;
-      toast.success("Squad deleted");
+      toast.success(t("squadDeleted"));
       navigate("/my-squads");
     } catch {
-      toast.error("Failed to delete squad");
+      toast.error(t("failedToDeleteSquad"));
     } finally {
       setDeleting(false);
       setDeleteOpen(false);
@@ -158,7 +158,7 @@ export default function SquadHub() {
   const handleShare = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
-      toast.success("Squad link copied! Share it with friends 🔗");
+      toast.success(t("squadLinkCopied"));
     }).catch(() => {
       toast.info(`Share this link: ${url}`);
     });
@@ -175,9 +175,9 @@ export default function SquadHub() {
         status: "pending",
       }, { onConflict: "squad_id,invitee_id" });
       if (error) throw error;
-      toast.success("Join request sent to the squad owner! 🙌");
+      toast.success(t("joinRequestSent"));
     } catch {
-      toast.error("Failed to send request");
+      toast.error(t("failedToSendRequest"));
     } finally {
       setRequesting(false);
     }
@@ -248,12 +248,12 @@ export default function SquadHub() {
         invitee_id: current.profile.user_id,
       });
       if (error) {
-        toast.error("Failed to send invite");
+        toast.error(t("failedToSendInvite"));
       } else {
-        toast.success(`Invited ${current.profile.name} to join!`);
+        toast.success(t("invitedToSquad").replace("{name}", current.profile.name));
       }
     }
-  }, [user, id, remainingDiscover, members]);
+  }, [user, id, remainingDiscover, members, t]);
 
   // Fetch compatible apartments based on squad filters
   useEffect(() => {
@@ -292,7 +292,7 @@ export default function SquadHub() {
       .then(({ data }) => {
         const rows = (data ?? []).flatMap((row: any) => {
           if (!row.apartments) return [];
-          const saver = members.find((m) => m.user_id === row.user_id)?.profile?.name ?? "Member";
+          const saver = members.find((m) => m.user_id === row.user_id)?.profile?.name ?? t("unknownMember");
           return [{ saver, apartment: row.apartments as ApartmentRow }];
         });
         setMemberSaves(rows);
@@ -414,7 +414,7 @@ export default function SquadHub() {
           .in("conversation_id", convoIds);
 
         if (existingConvo && existingConvo.length > 0) {
-          toast.success("🔥 Majority liked! Chat already exists with the owner!");
+          toast.success(t("squadApprovedChat"));
           return;
         }
       }
@@ -424,15 +424,15 @@ export default function SquadHub() {
           other_user_id: apt.user_id,
         });
         if (!error && convId) {
-          toast.success("🔥 Squad approved! Chat opened with the apartment owner!", {
-            action: { label: "Go to Chat", onClick: () => navigate("/chats") },
+          toast.success(t("squadApprovedChat"), {
+            action: { label: t("goToChat"), onClick: () => navigate("/chats") },
           });
         }
       } else {
-        toast.success("🔥 Squad approved this listing! The leader can now chat with the owner!");
+        toast.success(t("squadApprovedLeader"));
       }
     }, 800);
-  }, [id, squad, likes, members, apartments, user, navigate]);
+  }, [id, squad, likes, members, apartments, user, navigate, t]);
 
   const handleApartmentVote = async (apartmentId: string, liked: boolean) => {
     await handleApartmentLike(apartmentId, liked);
@@ -442,7 +442,7 @@ export default function SquadHub() {
       const threshold = Math.ceil(members.length / 2);
       const currentDislikes = likes.filter(l => l.apartment_id === apartmentId && !l.liked).length + 1;
       if (currentDislikes >= threshold) {
-        toast("Listing removed — majority voted it down", { icon: "👎" });
+        toast(t("listingRemovedByVote"), { icon: "👎" });
       }
     }
   };
@@ -533,7 +533,7 @@ export default function SquadHub() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pb-28 desk:pb-8">
-        <p className="text-muted-foreground text-sm">Loading squad...</p>
+        <p className="text-muted-foreground text-sm">{t("loadingSquad")}</p>
       </div>
     );
   }
@@ -692,7 +692,7 @@ export default function SquadHub() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-card-foreground text-sm truncate">{p?.name ?? "Unknown"}</span>
+                          <span className="font-semibold text-card-foreground text-sm truncate">{p?.name ?? t("unknownMember")}</span>
                           {isLeader && <Crown className="w-3.5 h-3.5 text-primary" />}
                         </div>
                         <span className="text-muted-foreground text-xs">{p?.occupation ?? ""} • {p?.city ?? ""}</span>
@@ -1051,19 +1051,17 @@ export default function SquadHub() {
       <AlertDialog open={leaveOpen} onOpenChange={setLeaveOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Leave squad?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to leave this squad? You'll lose access to its chat and shared apartments.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("leaveSquadTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("leaveSquadDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={leaving}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={leaving}>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleLeaveSquad}
               disabled={leaving}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {leaving ? "Leaving..." : "Leave"}
+              {leaving ? t("leaving") : t("leave")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1071,19 +1069,17 @@ export default function SquadHub() {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete squad?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this squad? This action cannot be undone, and all members will be notified.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("deleteSquadTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteSquadDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteSquad}
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? t("deleting") : t("deleteBtn")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

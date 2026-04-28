@@ -1,4 +1,5 @@
 import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -122,7 +123,7 @@ export default function Index() {
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
-        if (error) { console.error("Failed to load apartments:", error); }
+        if (error) { console.error("Failed to load apartments:", error); toast.error(t("failedToLoadApartments")); }
         setApartments((data ?? []).map(dbRowToApartment));
         setApartmentsLoading(false);
         setGridKey(1);

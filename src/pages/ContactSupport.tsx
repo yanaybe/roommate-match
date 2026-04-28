@@ -7,17 +7,21 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "sonner";
 
-const contactMethods = [
-  { icon: Phone, label: "Phone", value: "+972 54-540-4192", href: "tel:+972545404192", color: "from-emerald-500 to-green-600" },
-  { icon: Mail, label: "Email", value: "support@roomatch.app", href: "mailto:support@roomatch.app", color: "from-blue-500 to-cyan-600" },
-  { icon: Instagram, label: "Instagram", value: "@_roomatch_", href: "https://instagram.com/_roomatch_", color: "from-pink-500 to-purple-600" },
-  { icon: Facebook, label: "Facebook", value: "_roomatch_", href: "https://facebook.com/_roomatch_", color: "from-blue-600 to-indigo-600" },
-];
+function useContactMethods() {
+  const { t } = useLanguage();
+  return [
+    { icon: Phone, label: t("contactPhone"), value: "+972 54-540-4192", href: "tel:+972545404192", color: "from-emerald-500 to-green-600" },
+    { icon: Mail, label: t("contactEmail"), value: "support@roomatch.app", href: "mailto:support@roomatch.app", color: "from-blue-500 to-cyan-600" },
+    { icon: Instagram, label: t("contactInstagram"), value: "@_roomatch_", href: "https://instagram.com/_roomatch_", color: "from-pink-500 to-purple-600" },
+    { icon: Facebook, label: t("contactFacebook"), value: "_roomatch_", href: "https://facebook.com/_roomatch_", color: "from-blue-600 to-indigo-600" },
+  ];
+}
 
 export default function ContactSupport() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const contactMethods = useContactMethods();
   const [category, setCategory] = useState("general");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);

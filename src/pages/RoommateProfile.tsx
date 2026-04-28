@@ -84,8 +84,8 @@ export default function RoommateProfile() {
     const dbProfile = allProfiles.find((p) => p.user_id === id);
     if (dbProfile) {
       const u = profileToUser(dbProfile);
-      const match = myProfile ? calculateUserMatch(myProfile, dbProfile) : 0;
-      const bd = myProfile ? calculateUserMatchBreakdown(myProfile, dbProfile) : [];
+      const match = myProfile?.onboarding_complete ? calculateUserMatch(myProfile, dbProfile) : 0;
+      const bd = myProfile?.onboarding_complete ? calculateUserMatchBreakdown(myProfile, dbProfile) : [];
       return { userData: u, fullProfile: dbProfile, matchPercent: match, breakdown: bd };
     }
     return { userData: null, fullProfile: null, matchPercent: 0, breakdown: [] };

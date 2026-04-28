@@ -424,7 +424,7 @@ export default function ApartmentDetail() {
               <MapPin className="w-3.5 h-3.5" />
               {apartment.location}
             </div>
-            {(apartment as any).listingType === "entire_place" && (
+            {apartment.listingType === "entire_place" && (
               <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
                 🏠 Entire Apartment
               </span>
@@ -436,7 +436,7 @@ export default function ApartmentDetail() {
         <div className="space-y-3">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">{(apartment as any).listingType === "entire_place" ? "This Listing" : t("yourRoom")}</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-primary">{apartment.listingType === "entire_place" ? "This Listing" : t("yourRoom")}</span>
               <div className="flex-1 h-px bg-primary/20" />
             </div>
             <div className="grid grid-cols-2 gap-2">

@@ -68,7 +68,7 @@ export default function Auth() {
     }
 
     if (isLogin) {
-      if (!password) { toast.error("Password is required"); setLoading(false); return; }
+      if (!password) { toast.error(t("passwordRequired")); setLoading(false); return; }
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
       else navigate("/");
@@ -80,7 +80,7 @@ export default function Auth() {
         return;
       }
       if (password !== confirmPassword) {
-        toast.error("Passwords do not match");
+        toast.error(t("passwordsDoNotMatch"));
         setLoading(false);
         return;
       }
@@ -134,16 +134,16 @@ export default function Auth() {
                 <button
                   type="button"
                   onClick={async () => {
-                    if (!email) { toast.error("Enter your email address first"); return; }
+                    if (!email) { toast.error(t("enterEmailFirst")); return; }
                     const { error } = await supabase.auth.resetPasswordForEmail(email, {
                       redirectTo: `${window.location.origin}/auth`,
                     });
                     if (error) toast.error(error.message);
-                    else toast.success("Password reset email sent — check your inbox");
+                    else toast.success(t("passwordResetSent"));
                   }}
                   className="text-xs text-primary font-semibold hover:underline"
                 >
-                  Forgot password?
+                  {t("forgotPassword")}
                 </button>
               </div>
             </div>
@@ -169,9 +169,9 @@ export default function Auth() {
 
   /* ── Sign-up view ── */
   const features = [
-    { icon: Home, text: "Smart compatibility matching" },
-    { icon: MessageCircle, text: "Chat directly with roommates" },
-    { icon: ShieldCheck, text: "Verified profiles & safe community" },
+    { icon: Home, text: t("featureSmart") },
+    { icon: MessageCircle, text: t("featureChat") },
+    { icon: ShieldCheck, text: t("featureVerified") },
   ];
 
   return (
@@ -186,10 +186,10 @@ export default function Auth() {
           <span className="text-3xl">🏠</span>
         </div>
         <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">
-          Find your perfect<br /><span className="text-primary">roommate</span>
+          {t("heroFindPerfectRoommate")}
         </h1>
         <p className="text-muted-foreground text-sm mb-8 max-w-xs">
-          Join thousands of people finding their ideal living situation
+          {t("heroSubtitle")}
         </p>
 
         <div className="flex flex-col gap-3 w-full max-w-xs">
@@ -276,7 +276,7 @@ export default function Auth() {
                   : pwAnalysis.strength === "fair" ? "text-yellow-500"
                   : "text-green-500"
                 }`}>
-                  {pwAnalysis.strength === "weak" ? "Weak" : pwAnalysis.strength === "fair" ? "Fair" : "Strong"} password
+                  {pwAnalysis.strength === "weak" ? t("weakPasswordLabel") : pwAnalysis.strength === "fair" ? t("fairPasswordLabel") : t("strongPasswordLabel")} password
                 </p>
                 {pwAnalysis.missing.length > 0 && (
                   <ul className="space-y-0.5">
@@ -296,7 +296,7 @@ export default function Auth() {
           <div className="relative">
             <input
               type={showConfirm ? "text" : "password"}
-              placeholder="Confirm password"
+              placeholder={t("confirmPasswordPlaceholder")}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -314,7 +314,7 @@ export default function Auth() {
             </button>
           </div>
           {confirmPassword.length > 0 && confirmPassword !== password && (
-            <p className="text-destructive text-xs -mt-1 font-medium">Passwords do not match</p>
+            <p className="text-destructive text-xs -mt-1 font-medium">{t("passwordsDoNotMatch")}</p>
           )}
 
           <button

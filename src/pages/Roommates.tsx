@@ -91,8 +91,11 @@ export default function Roommates() {
 
   const items = otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent }));
 
+  const swipedSet = useMemo(() => new Set(swiped), [swiped]);
+  const blockedSet = useMemo(() => new Set(blockedIds), [blockedIds]);
+
   const remaining = items.filter(
-    (item) => !swiped.includes(item.user.id) && !blockedIds.includes(item.user.id)
+    (item) => !swipedSet.has(item.user.id) && !blockedSet.has(item.user.id)
   );
 
   const requireAuth = useCallback(() => {
