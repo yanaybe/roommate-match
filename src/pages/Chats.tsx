@@ -92,6 +92,7 @@ export default function Chats() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [subscriptionTier, setSubscriptionTier] = useState("free");
   // Rate limiting: track timestamps of recent sends (max 5 per 3 seconds)
   const recentSendTimestamps = useRef<number[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -102,6 +103,19 @@ export default function Chats() {
 
   const activeConvData = conversations.find((c) => c.id === activeConv);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(activeConvData?.other_user_id);
+
+  // Fetch current user's subscription tier for rate-limit bypass
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setSubscriptionTier((data as any).subscription_tier ?? "free");
+      });
+  }, [user]);
 
   // Fetch other user's profile for context card
   useEffect(() => {
@@ -328,29 +342,35 @@ export default function Chats() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !activeConv || !user) return;
 
+    const isGoldPlus = ["gold", "platinum"].includes(subscriptionTier);
+
     // ── Rate limiting: client-side burst guard (UX) ──────────────────────────
-    const now = Date.now();
-    const WINDOW_MS = 3000;
-    const MAX_IN_WINDOW = 5;
-    recentSendTimestamps.current = recentSendTimestamps.current.filter(
-      (t) => now - t < WINDOW_MS
-    );
-    if (recentSendTimestamps.current.length >= MAX_IN_WINDOW) {
-      toast.error("Slow down — you're sending messages too fast");
-      return;
+    if (!isGoldPlus) {
+      const now = Date.now();
+      const WINDOW_MS = 3000;
+      const MAX_IN_WINDOW = 5;
+      recentSendTimestamps.current = recentSendTimestamps.current.filter(
+        (t) => now - t < WINDOW_MS
+      );
+      if (recentSendTimestamps.current.length >= MAX_IN_WINDOW) {
+        toast.error("Slow down — you're sending messages too fast");
+        return;
+      }
+      recentSendTimestamps.current.push(now);
     }
-    recentSendTimestamps.current.push(now);
 
     // ── Rate limiting: server-side check (bypass-proof) ──────────────────────
-    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
-    const { count: recentCount } = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("sender_id", user.id)
-      .gte("created_at", oneMinuteAgo);
-    if ((recentCount ?? 0) >= 30) {
-      toast.error("You're sending too many messages. Please wait a minute.");
-      return;
+    if (!isGoldPlus) {
+      const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+      const { count: recentCount } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("sender_id", user.id)
+        .gte("created_at", oneMinuteAgo);
+      if ((recentCount ?? 0) >= 30) {
+        toast.error("You're sending too many messages. Please wait a minute.");
+        return;
+      }
     }
 
     // ── Sanitize content (strip control chars + bidi overrides) ──────────────

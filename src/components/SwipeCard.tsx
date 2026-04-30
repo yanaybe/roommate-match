@@ -6,7 +6,7 @@ import MatchBadge from "./MatchBadge";
 import type { UserProfile } from "@/data/mockData";
 
 interface SwipeCardProps {
-  user: UserProfile & { photos?: string[] };
+  user: UserProfile & { photos?: string[]; subscriptionTier?: string };
   matchPercent: number;
   onSwipe: (direction: "left" | "right") => void;
   isTop: boolean;
@@ -112,6 +112,16 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
         <div className="absolute top-4 left-4 z-10">
           <MatchBadge percent={matchPercent} />
         </div>
+
+        {/* Platinum "Top Match" badge */}
+        {user.subscriptionTier === "platinum" && (
+          <div className="absolute top-4 right-4 z-10">
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-white"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}>
+              ⭐ Top Match
+            </span>
+          </div>
+        )}
 
         {/* User info — tappable */}
         <div

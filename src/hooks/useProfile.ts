@@ -57,7 +57,15 @@ export function useProfile() {
   }};
 }
 
+const TIER_ORDER: Record<string, number> = {
+  platinum: 0,
+  gold: 1,
+  plus: 2,
+  free: 3,
+};
+
 export function useAllProfiles() {
+  const { user } = useAuth();
   const [profiles, setProfiles] = useState<FullProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +76,7 @@ export function useAllProfiles() {
   const loadPage = useCallback(async (afterCursor: string | null) => {
     let query = supabase
       .from("profiles")
-      .select("*")
+      .select("*, profile_visibility")
       .eq("onboarding_complete", true)
       .order("created_at", { ascending: false })
       .limit(PAGE_SIZE);
@@ -82,15 +90,26 @@ export function useAllProfiles() {
     if (fetchError) {
       setError(fetchError.message);
     } else {
-      const batch = (data as unknown as FullProfile[]) ?? [];
+      const raw = (data as unknown as FullProfile[]) ?? [];
+      // Filter out hidden profiles unless it's the current user's own profile
+      const batch = raw.filter((p) => {
+        if (p.user_id === user?.id) return true;
+        return (p as any).profile_visibility !== "hidden";
+      });
+      // Sort: platinum first, then gold, then plus, then free
+      batch.sort((a, b) => {
+        const aOrder = TIER_ORDER[(a as any).subscription_tier ?? "free"] ?? 3;
+        const bOrder = TIER_ORDER[(b as any).subscription_tier ?? "free"] ?? 3;
+        return aOrder - bOrder;
+      });
       setProfiles((prev) => (afterCursor === null ? batch : [...prev, ...batch]));
-      setHasMore(batch.length === PAGE_SIZE);
-      if (batch.length > 0) {
-        setCursor(batch[batch.length - 1].created_at as unknown as string);
+      setHasMore(raw.length === PAGE_SIZE);
+      if (raw.length > 0) {
+        setCursor(raw[raw.length - 1].created_at as unknown as string);
       }
     }
     setLoading(false);
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     setLoading(true);

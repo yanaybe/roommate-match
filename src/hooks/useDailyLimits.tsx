@@ -16,6 +16,7 @@ interface DailyLimitsContextValue {
   recordLike: () => void;
   recordSave: () => void;
   openPremiumSheet: () => void;
+  subscriptionTier: string;
 }
 
 const DailyLimitsContext = createContext<DailyLimitsContextValue>({
@@ -28,6 +29,7 @@ const DailyLimitsContext = createContext<DailyLimitsContextValue>({
   recordLike: () => {},
   recordSave: () => {},
   openPremiumSheet: () => {},
+  subscriptionTier: "free",
 });
 
 export function DailyLimitsProvider({ children }: { children: ReactNode }) {
@@ -92,6 +94,7 @@ export function DailyLimitsProvider({ children }: { children: ReactNode }) {
         recordLike,
         recordSave,
         openPremiumSheet,
+        subscriptionTier,
       }}
     >
       {children}

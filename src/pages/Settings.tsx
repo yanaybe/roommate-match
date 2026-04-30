@@ -122,18 +122,42 @@ export default function Settings() {
     document.documentElement.classList.contains("dark")
   );
   const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
+  const [profileVisibility, setProfileVisibility] = useState<"everyone" | "hidden">("everyone");
+  const [visibilityLoading, setVisibilityLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("subscription_tier")
+      .select("subscription_tier, profile_visibility")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setSubscriptionTier((data as any).subscription_tier ?? "free");
+        if (data) {
+          setSubscriptionTier((data as any).subscription_tier ?? "free");
+          setProfileVisibility(((data as any).profile_visibility ?? "everyone") as "everyone" | "hidden");
+        }
       });
   }, [user]);
+
+  const handleVisibilityToggle = async (hidden: boolean) => {
+    if (!user) return;
+    const isPlusPlus = ["plus", "gold", "platinum"].includes(subscriptionTier);
+    if (!isPlusPlus) {
+      setPremiumOpen(true);
+      return;
+    }
+    setVisibilityLoading(true);
+    const newValue = hidden ? "hidden" : "everyone";
+    const { error } = await supabase
+      .from("profiles")
+      .update({ profile_visibility: newValue } as any)
+      .eq("user_id", user.id);
+    if (!error) {
+      setProfileVisibility(newValue);
+    }
+    setVisibilityLoading(false);
+  };
 
   const currentPlan = subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1);
   const PlanIcon = planIcons[currentPlan] || Zap;
@@ -265,6 +289,41 @@ export default function Settings() {
               </span>
             </motion.button>
           )}
+        </section>
+
+        {/* 🔒 Privacy (Plus+ only) */}
+        <section>
+          <SectionHeader title="Privacy" />
+          <div className="bg-card rounded-2xl shadow-card divide-y divide-border/30">
+            <div className="w-full flex items-center gap-3 px-4 py-3.5">
+              <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                <Eye size={18} className="text-muted-foreground" />
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-semibold text-foreground">Hide my profile from discovery</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {["plus", "gold", "platinum"].includes(subscriptionTier)
+                    ? "Your profile won't appear in roommate search"
+                    : "Plus+ required to hide your profile"}
+                </p>
+              </div>
+              {["plus", "gold", "platinum"].includes(subscriptionTier) ? (
+                <Switch
+                  checked={profileVisibility === "hidden"}
+                  onCheckedChange={handleVisibilityToggle}
+                  disabled={visibilityLoading}
+                />
+              ) : (
+                <button
+                  onClick={() => setPremiumOpen(true)}
+                  className="flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full"
+                >
+                  <Lock size={11} />
+                  Upgrade
+                </button>
+              )}
+            </div>
+          </div>
         </section>
 
         {/* 🆘 Support & Legal */}

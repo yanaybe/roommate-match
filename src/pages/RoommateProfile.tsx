@@ -7,7 +7,7 @@ import {
   DollarSign, Home, Users, Volume2,
   UtensilsCrossed, Dumbbell,
   Wine, PartyPopper, Clock, BookOpen, Smile,
-  MoreVertical, Ban, Flag, Sparkles, Heart, X
+  MoreVertical, Ban, Flag, Sparkles, Heart, X, MessageCircle
 } from "lucide-react";
 import MatchBadge from "@/components/MatchBadge";
 import MatchModal from "@/components/MatchModal";
@@ -75,8 +75,10 @@ export default function RoommateProfile() {
   const [reportOpen, setReportOpen] = useState(false);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [likeLoading, setLikeLoading] = useState(false);
+  const [messageLoading, setMessageLoading] = useState(false);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(id);
-  const { canLike, likesLimit, recordLike, openPremiumSheet } = useDailyLimits();
+  const { canLike, likesLimit, recordLike, openPremiumSheet, subscriptionTier } = useDailyLimits();
+  const isPlatinum = subscriptionTier === "platinum";
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -174,6 +176,56 @@ export default function RoommateProfile() {
       toast.error("Failed to like. Please try again.");
     } finally {
       setLikeLoading(false);
+    }
+  };
+
+  const handleMessage = async () => {
+    if (!authUser || !userData || isOwnProfile) return;
+    if (!isUUID(userData.id)) {
+      toast.info("Demo profile — messaging available with real users!");
+      return;
+    }
+    setMessageLoading(true);
+    try {
+      // Find or create a conversation between the two users
+      const { data: existingParticipations } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("user_id", authUser.id);
+
+      let conversationId: string | null = null;
+
+      if (existingParticipations?.length) {
+        const myConvIds = existingParticipations.map((p) => p.conversation_id);
+        const { data: otherParticipations } = await supabase
+          .from("conversation_participants")
+          .select("conversation_id")
+          .eq("user_id", userData.id)
+          .in("conversation_id", myConvIds);
+        if (otherParticipations?.length) {
+          conversationId = otherParticipations[0].conversation_id;
+        }
+      }
+
+      if (!conversationId) {
+        const { data: newConv } = await supabase
+          .from("conversations")
+          .insert({})
+          .select("id")
+          .single();
+        if (!newConv) throw new Error("Failed to create conversation");
+        conversationId = newConv.id;
+        await supabase.from("conversation_participants").insert([
+          { conversation_id: conversationId, user_id: authUser.id },
+          { conversation_id: conversationId, user_id: userData.id },
+        ]);
+      }
+
+      navigate(`/chats?conv=${conversationId}`);
+    } catch {
+      toast.error("Could not open conversation. Please try again.");
+    } finally {
+      setMessageLoading(false);
     }
   };
 
@@ -527,6 +579,16 @@ export default function RoommateProfile() {
               <X className="w-5 h-5" />
               Pass
             </button>
+            {isPlatinum && (
+              <button
+                onClick={handleMessage}
+                disabled={messageLoading}
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-violet-500/40 bg-violet-500/10 text-violet-600 dark:text-violet-400 font-bold text-sm active:scale-95 transition-transform disabled:opacity-50 hover:bg-violet-500/20"
+              >
+                <MessageCircle className="w-5 h-5" />
+                {messageLoading ? "Opening…" : "Message"}
+              </button>
+            )}
             <button
               onClick={handleLike}
               disabled={likeLoading}

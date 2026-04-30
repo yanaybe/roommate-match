@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { X, Heart, RotateCcw, ArrowRight } from "lucide-react";
+import { X, Heart, RotateCcw, ArrowRight, Lock } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { isUUID } from "@/lib/profileUtils";
 
 // Convert DB profile to mock format for SwipeCard compatibility
-function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
+function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subscriptionTier?: string } {
   const photos = (p as any).photos as string[] | undefined;
   return {
     id: p.user_id,
@@ -43,6 +43,7 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
     bio: p.bio,
     photos: photos?.length ? photos : undefined,
     phoneVerified: (p as any).phone_verified ?? false,
+    subscriptionTier: (p as any).subscription_tier ?? "free",
   };
 }
 
@@ -57,7 +58,8 @@ export default function Roommates() {
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
-  const { canLike, likesUsed, likesLimit, recordLike, openPremiumSheet } = useDailyLimits();
+  const { canLike, likesUsed, likesLimit, recordLike, openPremiumSheet, subscriptionTier } = useDailyLimits();
+  const canUndo = subscriptionTier !== "free";
 
   useEffect(() => {
     if (!user?.id) return;
@@ -155,6 +157,10 @@ export default function Roommates() {
   );
 
   const handleUndo = () => {
+    if (!canUndo) {
+      openPremiumSheet();
+      return;
+    }
     setSwiped((prev) => prev.slice(0, -1));
   };
 
@@ -260,7 +266,7 @@ export default function Roommates() {
                       disabled={swiped.length === 0}
                       className="w-full flex items-center justify-center gap-2 py-3 bg-secondary rounded-xl text-sm font-semibold text-foreground hover:bg-secondary/80 disabled:opacity-40 active:scale-[0.98] transition-all"
                     >
-                      <RotateCcw className="w-4 h-4" /> Undo last swipe
+                      {canUndo ? <RotateCcw className="w-4 h-4" /> : <Lock className="w-4 h-4" />} Undo last swipe
                     </button>
                   </div>
                 </div>
@@ -272,8 +278,13 @@ export default function Roommates() {
                     onClick={handleUndo}
                     disabled={swiped.length === 0}
                     className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center shadow-card disabled:opacity-30 hover:bg-secondary/80 hover:scale-105 active:scale-95 transition-all duration-150"
+                    title={canUndo ? "Undo last swipe" : "Upgrade to Plus+ to undo swipes"}
                   >
-                    <RotateCcw className="w-5 h-5 text-muted-foreground" />
+                    {canUndo ? (
+                      <RotateCcw className="w-5 h-5 text-muted-foreground" />
+                    ) : (
+                      <Lock className="w-5 h-5 text-muted-foreground" />
+                    )}
                   </button>
                   <button
                     onClick={() => handleSwipe("left")}
