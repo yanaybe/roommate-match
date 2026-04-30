@@ -144,14 +144,6 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
 
         {/* Hero header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary via-violet-600 to-amber-500 px-5 pt-8 pb-6">
-          {/* Close button */}
-          <button
-            onClick={() => onOpenChange(false)}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm"
-          >
-            <X className="w-4 h-4 text-white" />
-          </button>
-
           {/* Decorative circles */}
           <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full bg-white/10 blur-xl" />
           <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full bg-white/10 blur-lg" />
