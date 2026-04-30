@@ -13,7 +13,7 @@ export function sanitizeText(value: string): string {
 // This prevents javascript:, data:, and any third-party domain from
 // being stored as a profile image URL.
 const ALLOWED_IMAGE_HOSTS = [
-  "fwgyslyngfpjpditoiov.supabase.co", // our Supabase storage
+  "ggrvcvjtkoupvorcdile.supabase.co", // our Supabase storage
 ];
 
 export function isSafeImageUrl(url: string): boolean {
