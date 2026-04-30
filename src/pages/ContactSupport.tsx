@@ -53,7 +53,15 @@ export default function ContactSupport() {
       toast.error(t("tooManySupportMessages") || "You've sent too many messages today. Please try again tomorrow.");
       return;
     }
-    const { error } = await supabase.from("support_messages").insert({ user_id: user.id, category, message: message.trim() });
+
+    const [{ error }] = await Promise.all([
+      supabase.from("support_messages").insert({ user_id: user.id, category, message: message.trim() }),
+      fetch("https://formspree.io/f/xwvykkrn", {
+        method: "POST",
+        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, category, message: message.trim() }),
+      }),
+    ]);
     setSending(false);
     if (error) { toast.error(t("failedToSend")); }
     else { setSentState(true); setMessage(""); setTimeout(() => setSentState(false), 3000); toast.success(t("messageSent")); }
