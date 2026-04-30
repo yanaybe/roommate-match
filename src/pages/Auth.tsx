@@ -219,7 +219,7 @@ export default function Auth() {
       >
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-extrabold text-foreground">{t("createYourAccount")}</h2>
-          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">Step 1 of 2</span>
+          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">{t("stepOneOfTwo")}</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -276,7 +276,7 @@ export default function Auth() {
                   : pwAnalysis.strength === "fair" ? "text-yellow-500"
                   : "text-green-500"
                 }`}>
-                  {pwAnalysis.strength === "weak" ? t("weakPasswordLabel") : pwAnalysis.strength === "fair" ? t("fairPasswordLabel") : t("strongPasswordLabel")} password
+                  {pwAnalysis.strength === "weak" ? t("weakPasswordLabel") : pwAnalysis.strength === "fair" ? t("fairPasswordLabel") : t("strongPasswordLabel")}
                 </p>
                 {pwAnalysis.missing.length > 0 && (
                   <ul className="space-y-0.5">

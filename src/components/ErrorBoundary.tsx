@@ -30,7 +30,7 @@ class ErrorBoundaryClass extends Component<Props & { t: (key: string) => string 
             <span className="text-3xl">⚠️</span>
           </div>
           <h2 className="text-xl font-extrabold text-foreground mb-2">{t("somethingWentWrong")}</h2>
-          <p className="text-muted-foreground text-sm mb-6 max-w-xs">{this.state.message || "An unexpected error occurred."}</p>
+          <p className="text-muted-foreground text-sm mb-6 max-w-xs">{this.state.message || t("unexpectedErrorDesc")}</p>
           <button
             onClick={() => { this.setState({ hasError: false, message: "" }); window.location.href = "/"; }}
             className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm"

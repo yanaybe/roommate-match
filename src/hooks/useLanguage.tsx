@@ -585,9 +585,11 @@ const translations: Record<Language, Record<string, string>> = {
     featureSmart: "Smart compatibility matching",
     featureChat: "Chat directly with roommates",
     featureVerified: "Verified profiles & safe community",
+    stepOneOfTwo: "Step 1 of 2",
 
     // ErrorBoundary
     somethingWentWrong: "Something went wrong",
+    unexpectedErrorDesc: "An unexpected error occurred.",
 
     // Index
     failedToLoadApartments: "Failed to load apartments",
@@ -1293,9 +1295,11 @@ const translations: Record<Language, Record<string, string>> = {
     featureSmart: "התאמה חכמה לפי תאימות",
     featureChat: "שוחח ישירות עם שותפים פוטנציאליים",
     featureVerified: "פרופילים מאומתים וקהילה בטוחה",
+    stepOneOfTwo: "שלב 1 מתוך 2",
 
     // ErrorBoundary
     somethingWentWrong: "משהו השתבש",
+    unexpectedErrorDesc: "אירעה שגיאה בלתי צפויה.",
 
     // Index
     failedToLoadApartments: "טעינת הדירות נכשלה",
@@ -2001,9 +2005,11 @@ const translations: Record<Language, Record<string, string>> = {
     featureSmart: "Correspondance intelligente par compatibilité",
     featureChat: "Discutez directement avec les colocataires",
     featureVerified: "Profils vérifiés & communauté sûre",
+    stepOneOfTwo: "Étape 1 sur 2",
 
     // ErrorBoundary
     somethingWentWrong: "Une erreur s'est produite",
+    unexpectedErrorDesc: "Une erreur inattendue s'est produite.",
 
     // Index
     failedToLoadApartments: "Échec du chargement des appartements",
