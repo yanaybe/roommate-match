@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
 import { useLanguage } from "@/hooks/useLanguage";
+import { analytics } from "@/lib/analytics";
 import { sanitizeText, isSafeImageUrl } from "@/lib/security";
 
 const sleepOptions = ["Early bird", "Night owl", "Flexible"];
@@ -411,6 +412,7 @@ export default function Onboarding() {
       toast.error(t("failedToSaveProfile") + error.message);
     } else {
       toast.success(isEdit ? t("preferencesUpdated") : t("profileCreated"));
+      if (!isEdit) analytics.onboardingComplete();
       navigate(isEdit ? "/profile" : "/", { replace: true });
     }
   };

@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
+import { analytics } from "@/lib/analytics";
 
 const DRAFT_KEY = "post_apartment_draft";
 
@@ -302,6 +303,7 @@ export default function PostApartment() {
         } as any);
         if (error) throw error;
         localStorage.removeItem(DRAFT_KEY);
+        analytics.apartmentPost();
         toast.success("Apartment posted successfully! 🎉");
         navigate("/");
       }

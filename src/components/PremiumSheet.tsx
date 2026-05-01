@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { analytics } from "@/lib/analytics";
 
 interface PremiumSheetProps {
   open: boolean;
@@ -114,10 +115,11 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
     });
   }, []);
 
-  const openCheckout = useCallback(async (priceId: string) => {
+  const openCheckout = useCallback(async (priceId: string, tier?: string) => {
     if (!paddle) { toast.error("Payment system not ready. Please try again."); return; }
     if (!priceId) { toast.error("This plan is not available yet."); return; }
     if (!user) { toast.error("Please sign in first."); return; }
+    analytics.upgradeClick("premium_sheet", tier);
     setLoading(true);
     try {
       paddle.Checkout.open({
@@ -135,7 +137,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
     }
   }, [paddle, user, onOpenChange]);
 
-  const handleSubscribe = () => openCheckout(PRICE_IDS[selectedPlan]);
+  const handleSubscribe = () => openCheckout(PRICE_IDS[selectedPlan], selectedPlan);
   const activePlan = plans.find((p) => p.id === selectedPlan)!;
 
   return (

@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 import { isUUID } from "@/lib/profileUtils";
+import { analytics } from "@/lib/analytics";
 
 // Convert DB profile to mock format for SwipeCard compatibility
 function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subscriptionTier?: string } {
@@ -145,15 +146,26 @@ export default function Roommates() {
             .maybeSingle();
 
           if (mutualLike) {
+            analytics.match(current.matchPercent);
             setMatchedUser(current.user);
             setMatchedPercent(current.matchPercent);
           }
         }
 
+        analytics.swipeLike(current.matchPercent);
         recordLike();
+
+        // Warn when approaching the daily free limit
+        const likesAfter = likesUsed + 1;
+        const remaining_likes = likesLimit - likesAfter;
+        if (subscriptionTier === "free" && remaining_likes > 0 && remaining_likes <= 2) {
+          toast.warning(`Only ${remaining_likes} like${remaining_likes === 1 ? "" : "s"} left today — upgrade to get unlimited likes.`);
+        }
+      } else {
+        analytics.swipeDislike();
       }
     },
-    [remaining, requireAuth, user],
+    [remaining, requireAuth, user, likesUsed, likesLimit, subscriptionTier],
   );
 
   const handleUndo = () => {

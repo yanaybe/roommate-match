@@ -8,6 +8,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { motion } from "framer-motion";
 import { Home, MessageCircle, ShieldCheck, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { analyzePassword } from "@/lib/security";
+import { analytics } from "@/lib/analytics";
 
 const emailSchema = z.string().email("Invalid email address");
 
@@ -71,7 +72,7 @@ export default function Auth() {
       if (!password) { toast.error(t("passwordRequired")); setLoading(false); return; }
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
-      else navigate("/");
+      else { analytics.login(); navigate("/"); }
     } else {
       const pwResult = passwordSchema.safeParse(password);
       if (!pwResult.success) {
@@ -90,7 +91,7 @@ export default function Auth() {
         options: { emailRedirectTo: `${window.location.origin}/verify-email` },
       });
       if (error) toast.error(error.message);
-      else navigate("/verify-email");
+      else { analytics.signup(); navigate("/verify-email"); }
     }
     setLoading(false);
   };

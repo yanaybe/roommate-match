@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { useLanguage } from "@/hooks/useLanguage";
+import { analytics } from "@/lib/analytics";
 const cities = ["Tel Aviv", "Jerusalem", "Haifa", "Beer Sheva", "Netanya", "Herzliya", "Ramat Gan", "Petah Tikva"];
 const steps = [0, 1, 2, 3];
 
@@ -71,6 +72,7 @@ export default function CreateSquad() {
       role: "leader",
     });
 
+    analytics.squadCreate();
     toast.success("Squad created! Start finding roommates 🚀");
     navigate(`/squad/${squad.id}`);
   };

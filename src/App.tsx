@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, Outlet } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -39,8 +39,23 @@ import { useProfile } from "@/hooks/useProfile";
 import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
+import { initAnalytics, identifyUser, resetAnalytics } from "@/lib/analytics";
+
+initAnalytics();
 
 const queryClient = new QueryClient();
+
+function AnalyticsSync() {
+  const { user } = useAuth();
+  useEffect(() => {
+    if (user) {
+      identifyUser(user.id, { email: user.email });
+    } else {
+      resetAnalytics();
+    }
+  }, [user?.id]);
+  return null;
+}
 
 function PageLoader() {
   return (
@@ -85,6 +100,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
+        <AnalyticsSync />
         <LanguageProvider>
         <SidebarProvider>
         <UnreadCountProvider>
