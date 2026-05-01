@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, Building2, Heart } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, Building2, Heart, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PremiumSheet from "@/components/PremiumSheet";
 import PreferencesSheet from "@/components/profile/PreferencesSheet";
@@ -129,6 +129,26 @@ export default function Profile() {
     hasPhotos: !!(profile?.avatar_url),
   };
 
+  // Profile completion score — each checked field is worth one point
+  const completionFields = [
+    !!profile?.name,
+    !!profile?.age,
+    !!profile?.city,
+    !!profile?.occupation,
+    !!profile?.bio,
+    !!profile?.avatar_url,
+    !!((profile as any)?.photos?.length > 1),
+    !!(profile?.budget),
+    !!(profile?.sleep_schedule),
+    !!(profile?.lifestyle_vibe),
+    !!(profile?.social_level),
+    !!(profile?.noise_level),
+    !!((profile as any)?.phone_verified),
+  ];
+  const completionScore = Math.round(
+    (completionFields.filter(Boolean).length / completionFields.length) * 100
+  );
+
   return (
     <div className="min-h-screen bg-background pb-28 desk:pb-8">
       <div className="max-w-2xl mx-auto px-4 pt-12 desk:pt-8">
@@ -166,6 +186,44 @@ export default function Profile() {
             <VerificationBadges status={verificationStatus} />
           </div>
         </motion.div>
+
+        {/* Profile completion score — hidden once 100% */}
+        {completionScore < 100 && (
+          <motion.button
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            onClick={() => navigate("/onboarding?edit=true")}
+            className="w-full bg-card rounded-2xl shadow-card p-4 mb-4 text-left hover:bg-secondary/50 transition-colors"
+          >
+            <div className="flex items-center gap-3 mb-2.5">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground">Profile {completionScore}% complete</p>
+                <p className="text-xs text-muted-foreground">
+                  {completionScore < 60
+                    ? "Complete your profile to get 3× more matches"
+                    : completionScore < 85
+                    ? "Almost there — a complete profile ranks higher"
+                    : "Add a few more details to reach 100%"}
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </div>
+            <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${completionScore}%` }}
+                transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+                className={`h-full rounded-full ${
+                  completionScore >= 85 ? "bg-emerald-500" : completionScore >= 60 ? "gradient-primary" : "bg-amber-500"
+                }`}
+              />
+            </div>
+          </motion.button>
+        )}
 
         <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-4">
           {getMenuItems(t, hasListings).map((item, i) => {

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Home, Users, MessageCircle, Zap, Star, Shield,
   ChevronRight, Heart, MapPin, Check, Sparkles, Globe
@@ -23,9 +24,28 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t, language, setLanguage, languageInfo } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
+  const [matchCount, setMatchCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Count total liked_profiles rows / 2 ≈ unique connections made
+    supabase
+      .from("liked_profiles")
+      .select("*", { count: "exact", head: true })
+      .then(({ count }) => {
+        if (count && count > 1) setMatchCount(Math.floor(count / 2));
+      });
+  }, []);
+
+  const formatCount = (n: number) => {
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}k+`;
+    return `${n}+`;
+  };
 
   const STATS = [
-    { value: "14", label: t("statsFactorsLabel") },
+    {
+      value: matchCount !== null && matchCount > 0 ? formatCount(matchCount) : "14",
+      label: matchCount !== null && matchCount > 0 ? t("statsMatchesMade") : t("statsFactorsLabel"),
+    },
     { value: "3", label: t("statsLanguagesLabel") },
     { value: "100%", label: t("statsFreeToStart") },
   ];

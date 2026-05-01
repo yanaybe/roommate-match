@@ -1,18 +1,20 @@
 import { useState } from "react";
-import { Briefcase, Moon, Sun, Sparkles, MapPin, ChevronLeft, ChevronRight, Phone } from "lucide-react";
+import { Briefcase, MapPin, ChevronLeft, ChevronRight, Phone } from "lucide-react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
 import type { UserProfile } from "@/data/mockData";
+import type { MatchFactor } from "@/lib/matching";
 
 interface SwipeCardProps {
   user: UserProfile & { photos?: string[]; subscriptionTier?: string };
   matchPercent: number;
+  matchBreakdown?: MatchFactor[];
   onSwipe: (direction: "left" | "right") => void;
   isTop: boolean;
 }
 
-export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeCardProps) {
+export default function SwipeCard({ user, matchPercent, matchBreakdown, onSwipe, isTop }: SwipeCardProps) {
   const navigate = useNavigate();
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -152,25 +154,38 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
             {user.occupation}
           </div>
           <p className="text-primary-foreground/70 text-sm mt-2 line-clamp-2">{user.bio}</p>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full flex items-center gap-1">
-              {user.sleepSchedule === "Night owl" ? <Moon className="w-3 h-3" /> : <Sun className="w-3 h-3" />}
-              {user.sleepSchedule}
-            </span>
-            <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              Clean: {user.cleanliness}/5
-            </span>
-            <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">
-              ₪{user.budget.toLocaleString()}/mo
-            </span>
-            {user.wfh && (
-              <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🏠 WFH</span>
-            )}
-            {user.pets && (
-              <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🐾 Pets</span>
-            )}
-          </div>
+          {matchBreakdown && matchBreakdown.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {/* Show conflicts first, then top positives — max 3 pills */}
+              {[
+                ...matchBreakdown.filter((f) => f.isConflict).slice(0, 1),
+                ...matchBreakdown.filter((f) => !f.isConflict).slice(0, 2),
+              ].slice(0, 3).map((f) => (
+                <span
+                  key={f.label}
+                  className={`text-xs px-2.5 py-1 rounded-full backdrop-blur-sm font-medium ${
+                    f.isConflict
+                      ? "bg-red-500/30 text-red-200 border border-red-400/30"
+                      : "bg-primary-foreground/20 text-primary-foreground"
+                  }`}
+                >
+                  {f.emoji} {f.detail}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">
+                ₪{user.budget.toLocaleString()}/mo
+              </span>
+              {user.wfh && (
+                <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🏠 WFH</span>
+              )}
+              {user.pets && (
+                <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🐾 Pets</span>
+              )}
+            </div>
+          )}
           <p className="text-primary-foreground/50 text-xs mt-2 text-center">Tap to see full profile</p>
         </div>
       </div>

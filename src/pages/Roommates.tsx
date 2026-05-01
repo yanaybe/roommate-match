@@ -12,7 +12,7 @@ import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile
 import { fetchBlockedIds } from "@/hooks/useBlockReport";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useDailyLimits } from "@/hooks/useDailyLimits";
-import { calculateUserMatch } from "@/lib/matching";
+import { calculateUserMatch, calculateUserMatchBreakdown, type MatchFactor } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -80,7 +80,7 @@ export default function Roommates() {
       });
   }, [user?.id]);
 
-  // Other profiles (not current user), with match percentages
+  // Other profiles (not current user), with match percentages + breakdown
   const otherProfiles = useMemo(() => {
     if (!myProfile) return [];
     return allProfiles
@@ -89,10 +89,11 @@ export default function Roommates() {
         profile: p,
         user: profileToUser(p),
         matchPercent: calculateUserMatch(myProfile, p),
+        matchBreakdown: calculateUserMatchBreakdown(myProfile, p),
       }));
   }, [allProfiles, myProfile, user?.id]);
 
-  const items = otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent }));
+  const items = otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent, matchBreakdown: p.matchBreakdown }));
 
   const swipedSet = useMemo(() => new Set(swiped), [swiped]);
   const blockedSet = useMemo(() => new Set(blockedIds), [blockedIds]);
@@ -253,6 +254,7 @@ export default function Roommates() {
                           key={item.user.id}
                           user={item.user}
                           matchPercent={item.matchPercent}
+                          matchBreakdown={item.matchBreakdown}
                           onSwipe={handleSwipe}
                           isTop={i === visibleCards.length - 1}
                         />
