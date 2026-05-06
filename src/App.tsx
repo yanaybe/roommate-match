@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, Outlet } from "react-router-dom";
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -40,6 +40,7 @@ import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
 import { initAnalytics, identifyUser, resetAnalytics } from "@/lib/analytics";
+import { supabase } from "@/integrations/supabase/client";
 
 initAnalytics();
 
@@ -65,6 +66,47 @@ function PageLoader() {
   );
 }
 
+function EmailVerificationBanner() {
+  const { user } = useAuth();
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  if (!user || user.email_confirmed_at) return null;
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || resending || !user.email) return;
+    setResending(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: user.email,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    setResending(false);
+    if (!error) setResendCooldown(60);
+  };
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center">
+      <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+        Please verify your email to unlock all features.{" "}
+        <button
+          onClick={handleResend}
+          disabled={resendCooldown > 0 || resending}
+          className="underline font-bold disabled:opacity-50"
+        >
+          {resending ? "Sending…" : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend email"}
+        </button>
+      </p>
+    </div>
+  );
+}
+
 function HomeRoute() {
   const { user, loading } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
@@ -72,51 +114,6 @@ function HomeRoute() {
   const offsetClass = collapsed ? "desk:ltr:pl-14 desk:rtl:pr-14" : "desk:ltr:pl-64 desk:rtl:pr-64";
   if (loading || profileLoading) return <PageLoader />;
   if (!user) return <Landing />;
-  // TODO [SPRINT 1 — CRITICAL]: Remove the hard email_confirmed_at gate here
-  // and in AuthedLayout below. Replace with a soft persistent banner.
-  //
-  // WHY: Forcing users to verify email before seeing ANY content kills ~70% of
-  // signups (industry standard). They signed up but haven't been shown value yet.
-  // The verification link lands in spam or is ignored. They never come back.
-  //
-  // IMPLEMENTATION:
-  // 1. Remove `if (!user.email_confirmed_at) return <Navigate to="/verify-email" replace />;`
-  //    from both HomeRoute and AuthedLayout.
-  // 2. In this file, ABOVE <BottomNav />, add a soft banner component:
-  //
-  //    function EmailVerificationBanner() {
-  //      const { user } = useAuth();
-  //      const [resendCooldown, setResendCooldown] = useState(0);
-  //      if (!user || user.email_confirmed_at) return null;
-  //      const handleResend = async () => {
-  //        const { error } = await supabase.auth.resend({
-  //          type: "signup", email: user.email!,
-  //          options: { emailRedirectTo: window.location.origin },
-  //        });
-  //        if (!error) setResendCooldown(60);
-  //      };
-  //      return (
-  //        <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500/10
-  //                        border-b border-amber-500/20 px-4 py-2 text-center">
-  //          <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
-  //            Verify your email to unlock all features.{" "}
-  //            <button
-  //              onClick={handleResend}
-  //              disabled={resendCooldown > 0}
-  //              className="underline font-bold disabled:opacity-50"
-  //            >
-  //              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend"}
-  //            </button>
-  //          </p>
-  //        </div>
-  //      );
-  //    }
-  //
-  // 3. Render <EmailVerificationBanner /> above <BottomNav /> in the <BrowserRouter>.
-  // 4. Keep the email_confirmed_at guard only when a user tries to SEND their
-  //    FIRST message (in Chats.tsx sendMessage). This is the natural, low-friction
-  //    moment to ask: "Please verify your email to start chatting."
-  if (!user.email_confirmed_at) return <Navigate to="/verify-email" replace />;
   if (!profile?.onboarding_complete) return <Navigate to="/onboarding" replace />;
   return <div className={`transition-all duration-200 ${offsetClass}`}><div className="desk:max-w-[1400px] desk:mx-auto"><Index /></div></div>;
 }
@@ -127,10 +124,6 @@ function AuthedLayout() {
   const offsetClass = collapsed ? "desk:ltr:pl-14 desk:rtl:pr-14" : "desk:ltr:pl-64 desk:rtl:pr-64";
   if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
-  // TODO [SPRINT 1 — CRITICAL]: Remove this email_confirmed_at guard here too.
-  // See the detailed comment in HomeRoute above for full implementation instructions.
-  // Once removed, the EmailVerificationBanner handles this softly across all pages.
-  if (!user.email_confirmed_at) return <Navigate to="/verify-email" replace />;
   return <div className={`transition-all duration-200 ${offsetClass}`}><div className="desk:max-w-[1400px] desk:mx-auto"><Outlet /></div></div>;
 }
 
@@ -158,6 +151,7 @@ const App = () => (
           <BrowserRouter>
             <ErrorBoundary>
             <ScrollToTop />
+            <EmailVerificationBanner />
             <NotificationToaster />
             <BottomNav />
             <Suspense fallback={<PageLoader />}>

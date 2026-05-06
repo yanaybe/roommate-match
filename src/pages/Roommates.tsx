@@ -157,23 +157,13 @@ export default function Roommates() {
         recordLike();
 
         // TODO [SPRINT 1]: Fix the FOMO copy and upgrade the warning to a
-        // Bumble-style actionable toast with an inline "Upgrade" CTA button.
-        // The current copy feels punishing ("upgrade to get unlimited likes").
-        // It should feel exciting ("your next match could be out there").
-        // Also raise the warning threshold from <= 2 to <= 5 so users get
-        // more runway to feel the FOMO before the hard limit.
-        //
-        // CHANGE TO:
-        //   if (subscriptionTier === "free" && remaining_likes > 0 && remaining_likes <= 5) {
-        //     toast(`${remaining_likes} like${remaining_likes === 1 ? "" : "s"} left today ✨`, {
-        //       description: "Upgrade to keep swiping — your next match could be out there.",
-        //       action: { label: "Upgrade", onClick: openPremiumSheet },
-        //     });
-        //   }
         const likesAfter = likesUsed + 1;
         const remaining_likes = likesLimit - likesAfter;
-        if (subscriptionTier === "free" && remaining_likes > 0 && remaining_likes <= 2) {
-          toast.warning(`Only ${remaining_likes} like${remaining_likes === 1 ? "" : "s"} left today — upgrade to get unlimited likes.`);
+        if (subscriptionTier === "free" && remaining_likes > 0 && remaining_likes <= 5) {
+          toast(`${remaining_likes} like${remaining_likes === 1 ? "" : "s"} left today ✨`, {
+            description: "Upgrade to keep swiping — your next match could be out there.",
+            action: { label: "Upgrade", onClick: openPremiumSheet },
+          });
         }
       } else {
         analytics.swipeDislike();

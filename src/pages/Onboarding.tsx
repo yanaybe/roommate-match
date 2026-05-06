@@ -140,35 +140,7 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
 
-  // TODO [SPRINT 1 — CRITICAL]: Reorder onboarding steps — move Photos to LAST.
-  // Currently Step 0 (first thing the user sees) is photo upload, which requires
-  // leaving the app, browsing camera roll, and uploading before seeing anything.
-  // This is the highest-friction possible first ask. Users drop off immediately.
-  //
-  // NEW STEP ORDER:
-  //   0: Basic Info  (name, age, city, budget — 30 seconds)
-  //   1: Living Habits (sleep, cleanliness, cooking)
-  //   2: Lifestyle (smoking, pets, WFH, religion, alcohol)
-  //   3: Personality (social level, noise, vibe, partying)
-  //   4: Preferences (age range, gender pref, cleanliness expectations)
-  //   5: Photos (last — user has investment in the app now, conversion is higher)
-  //
-  // IMPLEMENTATION:
-  // 1. Change STEPS array order as shown below (swap stepPhotos to last).
-  // 2. In renderStep(), swap case 0 and case 1 bodies so Basic Info renders at 0
-  //    and Photos renders at 5. Shift all other cases down accordingly.
-  // 3. In canProceed():
-  //    - step 0: return form.name.trim() && form.age && form.city.trim() && form.budget
-  //    - step 5 (photos): return true  (non-blocking — show a soft warning instead)
-  // 4. In validateStep(): move the name/age/city/occupation/budget validation
-  //    from `if (step === 1)` to `if (step === 0)`.
-  // 5. On the photo step (now case 5), add this soft warning when no photos:
-  //    {form.photos.length === 0 && (
-  //      <p className="text-xs text-amber-600 text-center mt-2">
-  //        Profiles with photos get 4x more matches. You can add them later from your profile.
-  //      </p>
-  //    )}
-  const STEPS = [t("stepPhotos"), t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences")];
+  const STEPS = [t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences"), t("stepPhotos")];
 
   // Map English option values → translated display text
   const optMap: Record<string, string> = {
@@ -237,12 +209,6 @@ export default function Onboarding() {
       navigate("/auth", { replace: true });
       return;
     }
-    if (!isEdit && !user.email_confirmed_at) {
-      toast(t("pleaseVerifyEmailFirst"), {
-        description: t("verifyEmailBeforeProfile"),
-      });
-      navigate("/verify-email", { replace: true });
-    }
   }, [user, authLoading, navigate, isEdit]);
 
   useEffect(() => {
@@ -290,7 +256,7 @@ export default function Onboarding() {
 
   const validateStep = (): Errors => {
     const e: Errors = {};
-    if (step === 1) {
+    if (step === 0) {
       const name = form.name.trim();
       if (!name) {
         e.name = t("nameRequired");
@@ -335,7 +301,7 @@ export default function Onboarding() {
       }
     }
 
-    if (step === 5) {
+    if (step === 4) {
       const minAge = Number(form.preferred_age_min);
       const maxAge = Number(form.preferred_age_max);
       if (!Number.isInteger(minAge) || minAge < 16 || minAge > 100) {
@@ -352,14 +318,8 @@ export default function Onboarding() {
     return e;
   };
 
-  // TODO [SPRINT 1 — CRITICAL]: Update canProceed() after reordering steps.
-  // When Basic Info is step 0 and Photos is step 5, this logic must change to:
-  //   if (step === 0) return !!(form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget);
-  //   if (step === 5) return true; // photos are non-blocking — soft warning instead
-  // Remove the `form.photos.length >= 1` hard gate entirely.
   const canProceed = () => {
-    if (step === 0) return form.photos.length >= 1;
-    if (step === 1) return form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget;
+    if (step === 0) return !!(form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget);
     return true;
   };
 
@@ -492,20 +452,6 @@ export default function Onboarding() {
       case 0:
         return (
           <div className="space-y-4">
-            <div className="text-center mb-2">
-              <h2 className="text-lg font-bold text-foreground">{t("addYourPhotos")}</h2>
-              <p className="text-muted-foreground text-sm">{t("showRoommates")}</p>
-            </div>
-            <PhotoUpload
-              photos={form.photos}
-              onChange={(photos) => update("photos", photos)}
-              maxPhotos={6}
-            />
-          </div>
-        );
-      case 1:
-        return (
-          <div className="space-y-4">
             {/* TODO [SPRINT 3]: Add a "move_in_date" field to this step.
                 Move-in timing is the #1 failure point in roommate searching — even a
                 perfect lifestyle match fails if one person needs to move in October
@@ -613,7 +559,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 2:
+      case 1:
         return (
           <div className="space-y-5">
             <div>
@@ -643,7 +589,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 3:
+      case 2:
         return (
           <div className="space-y-5">
             <div>
@@ -699,7 +645,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 4:
+      case 3:
         return (
           <div className="space-y-5">
             <SliderField label={t("socialVsPrivate")} value={form.social_level} onChange={(v) => update("social_level", v)} labels={[t("sliderVeryPrivate"), "", t("sliderBalanced"), "", t("sliderVerySocial")]} />
@@ -722,7 +668,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 5:
+      case 4:
         return (
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-3">
@@ -774,6 +720,25 @@ export default function Onboarding() {
                 ))}
               </div>
             </div>
+          </div>
+        );
+      case 5:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-2">
+              <h2 className="text-lg font-bold text-foreground">{t("addYourPhotos")}</h2>
+              <p className="text-muted-foreground text-sm">{t("showRoommates")}</p>
+            </div>
+            <PhotoUpload
+              photos={form.photos}
+              onChange={(photos) => update("photos", photos)}
+              maxPhotos={6}
+            />
+            {form.photos.length === 0 && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 text-center mt-2">
+                Profiles with photos get 4× more matches. You can always add them later from your profile.
+              </p>
+            )}
           </div>
         );
       default:
