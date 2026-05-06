@@ -156,7 +156,6 @@ export default function Roommates() {
         analytics.swipeLike(current.matchPercent);
         recordLike();
 
-        // TODO [SPRINT 1]: Fix the FOMO copy and upgrade the warning to a
         const likesAfter = likesUsed + 1;
         const remaining_likes = likesLimit - likesAfter;
         if (subscriptionTier === "free" && remaining_likes > 0 && remaining_likes <= 5) {
