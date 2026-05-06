@@ -91,6 +91,20 @@ export default function Auth() {
         options: { emailRedirectTo: `${window.location.origin}/verify-email` },
       });
       if (error) toast.error(error.message);
+      // TODO [SPRINT 1 — CRITICAL]: Remove the mandatory email verification gate.
+      // Currently after signup the user is immediately sent to /verify-email, which
+      // is a dead wall: they must leave the app, open their inbox, and click a link
+      // before seeing ANY value. Industry data shows ~70% of users who hit a mandatory
+      // inbox check before seeing the product will not return.
+      //
+      // FIX: Change `navigate("/verify-email")` to `navigate("/onboarding")`.
+      // Replace the hard gate with a soft persistent banner (see App.tsx TODO).
+      // The email verification link still works when the user eventually clicks it
+      // — they'll be verified next time they open the app. Keep /verify-email as a
+      // route so users can resend the link from their profile if they want.
+      //
+      // Keep the email_confirmed_at guard on sensitive actions (e.g. sending a
+      // message for the first time) rather than at signup.
       else { analytics.signup(); navigate("/verify-email"); }
     }
     setLoading(false);
@@ -223,6 +237,47 @@ export default function Auth() {
           <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">{t("stepOneOfTwo")}</span>
         </div>
 
+        {/* TODO [SPRINT 1 — CRITICAL]: Add Google OAuth sign-in button here.
+            Email + password + strong password requirements is high friction.
+            Every extra tap kills mobile conversion.
+
+            Implementation:
+            1. Enable Google provider in Supabase dashboard →
+               Authentication → Providers → Google.
+               Add your Google OAuth client ID + secret.
+               Set the redirect URL to: https://yourdomain.com/auth/callback
+
+            2. Add this handler to the component:
+               const handleGoogleAuth = async () => {
+                 const { error } = await supabase.auth.signInWithOAuth({
+                   provider: "google",
+                   options: { redirectTo: `${window.location.origin}/` },
+                 });
+                 if (error) toast.error(error.message);
+               };
+
+            3. Add the Google button above this form:
+               <button
+                 type="button"
+                 onClick={handleGoogleAuth}
+                 className="w-full flex items-center justify-center gap-3 bg-secondary
+                            text-secondary-foreground font-semibold py-3 rounded-xl
+                            text-sm border border-border hover:bg-secondary/70 transition-colors"
+               >
+                 <svg className="w-4 h-4" viewBox="0 0 24 24">
+                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92..."/>
+                   // Full Google SVG: https://developers.google.com/identity/branding-guidelines
+                 </svg>
+                 Continue with Google
+               </button>
+               <div className="flex items-center gap-3 my-3">
+                 <div className="flex-1 h-px bg-border" />
+                 <span className="text-xs text-muted-foreground">or</span>
+                 <div className="flex-1 h-px bg-border" />
+               </div>
+
+            Note: After Google auth the user is redirected back to "/".
+            HomeRoute in App.tsx handles routing to onboarding if profile is incomplete. */}
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="email"

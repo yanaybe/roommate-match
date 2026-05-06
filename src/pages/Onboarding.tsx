@@ -140,6 +140,34 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
 
+  // TODO [SPRINT 1 — CRITICAL]: Reorder onboarding steps — move Photos to LAST.
+  // Currently Step 0 (first thing the user sees) is photo upload, which requires
+  // leaving the app, browsing camera roll, and uploading before seeing anything.
+  // This is the highest-friction possible first ask. Users drop off immediately.
+  //
+  // NEW STEP ORDER:
+  //   0: Basic Info  (name, age, city, budget — 30 seconds)
+  //   1: Living Habits (sleep, cleanliness, cooking)
+  //   2: Lifestyle (smoking, pets, WFH, religion, alcohol)
+  //   3: Personality (social level, noise, vibe, partying)
+  //   4: Preferences (age range, gender pref, cleanliness expectations)
+  //   5: Photos (last — user has investment in the app now, conversion is higher)
+  //
+  // IMPLEMENTATION:
+  // 1. Change STEPS array order as shown below (swap stepPhotos to last).
+  // 2. In renderStep(), swap case 0 and case 1 bodies so Basic Info renders at 0
+  //    and Photos renders at 5. Shift all other cases down accordingly.
+  // 3. In canProceed():
+  //    - step 0: return form.name.trim() && form.age && form.city.trim() && form.budget
+  //    - step 5 (photos): return true  (non-blocking — show a soft warning instead)
+  // 4. In validateStep(): move the name/age/city/occupation/budget validation
+  //    from `if (step === 1)` to `if (step === 0)`.
+  // 5. On the photo step (now case 5), add this soft warning when no photos:
+  //    {form.photos.length === 0 && (
+  //      <p className="text-xs text-amber-600 text-center mt-2">
+  //        Profiles with photos get 4x more matches. You can add them later from your profile.
+  //      </p>
+  //    )}
   const STEPS = [t("stepPhotos"), t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences")];
 
   // Map English option values → translated display text
@@ -164,6 +192,43 @@ export default function Onboarding() {
     "Prefer no pets": t("optPreferNoPets"),
   };
   const to = (val: string) => optMap[val] ?? val;
+
+  // TODO [SPRINT 3 — GROWTH]: Add a squad-first onboarding path to create virality.
+  // Every squad invitation is a user acquisition event. One signup can trigger 2–4 more.
+  // Currently there's no way to start the onboarding flow as "searching with friends"
+  // — users land in the solo flow by default and never think to create a squad.
+  //
+  // THE PATTERN: Add an intent screen as Step -1 (before the current Step 0):
+  //   "Are you searching alone or with friends?"
+  //   [Solo — take me to full onboarding]
+  //   [With friends → create a squad]
+  //
+  // SQUAD PATH FLOW (minimal onboarding, faster):
+  //   Step 1: Name + Budget + City (30 seconds)
+  //   → Auto-create a draft squad
+  //   → Show a shareable invite link card ("Share this with your friends")
+  //   → Friends who click the link land on /onboarding?squad=<id>
+  //   → They complete their own onboarding and are auto-added to the squad
+  //
+  // IMPLEMENTATION:
+  // 1. Add a URL param check: const squadId = searchParams.get("squad");
+  //    If present, after completing onboarding auto-join the squad via:
+  //    await supabase.from("squad_members").insert({
+  //      squad_id: squadId, user_id: user.id, status: "joined", role: "member"
+  //    });
+  //    Then navigate to `/squad/${squadId}`.
+  //
+  // 2. Create a new component `OnboardingIntentScreen` that shows before Step 0
+  //    when `!isEdit && !squadId`. It shows two large tap targets.
+  //    If "With friends" → after Step 1 (basic info), call:
+  //    const { data } = await supabase.from("squads").insert({
+  //      name: `${form.name}'s Squad`, creator_id: user.id,
+  //      target_size: 3, status: "draft"
+  //    }).select().single();
+  //    Then show a shareable card: `${window.location.origin}/onboarding?squad=${data.id}`
+  //
+  // 3. The squad invite link is the viral loop. Post to WhatsApp groups → multiple
+  //    signups per squad. This is Airbnb's referral loop applied to roommate search.
 
   // Guard: redirect unverified users to verify-email, unauthenticated to auth
   useEffect(() => {
@@ -287,6 +352,11 @@ export default function Onboarding() {
     return e;
   };
 
+  // TODO [SPRINT 1 — CRITICAL]: Update canProceed() after reordering steps.
+  // When Basic Info is step 0 and Photos is step 5, this logic must change to:
+  //   if (step === 0) return !!(form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget);
+  //   if (step === 5) return true; // photos are non-blocking — soft warning instead
+  // Remove the `form.photos.length >= 1` hard gate entirely.
   const canProceed = () => {
     if (step === 0) return form.photos.length >= 1;
     if (step === 1) return form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget;
@@ -436,6 +506,37 @@ export default function Onboarding() {
       case 1:
         return (
           <div className="space-y-4">
+            {/* TODO [SPRINT 3]: Add a "move_in_date" field to this step.
+                Move-in timing is the #1 failure point in roommate searching — even a
+                perfect lifestyle match fails if one person needs to move in October
+                and the other in January. No competitor surfaces this.
+
+                STEPS:
+                1. Add `move_in_date: string` to the FormData interface (above, line ~30).
+                2. Add `move_in_date: ""` to the `initial` object (line ~64).
+                3. Add `move_in_date` column (type: date, nullable) to the `profiles`
+                   Supabase table via a migration.
+                4. Add to the payload in both saveProgress() and handleSubmit().
+                5. Add this UI below the budget field:
+                   <div>
+                     <label className="text-sm font-semibold text-foreground block mb-1.5">
+                       When are you looking to move in?
+                     </label>
+                     <input
+                       type="month"
+                       value={form.move_in_date}
+                       onChange={(e) => update("move_in_date", e.target.value)}
+                       className="w-full bg-secondary text-secondary-foreground px-4 py-3
+                                  rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                     />
+                     <p className="text-xs text-muted-foreground mt-1">Optional — helps match timing</p>
+                   </div>
+                6. In SwipeCard.tsx, display the move-in month below the user's city.
+                7. In src/lib/matching.ts, add a timing factor to calculateUserMatch():
+                   if both users have move_in_date set and the gap is ≤ 30 days: +8 pts
+                   if the gap is 31–60 days: +4 pts
+                   if the gap is > 90 days: -8 pts
+                   Weight this factor at ~5% of the base score. */}
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("nameLbl")}</label>
               <input
@@ -694,6 +795,27 @@ export default function Onboarding() {
               {t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}
               {step === 0 && <span className="ltr:ml-2 rtl:mr-2 text-primary font-medium">· {t("threeMin")}</span>}
             </p>
+            {/* TODO [SPRINT 2]: Add a real-time match quality % counter here.
+                Framing data collection as "unlocking match quality" motivates
+                completion. Shows users their answers directly improve results.
+
+                IMPLEMENTATION — add below the <p> above:
+                (() => {
+                  const fields = [
+                    form.name, form.age, form.city, form.occupation, form.budget,
+                    form.sleep_schedule, form.cooking_habits, form.smoking_preference,
+                    form.pet_preference, form.religious_level, form.lifestyle_vibe,
+                    String(form.social_level), String(form.noise_level), form.partying,
+                    form.bio, form.photos.length > 0 ? "yes" : "",
+                  ];
+                  const pct = Math.round((fields.filter(Boolean).length / fields.length) * 100);
+                  if (pct <= 10) return null;
+                  return (
+                    <p className="text-xs text-primary font-bold mt-0.5">
+                      {pct}% match quality unlocked
+                    </p>
+                  );
+                })()  */}
           </div>
           {isEdit && (
             <button

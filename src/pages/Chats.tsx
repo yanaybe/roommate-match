@@ -130,6 +130,51 @@ export default function Chats() {
     return calculateUserMatch(myProfile, otherProfile);
   }, [myProfile, otherProfile]);
 
+  // TODO [SPRINT 3]: Add a compatibility breakdown for the "Why you matched" card.
+  // The matchPercent is already computed above. Now also compute the breakdown
+  // so you can display the top strength factors at the top of the chat thread.
+  //
+  // IMPLEMENTATION:
+  // 1. Import `calculateUserMatchBreakdown` (already imported in RoommateProfile.tsx
+  //    as a reference — it exists in src/lib/matching.ts).
+  // 2. Add:
+  //    const matchBreakdown = useMemo(() => {
+  //      if (!myProfile || !otherProfile) return [];
+  //      return calculateUserMatchBreakdown(myProfile, otherProfile);
+  //    }, [myProfile, otherProfile]);
+  // 3. Render this card at the TOP of the messages list (before the messages map),
+  //    hidden once `contextDismissed` is true (contextDismissed state already exists):
+  //    {!contextDismissed && matchPercent > 0 && matchBreakdown.length > 0 && (
+  //      <div className="bg-secondary/60 rounded-2xl p-3 mx-1 mb-3 flex-shrink-0">
+  //        <div className="flex items-center justify-between mb-2">
+  //          <span className="text-xs font-bold text-foreground">
+  //            {matchPercent}% compatible
+  //          </span>
+  //          <button onClick={() => setContextDismissed(true)}
+  //            className="text-muted-foreground hover:text-foreground">
+  //            <X className="w-3.5 h-3.5" />
+  //          </button>
+  //        </div>
+  //        <div className="flex flex-wrap gap-1.5">
+  //          {matchBreakdown
+  //            .filter(f => !f.isConflict)
+  //            .slice(0, 3)
+  //            .map(f => (
+  //              <span key={f.label}
+  //                className="text-xs bg-green-100 dark:bg-green-900/30
+  //                           text-green-700 dark:text-green-300
+  //                           px-2 py-0.5 rounded-full font-medium">
+  //                {f.emoji} {f.detail}
+  //              </span>
+  //            ))
+  //          }
+  //        </div>
+  //      </div>
+  //    )}
+  //
+  // This makes the matching algorithm visible and builds trust in the product.
+  // The contextDismissed state already exists for the ice-breaker card — reuse it.
+
   const sharedTraits = useMemo(() => getSharedTraits(myProfile, otherProfile), [myProfile, otherProfile]);
   const icebreakers = useMemo(
     () => generateIcebreakers(myProfile, otherProfile, activeConvData?.other_name ?? "there"),
@@ -343,6 +388,37 @@ export default function Chats() {
     if (!newMessage.trim() || !activeConv || !user) return;
 
     const isGoldPlus = ["gold", "platinum"].includes(subscriptionTier);
+
+    // TODO [SPRINT 2]: Replace the velocity-based rate limiter with a daily
+    // volume-based limit that feels natural instead of broken.
+    //
+    // THE PROBLEM: The 3-second window / 5-messages burst guard makes the app
+    // feel like it's malfunctioning during normal rapid-fire chat. Real users
+    // in early conversation naturally send several short messages in a row
+    // ("Hey!", "I saw we both work from home", "What area are you looking in?").
+    // Blocking this pattern with a "too fast" error is a terrible UX moment.
+    //
+    // The server-side guard (30 messages/minute) is more reasonable but still
+    // too tight for a chat product. Typical casual chat is 20–40 messages/session.
+    //
+    // FIX: Replace both guards with a single daily volume limit:
+    //   const FREE_MESSAGES_PER_DAY = 100;  // generous for free tier
+    //   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    //   const { count: todayCount } = await supabase
+    //     .from("messages")
+    //     .select("id", { count: "exact", head: true })
+    //     .eq("sender_id", user.id)
+    //     .gte("created_at", todayStart.toISOString());
+    //   if (!isGoldPlus && (todayCount ?? 0) >= FREE_MESSAGES_PER_DAY) {
+    //     toast("Daily message limit reached", {
+    //       description: "Upgrade to Gold for unlimited messaging.",
+    //       action: { label: "Upgrade", onClick: () => { /* open premium sheet */ } },
+    //     });
+    //     return;
+    //   }
+    //
+    // Remove the `recentSendTimestamps` ref and the burst guard entirely.
+    // The server-side daily count is bypass-proof and non-annoying.
 
     // ── Rate limiting: client-side burst guard (UX) ──────────────────────────
     if (!isGoldPlus) {

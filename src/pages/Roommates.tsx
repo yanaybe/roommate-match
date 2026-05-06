@@ -156,7 +156,20 @@ export default function Roommates() {
         analytics.swipeLike(current.matchPercent);
         recordLike();
 
-        // Warn when approaching the daily free limit
+        // TODO [SPRINT 1]: Fix the FOMO copy and upgrade the warning to a
+        // Bumble-style actionable toast with an inline "Upgrade" CTA button.
+        // The current copy feels punishing ("upgrade to get unlimited likes").
+        // It should feel exciting ("your next match could be out there").
+        // Also raise the warning threshold from <= 2 to <= 5 so users get
+        // more runway to feel the FOMO before the hard limit.
+        //
+        // CHANGE TO:
+        //   if (subscriptionTier === "free" && remaining_likes > 0 && remaining_likes <= 5) {
+        //     toast(`${remaining_likes} like${remaining_likes === 1 ? "" : "s"} left today ✨`, {
+        //       description: "Upgrade to keep swiping — your next match could be out there.",
+        //       action: { label: "Upgrade", onClick: openPremiumSheet },
+        //     });
+        //   }
         const likesAfter = likesUsed + 1;
         const remaining_likes = likesLimit - likesAfter;
         if (subscriptionTier === "free" && remaining_likes > 0 && remaining_likes <= 2) {
@@ -191,7 +204,27 @@ export default function Roommates() {
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 desk:pt-6 pb-3">
           <h1 className="text-2xl font-extrabold text-foreground tracking-tight mb-3">{t("findRoommates")}</h1>
-          <div className="flex bg-secondary rounded-xl p-1">
+          {/* TODO [SPRINT 2]: Add a "NEW" badge on the Squads tab until the user
+            first views it. This alone would increase Squad discovery by 2–3x.
+            Squads is the #1 unique differentiator — most users never find it
+            because "People" is the default and nothing draws the eye to "Squads".
+
+            IMPLEMENTATION:
+            1. Add a localStorage key to track if the user has ever clicked Squads:
+               const [hasViewedSquads, setHasViewedSquads] = useState(
+                 () => localStorage.getItem("squads_tab_viewed") === "true"
+               );
+            2. When the user clicks the Squads tab:
+               setHasViewedSquads(true);
+               localStorage.setItem("squads_tab_viewed", "true");
+            3. Add the badge to the tab button:
+               {tab === "squads" && !hasViewedSquads && (
+                 <span className="ml-1.5 bg-primary text-primary-foreground
+                                  text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                   NEW
+                 </span>
+               )}  */}
+        <div className="flex bg-secondary rounded-xl p-1">
             {(["people", "squads"] as const).map((tab) => (
               <button
                 key={tab}

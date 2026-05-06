@@ -3,6 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import PremiumSheet from "@/components/PremiumSheet";
 
+// TODO [SPRINT 1 — CRITICAL]: Raise the free swipe limit from 8 → 30.
+// 8 daily likes is the single highest-risk churn point in the product. Users
+// open the app, swipe 8 times without a match, hit the wall, and never return.
+// They never experience the core value (a real match) before being asked to pay.
+// Tinder gives ~100/day, Bumble ~25. 30 is enough to protect premium upsell
+// while giving users a real session length to experience a match.
+// Change: FREE_LIKES_LIMIT = 30
+// After launch, A/B test 20 vs 30 vs 40 to find the optimal conversion point.
 const FREE_LIKES_LIMIT = 8;
 const FREE_SAVES_LIMIT = 10;
 

@@ -159,6 +159,48 @@ export default function Index() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // TODO [SPRINT 3]: Build a "Recommended for you" section at the top of the
+  // apartment list. This is the #1 missing personalization feature — every listing
+  // currently shows with zero personalisation signal, like a generic classifieds page.
+  //
+  // Even a simple budget + city match creates a meaningfully better experience:
+  //   const recommended = useMemo(() => {
+  //     if (!profile?.budget || !profile?.city) return [];
+  //     return apartments
+  //       .filter(apt => {
+  //         const withinBudget = apt.price <= profile.budget * 1.15; // 15% buffer
+  //         const cityMatch = apt.location.toLowerCase().includes(profile.city.toLowerCase());
+  //         return withinBudget && cityMatch;
+  //       })
+  //       .slice(0, 3);
+  //   }, [apartments, profile]);
+  //
+  // Render a horizontal scroll row with these 3 cards above the main grid,
+  // with a "Picked for you" header and a "Based on your budget & location" subtext.
+  //
+  // In the apartment grid, inject an inline Squad promotion card after the 3rd
+  // listing (if user has no squad yet). This is in addition to the squad banner
+  // at the top — this one is persistent in the grid and catches scrollers:
+  //   if (index === 2 && squads.length === 0) {
+  //     return (
+  //       <div key="squad-promo" className="col-span-full bg-amber-50 dark:bg-amber-900/20
+  //                border border-amber-200 dark:border-amber-800 rounded-2xl p-4
+  //                cursor-pointer flex items-center gap-4"
+  //            onClick={() => navigate("/create-squad")}>
+  //         <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center
+  //                          justify-center shrink-0">
+  //           <Users className="w-6 h-6 text-white" />
+  //         </div>
+  //         <div className="flex-1 min-w-0">
+  //           <p className="font-bold text-foreground text-sm">Searching with friends?</p>
+  //           <p className="text-xs text-muted-foreground">
+  //             Create a Squad — browse, vote, and move in together.
+  //           </p>
+  //         </div>
+  //         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+  //       </div>
+  //     );
+  //   }
   const filtered = useMemo(() => {
     return apartments.filter((apt) => {
       if (search.trim()) {

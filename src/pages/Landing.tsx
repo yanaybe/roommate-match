@@ -41,6 +41,24 @@ export default function Landing() {
     return `${n}+`;
   };
 
+  // TODO [SPRINT 1 — CRITICAL]: Fix the social proof stats.
+  // The current fallback shows "14" as a match count when there's no real data.
+  // This is the worst possible social proof — it signals nobody uses the app.
+  // A new user seeing "14 matches made" will immediately distrust the product.
+  //
+  // FIX: Lead with the "14 compatibility factors" stat (which is ALWAYS true and
+  // impressive) as the primary stat regardless of matchCount. Only surface the
+  // real match count once it exceeds a credible threshold (e.g. 500+).
+  //
+  // CHANGE TO:
+  //   const STATS = [
+  //     { value: "14", label: t("statsFactorsLabel") },    // "14 compatibility factors"
+  //     { value: "3",  label: t("statsLanguagesLabel") },  // "3 languages supported"
+  //     { value: "100%", label: t("statsFreeToStart") },   // "Free to start"
+  //   ];
+  //
+  // Once matchCount > 500, you can add it back as a 4th stat or replace the
+  // factors stat: e.g. "2,400+ matches made". Until then it actively hurts.
   const STATS = [
     {
       value: matchCount !== null && matchCount > 0 ? formatCount(matchCount) : "14",

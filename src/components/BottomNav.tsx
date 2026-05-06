@@ -18,6 +18,28 @@ export default function BottomNav() {
   const { profile } = useProfile();
   const { collapsed, toggle } = useSidebar();
 
+  // TODO [SPRINT 2]: Add Squad as a dedicated nav item to surface the #1
+  // differentiating feature. Squad is currently buried as Tab 2 on Roommates —
+  // most users never discover it. A nav item would drive Squad creation and
+  // virality (each squad invite is a user acquisition event).
+  //
+  // APPROACH A — Replace "Create" with "Squads" in bottom nav:
+  //   Move the apartment "Create" action to a FAB (+) button on the Index page
+  //   instead, freeing up a nav slot for Squads. This is the recommended approach.
+  //   Nav becomes: Rooms | Roommates | Squads | Chats | Profile
+  //
+  // APPROACH B — Add Squads as a 6th item (5 is max for mobile bottom nav):
+  //   Not recommended — 5 items is already at the mobile limit. Squeezing a 6th
+  //   makes each item too small on small screens.
+  //
+  // IMPLEMENTATION for Approach A:
+  // 1. Change this tabs array to replace /create with /my-squads:
+  //    { path: "/my-squads", icon: Users, label: "Squads" }
+  //    Import the `Shield` or `Users` icon from lucide-react.
+  // 2. Add a FAB to src/pages/Index.tsx (see TODO there).
+  // 3. Add translation key for "Squads" in useLanguage hook.
+  // 4. Add a "NEW" badge on the Squads nav item until the user has visited it
+  //    (same localStorage pattern as the Roommates tab TODO).
   const tabs = [
     { path: "/", icon: Home, label: t("navRooms") },
     { path: "/roommates", icon: Users, label: t("navRoommates") },
