@@ -34,6 +34,15 @@ export default function Auth() {
 
   const pwAnalysis = analyzePassword(password);
 
+  // TODO [PRIORITY: HIGH] [AREA: LOGIC]
+  // Problem: After Google OAuth the user is redirected to "/" and HomeRoute checks onboarding_complete.
+  //          But there is no welcoming transition — the user lands cold on the apartment browser
+  //          with no guidance. New Google OAuth users often have a half-loaded profile with just email.
+  // Fix: After OAuth redirect, detect new users (profile.onboarding_complete === false) and show
+  //      a brief "Welcome! Let's set up your profile" interstitial before /onboarding.
+  //      This can be a simple full-screen modal in HomeRoute: if user exists but onboarding is incomplete,
+  //      show a "You're 3 minutes away from your first match" card with a CTA to /onboarding.
+  // Expected Result: Google OAuth users understand the next step and don't land confused on apartment grid.
   const handleGoogleAuth = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -201,6 +210,14 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-primary/15 via-primary/5 to-background">
       {/* Hero */}
+      {/* TODO [PRIORITY: HIGH] [AREA: UX]
+          Problem: The sign-up view shows a full marketing hero (features list, headline, subtitle) ABOVE the form.
+                   Users who clicked "Sign Up" have already decided to try it — re-selling them adds scroll
+                   and delays reaching the form. On a small phone the form is completely off-screen on load.
+          Fix: Remove or collapse the hero section for the sign-up view. Replace with just the logo +
+               a single line: "Create your account — it takes 2 minutes."
+               Move the features list below the form as a reassurance block, not a barrier.
+          Expected Result: Users see the email input immediately on the sign-up screen — higher conversion. */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}

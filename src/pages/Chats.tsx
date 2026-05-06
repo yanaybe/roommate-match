@@ -532,6 +532,17 @@ export default function Chats() {
           )}
           <div className="flex-1">
             <h2 className="font-bold text-foreground text-sm">{conv?.other_name}</h2>
+            {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
+                Problem: The chat header shows the other person's name and avatar but gives no temporal context.
+                         Users don't know when they matched, how long the conversation has been open, or how
+                         recently the other person was active. This makes old matches feel stale and forgotten.
+                Fix: Add "Matched [X days ago]" below the name in the chat header.
+                     The conversation created_at timestamp is already available in activeConvData — compute
+                     the relative time: const matchedAgo = formatDistanceToNow(new Date(activeConvData.created_at), { addSuffix: true });
+                     Show: <p className="text-xs text-muted-foreground">Matched {matchedAgo}</p>
+                     Also show last_seen if the other user's profile has it: "Active 2 hours ago"
+                Expected Result: Chat header gives temporal context — users feel the connection is meaningful,
+                                 not just a forgotten match from weeks ago. */}
             <p className="text-muted-foreground text-xs">{t("online")}</p>
           </div>
           <div className="relative">
@@ -632,6 +643,20 @@ export default function Chats() {
                   <p className="text-sm leading-relaxed">{msg.content}</p>
                   <div className={`flex items-center justify-end gap-1 mt-0.5 ${isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                     <span className="text-xs">{formatTime(msg.created_at)}</span>
+                    {/* TODO [PRIORITY: LOW] [AREA: UX]
+                        Problem: Read receipts use two identical CheckCheck icons with only a color change (blue vs muted).
+                                 This is easy to miss at a glance. Users who want to know if their message was read
+                                 have to squint to compare icon colors — this is poor UX.
+                        Fix: Use two distinct icon states:
+                             - Sent (not read): single Check icon in muted color
+                             - Read: double CheckCheck icon in blue
+                             import { Check, CheckCheck } from "lucide-react"
+                             {isMine && (msg.is_read
+                               ? <CheckCheck className="w-3.5 h-3.5 text-blue-400" />
+                               : <Check className="w-3.5 h-3.5 opacity-50" />
+                             )}
+                             This matches WhatsApp / Telegram visual language that users already understand.
+                        Expected Result: Read status is immediately clear without squinting — cleaner message UI. */}
                     {isMine && (msg.is_read ? <CheckCheck className="w-3.5 h-3.5 text-blue-400" /> : <CheckCheck className="w-3.5 h-3.5" />)}
                   </div>
                 </div>
@@ -660,6 +685,17 @@ export default function Chats() {
         </div>
       )}
 
+      {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
+          Problem: There is no typing indicator. When the other person is composing a message,
+                   the recipient has no feedback. This makes the chat feel unresponsive and dead
+                   compared to WhatsApp, Telegram, or any modern messaging app.
+          Fix: Use Supabase Realtime Presence to broadcast typing state:
+               1. On input onChange, broadcast: channel.track({ typing: true, user_id: user.id })
+               2. Clear after 2 seconds of inactivity: setTimeout(() => channel.track({ typing: false }), 2000)
+               3. Subscribe to presence state: channel.on("presence", { event: "sync" }, () => { ... })
+               4. Show "Name is typing..." with animated dots above the input bar when other user is typing.
+               The presence channel can be scoped per conversation_id.
+          Expected Result: Chat feels live and responsive — users stay engaged waiting for the reply. */}
       {/* Input bar */}
       <div className="shrink-0 bg-background border-t border-border">
         <div className="px-4 py-3 flex items-center gap-2">

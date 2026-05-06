@@ -24,6 +24,16 @@ export default function Landing() {
   const { t, language, setLanguage, languageInfo } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
 
+  // TODO [PRIORITY: HIGH] [AREA: UX]
+  // Problem: All three stats are static features ("3 languages", "14 factors") — nobody is impressed by this.
+  //          There is zero social proof that real people use this product.
+  // Fix: Replace at least one stat with a live dynamic count from Supabase:
+  //      const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true })
+  //                                       .eq("onboarding_complete", true);
+  //      Then show e.g. { value: `${count}+`, label: "Active searchers" } or
+  //      filter by city to show "340 searching in Tel Aviv".
+  //      Fetch this in a useEffect with useState, fall back to a static floor number if count < 50.
+  // Expected Result: First-time visitors see a credibility signal that real users exist in their city.
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
     { value: "3", label: t("statsLanguagesLabel") },
@@ -200,6 +210,14 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
+          Problem: Preview listings are hardcoded mock data. If a user taps/clicks them they go nowhere
+                   or show fake data, which immediately breaks trust.
+          Fix: Either (a) load 3 real published apartments from Supabase and render them here,
+               or (b) add a clear "Example listing" label/badge on each card and make them non-clickable.
+               Option (a) is preferred — real listings show the product is live.
+               Query: supabase.from("apartments").select("*").order("created_at", { ascending: false }).limit(3)
+          Expected Result: Landing page preview cards are real or clearly marked as examples — no broken trust. */}
       {/* ── Preview listings ── */}
       <section className="px-5 pb-16 max-w-5xl mx-auto">
         <motion.div
@@ -344,6 +362,13 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
+              {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
+                  Problem: The Squad CTA asks users to "Create a Squad" before explaining what a Squad actually is.
+                           New visitors have no context — "Squad" is jargon until explained.
+                  Fix: Add a 3-step visual explainer inline:
+                       1. "Invite 2–4 friends" → 2. "Browse & vote on apartments together" → 3. "Move in as a group"
+                       Use icons + short labels. Keep it to 2 lines per step. Place it ABOVE the CTA button.
+                  Expected Result: Users understand the Squad concept before clicking — higher Squad creation rate. */}
               <button
                 onClick={() => navigate("/auth")}
                 className="gradient-primary text-primary-foreground font-bold px-6 py-3 rounded-xl text-sm flex items-center gap-2 w-fit"

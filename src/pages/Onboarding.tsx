@@ -410,6 +410,22 @@ export default function Onboarding() {
     } else {
       toast.success(isEdit ? t("preferencesUpdated") : t("profileCreated"));
       if (!isEdit) analytics.onboardingComplete();
+      // TODO [PRIORITY: HIGH] [AREA: UX]
+      // Problem: After spending 3–5 minutes completing a detailed profile, users are silently redirected
+      //          to the apartment browser with zero acknowledgment or payoff. The reward for all that effort
+      //          is invisible — no "here's what we found" moment.
+      // Fix: Before navigating to "/", show a full-screen "match reveal" interstitial:
+      //      1. Query how many profiles share the user's city:
+      //         const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true })
+      //                                          .eq("city", form.city).eq("onboarding_complete", true)
+      //                                          .neq("user_id", user.id);
+      //      2. Navigate to a new route "/welcome" that shows:
+      //         "🎉 We found {count} potential roommates in {city}!"
+      //         with an animated counter and a "See your matches →" CTA.
+      //      3. That CTA navigates to "/roommates".
+      //      Keep the welcome screen simple — 1 page, 1 CTA, 3 seconds max.
+      // Expected Result: Onboarding completion feels rewarding. Users start the matching experience
+      //                  with excitement rather than landing cold on apartment listings.
       navigate(isEdit ? "/profile" : "/", { replace: true });
     }
   };
@@ -540,6 +556,16 @@ export default function Onboarding() {
       case 2:
         return (
           <div className="space-y-5">
+            {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
+                Problem: This step packs 6+ distinct preference categories (smoking, pets, WFH, religion, alcohol,
+                         fitness, guests) into a single scrolling view. It's the longest step and has the highest
+                         drop-off. Users feel overwhelmed and quit at this exact point.
+                Fix: Split into two sub-steps within this step using an inner "substep" state:
+                     Sub-step A: Smoking preference, Pet preference, WFH toggle (deal-breakers — most important)
+                     Sub-step B: Religion, Alcohol, Fitness, Guests (nice-to-have lifestyle details)
+                     Use the same Next button but advance the substep first before advancing to step 3.
+                     Alternatively, move Fitness and Guests to the Personality step (step 3) which is shorter.
+                Expected Result: No single step feels overwhelming — completion rate improves at the midpoint. */}
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">🚬 {t("smoking")}</label>
               <div className="flex flex-wrap gap-2">
@@ -708,6 +734,18 @@ export default function Onboarding() {
               {t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}
               {step === 0 && <span className="ltr:ml-2 rtl:mr-2 text-primary font-medium">· {t("threeMin")}</span>}
             </p>
+            {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
+                Problem: Users can't see what steps are coming after the current one. The progress bar shows position
+                         but not content — "Step 3 of 6" tells you nothing about what's left. This creates anxiety
+                         and silent drop-off at the midpoint (steps 3–4).
+                Fix: Below the current step label, render the NEXT step name in muted text:
+                     {step < STEPS.length - 1 && (
+                       <p className="text-[10px] text-muted-foreground mt-0.5">
+                         Next: {STEPS[step + 1]}
+                       </p>
+                     )}
+                     This tiny addition tells users exactly what they're committing to next.
+                Expected Result: Users make an informed decision to continue rather than dropping off due to uncertainty. */}
             {(() => {
               const fields = [
                 form.name, form.age, form.city, form.occupation, form.budget,

@@ -98,6 +98,22 @@ export default function Roommates() {
       }));
   }, [allProfiles, myProfile, user?.id]);
 
+  // TODO [PRIORITY: HIGH] [AREA: LOGIC]
+  // Problem: The swipe deck shows ALL profiles regardless of city. A Tel Aviv user sees profiles from
+  //          Haifa, Beer Sheva, and Eilat — matches that are geographically impossible for roommate
+  //          searching. Even though the match score penalizes budget gaps, there is no city filter.
+  //          Users who swipe through 5 wrong-city profiles feel the product doesn't understand them.
+  // Fix: Add a city-match filter before building the swipe deck:
+  //      const cityFiltered = allProfiles.filter(p =>
+  //        !myProfile?.city ||
+  //        !p.city ||
+  //        p.city.toLowerCase() === myProfile.city.toLowerCase()
+  //      );
+  //      Use cityFiltered instead of allProfiles when building items.
+  //      Add a "Show all cities" toggle in the header for users who opt into seeing all profiles.
+  //      Store this preference in localStorage ("show_all_cities").
+  // Expected Result: Swipe deck shows only geographically relevant profiles by default.
+  //                  Users feel the algorithm understands their actual situation.
   const items = otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent, matchBreakdown: p.matchBreakdown }));
 
   const swipedSet = useMemo(() => new Set(swiped), [swiped]);
@@ -262,6 +278,22 @@ export default function Roommates() {
                 </div>
               ) : remaining.length > 0 ? (
                 <div className="relative w-full aspect-[3/4] max-h-[520px]">
+                  {/* TODO [PRIORITY: HIGH] [AREA: UX]
+                      Problem: First-time users land on the swipe stack with zero instruction. The LIKE/NOPE overlay
+                               only appears mid-drag, so users who don't know to drag just stare at a static card.
+                               This is a silent drop-off point — confused users leave, not complain.
+                      Fix: Show a one-time animated tutorial overlay on the FIRST visit only (track with localStorage key
+                           "swipe_tutorial_seen"). The overlay should:
+                           1. Appear for 2 seconds over the first card
+                           2. Show a left-swipe arrow with "Pass" label and right-swipe arrow with "Like" label
+                           3. Use a subtle animated hand icon dragging left-then-right
+                           4. Dismiss on any tap or after the animation completes
+                           Implementation:
+                             const [showTutorial, setShowTutorial] = useState(
+                               () => !localStorage.getItem("swipe_tutorial_seen")
+                             );
+                             // After dismiss: localStorage.setItem("swipe_tutorial_seen", "true")
+                      Expected Result: First-time users immediately understand the gesture — zero confusion, higher engagement. */}
                   <AnimatePresence>
                     {visibleCards
                       .slice()

@@ -160,6 +160,15 @@ export default function SwipeCard({ user, matchPercent, matchBreakdown, onSwipe,
             <Briefcase className="w-3.5 h-3.5" />
             {user.occupation}
           </div>
+          {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
+              Problem: The card shows the user's city but gives no sense of distance or area specificity.
+                       In a city like Tel Aviv, being in Florentin vs. Ramat Aviv vs. Jaffa matters enormously
+                       for commute, vibe, and price. "Tel Aviv" is too coarse.
+              Fix: Add a neighborhood / area field to the profiles table (text, nullable).
+                   Show it on the card as a secondary line: "📍 Florentin, Tel Aviv"
+                   If no neighborhood is set, fall back to city only.
+                   Add the neighborhood field to the Onboarding Basic Info step below the city input.
+              Expected Result: Cards give enough location context to make a swipe decision without opening the profile. */}
           <p className="text-primary-foreground/70 text-sm mt-2 line-clamp-2">{user.bio}</p>
           {matchBreakdown && matchBreakdown.length > 0 ? (
             <div className="flex flex-wrap gap-1.5 mt-3">

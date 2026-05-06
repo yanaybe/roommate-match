@@ -269,6 +269,21 @@ export default function MySquads() {
                 <p className="text-muted-foreground text-sm">{t("loadingSquads")}</p>
               </div>
             ) : squads.length === 0 && invites.length === 0 ? (
+              <>
+              {/* TODO [PRIORITY: HIGH] [AREA: UX]
+                  Problem: New users clicking "Squads" from the nav have no idea what a Squad is.
+                           The page either shows an empty state or immediately prompts them to create one.
+                           "Create a Squad" is a high-commitment action for a concept that hasn't been explained.
+                  Fix: When the user has zero squads AND has never created one (localStorage "squad_created" !== "true"),
+                       show a full-width explainer card ABOVE the "Create Squad" button:
+                       Title: "What's a Squad?"
+                       Body: 3 bullet points with icons:
+                         👥 Invite 2–4 friends who are also apartment hunting
+                         🗳️ Browse listings together and vote on your favorites
+                         🏠 Move in as a group — easier search, more negotiating power
+                       Then the "Create a Squad" CTA below the explainer.
+                       Once the user creates a squad, this card never shows again.
+                  Expected Result: Squad feature comprehension before commitment — higher Squad creation rate. */}
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
                   <Users className="w-8 h-8 text-muted-foreground" />
@@ -290,6 +305,7 @@ export default function MySquads() {
                   </button>
                 </div>
               </div>
+              </>
             ) : (
               <div className="space-y-3">
                 {squads.map((squad, i) => (

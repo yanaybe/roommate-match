@@ -158,6 +158,33 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
   const handleApply = () => {
     onApply(local);
     if (saveSearch) {
+      // TODO [PRIORITY: HIGH] [AREA: BACKEND]
+      // Problem: "Save this search" currently only writes to localStorage. This means:
+      //          (a) Saved searches are lost when the user clears their browser or switches devices
+      //          (b) There is no way to send email/push alerts when new listings match — the whole
+      //              point of saving a search is to get notified without manually checking the app.
+      // Fix: Persist saved searches to Supabase instead of (or in addition to) localStorage.
+      //      1. Run this migration in Supabase SQL editor:
+      //         create table if not exists saved_searches (
+      //           id uuid primary key default gen_random_uuid(),
+      //           user_id uuid references auth.users not null,
+      //           label text,
+      //           filters jsonb not null,
+      //           notify_email boolean default true,
+      //           created_at timestamptz default now()
+      //         );
+      //         alter table saved_searches enable row level security;
+      //         create policy "Users manage own searches"
+      //           on saved_searches for all using (auth.uid() = user_id);
+      //      2. In handleApply, after the existing localStorage write, also call:
+      //         await supabase.from("saved_searches").insert({
+      //           user_id: currentUser.id, label, filters: local, notify_email: true
+      //         });
+      //      3. Create a Supabase Edge Function (supabase/functions/listing-alerts/index.ts) triggered
+      //         by pg_cron once daily at 9am Israel time. It queries apartments inserted in the last 24h,
+      //         matches against all saved_searches, and sends email via Resend (resend.com).
+      // Expected Result: Saved searches survive device changes and trigger real email alerts —
+      //                  the #1 re-engagement mechanism for a listings product.
       // Saved search persisted locally until backend is wired up
       const saved = JSON.parse(localStorage.getItem("saved_searches") ?? "[]");
       const label = [local.city, local.budgetMax < 10000 ? `under ₪${local.budgetMax.toLocaleString()}` : ""].filter(Boolean).join(" · ") || "My search";
