@@ -157,42 +157,19 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center text-center mb-6"
         >
-          {/* TODO [SPRINT 2]: Replace the static `ring-primary/20` ring with a dynamic
-              SVG arc that shows profile completeness — like Instagram Stories indicator.
-              The completionScore is already computed below (lines ~133-150 in this file).
-              A visual arc communicates "there's more to do here" without any text.
-
-              IMPLEMENTATION — replace the static ring-4 ring-primary/20 div with:
-              <div className="relative w-24 h-24 mb-4">
-                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 96 96">
-                  <circle cx="48" cy="48" r="44" fill="none"
-                    stroke="currentColor" strokeWidth="4"
-                    className="text-secondary" />
-                  <circle cx="48" cy="48" r="44" fill="none"
-                    stroke="currentColor" strokeWidth="4"
-                    strokeDasharray={`${completionScore * 2.76} 276`}
-                    strokeLinecap="round"
-                    className={completionScore >= 85 ? "text-emerald-500"
-                      : completionScore >= 60 ? "text-primary" : "text-amber-500"} />
-                </svg>
-                <div className="absolute inset-1.5 rounded-full bg-primary/10
-                                flex items-center justify-center overflow-hidden">
-                  {profile.avatar_url
-                    ? <img src={profile.avatar_url} alt={profile.name}
-                           className="w-full h-full object-cover rounded-full" />
-                    : <span className="text-primary text-3xl font-extrabold">
-                        {profile.name.charAt(0).toUpperCase()}
-                      </span>
-                  }
-                </div>
-              </div>
-
-              Note: 2.76 = circumference (2π×44) / 100. The ring fills clockwise as
-              completionScore increases from 0 → 100. At 100% the ring closes fully. */}
-          <div className="relative mb-4">
-            <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center ring-4 ring-primary/20 overflow-hidden">
+          <div className="relative w-24 h-24 mb-4">
+            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="44" fill="none" stroke="currentColor" strokeWidth="4" className="text-secondary" />
+              <circle
+                cx="48" cy="48" r="44" fill="none" stroke="currentColor" strokeWidth="4"
+                strokeDasharray={`${completionScore * 2.76} 276`}
+                strokeLinecap="round"
+                className={completionScore >= 85 ? "text-emerald-500" : completionScore >= 60 ? "text-primary" : "text-amber-500"}
+              />
+            </svg>
+            <div className="absolute inset-1.5 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.name} className="w-full h-full object-cover" />
+                <img src={profile.avatar_url} alt={profile.name} className="w-full h-full object-cover rounded-full" />
               ) : (
                 <span className="text-primary text-3xl font-extrabold">
                   {profile.name.charAt(0).toUpperCase()}

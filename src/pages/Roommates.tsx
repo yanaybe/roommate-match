@@ -59,6 +59,10 @@ export default function Roommates() {
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
+  const [matchedBreakdown, setMatchedBreakdown] = useState<import("@/lib/matching").MatchFactor[]>([]);
+  const [hasViewedSquads, setHasViewedSquads] = useState(
+    () => localStorage.getItem("squads_tab_viewed") === "true"
+  );
   const { canLike, likesUsed, likesLimit, recordLike, openPremiumSheet, subscriptionTier } = useDailyLimits();
   const canUndo = subscriptionTier !== "free";
 
@@ -150,6 +154,7 @@ export default function Roommates() {
             analytics.match(current.matchPercent);
             setMatchedUser(current.user);
             setMatchedPercent(current.matchPercent);
+            setMatchedBreakdown(current.matchBreakdown ?? []);
           }
         }
 
@@ -193,38 +198,27 @@ export default function Roommates() {
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 desk:pt-6 pb-3">
           <h1 className="text-2xl font-extrabold text-foreground tracking-tight mb-3">{t("findRoommates")}</h1>
-          {/* TODO [SPRINT 2]: Add a "NEW" badge on the Squads tab until the user
-            first views it. This alone would increase Squad discovery by 2–3x.
-            Squads is the #1 unique differentiator — most users never find it
-            because "People" is the default and nothing draws the eye to "Squads".
-
-            IMPLEMENTATION:
-            1. Add a localStorage key to track if the user has ever clicked Squads:
-               const [hasViewedSquads, setHasViewedSquads] = useState(
-                 () => localStorage.getItem("squads_tab_viewed") === "true"
-               );
-            2. When the user clicks the Squads tab:
-               setHasViewedSquads(true);
-               localStorage.setItem("squads_tab_viewed", "true");
-            3. Add the badge to the tab button:
-               {tab === "squads" && !hasViewedSquads && (
-                 <span className="ml-1.5 bg-primary text-primary-foreground
-                                  text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                   NEW
-                 </span>
-               )}  */}
         <div className="flex bg-secondary rounded-xl p-1">
             {(["people", "squads"] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab === "squads" && !hasViewedSquads) {
+                    setHasViewedSquads(true);
+                    localStorage.setItem("squads_tab_viewed", "true");
+                  }
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
                   activeTab === tab
                     ? "gradient-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {tab === "people" ? "People" : "Squads"}
+                {tab === "squads" && !hasViewedSquads && (
+                  <span className="ml-1.5 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-full">NEW</span>
+                )}
               </button>
             ))}
           </div>
@@ -342,7 +336,7 @@ export default function Roommates() {
       </div>
 
       {matchedUser && (
-        <MatchModal user={matchedUser} matchPercent={matchedPercent} onClose={() => setMatchedUser(null)} />
+        <MatchModal user={matchedUser} matchPercent={matchedPercent} matchBreakdown={matchedBreakdown} onClose={() => setMatchedUser(null)} />
       )}
     </div>
   );

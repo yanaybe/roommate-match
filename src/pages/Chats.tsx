@@ -93,8 +93,7 @@ export default function Chats() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [subscriptionTier, setSubscriptionTier] = useState("free");
-  // Rate limiting: track timestamps of recent sends (max 5 per 3 seconds)
-  const recentSendTimestamps = useRef<number[]>([]);
+  const FREE_MESSAGES_PER_DAY = 100;
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -389,62 +388,20 @@ export default function Chats() {
 
     const isGoldPlus = ["gold", "platinum"].includes(subscriptionTier);
 
-    // TODO [SPRINT 2]: Replace the velocity-based rate limiter with a daily
-    // volume-based limit that feels natural instead of broken.
-    //
-    // THE PROBLEM: The 3-second window / 5-messages burst guard makes the app
-    // feel like it's malfunctioning during normal rapid-fire chat. Real users
-    // in early conversation naturally send several short messages in a row
-    // ("Hey!", "I saw we both work from home", "What area are you looking in?").
-    // Blocking this pattern with a "too fast" error is a terrible UX moment.
-    //
-    // The server-side guard (30 messages/minute) is more reasonable but still
-    // too tight for a chat product. Typical casual chat is 20–40 messages/session.
-    //
-    // FIX: Replace both guards with a single daily volume limit:
-    //   const FREE_MESSAGES_PER_DAY = 100;  // generous for free tier
-    //   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-    //   const { count: todayCount } = await supabase
-    //     .from("messages")
-    //     .select("id", { count: "exact", head: true })
-    //     .eq("sender_id", user.id)
-    //     .gte("created_at", todayStart.toISOString());
-    //   if (!isGoldPlus && (todayCount ?? 0) >= FREE_MESSAGES_PER_DAY) {
-    //     toast("Daily message limit reached", {
-    //       description: "Upgrade to Gold for unlimited messaging.",
-    //       action: { label: "Upgrade", onClick: () => { /* open premium sheet */ } },
-    //     });
-    //     return;
-    //   }
-    //
-    // Remove the `recentSendTimestamps` ref and the burst guard entirely.
-    // The server-side daily count is bypass-proof and non-annoying.
-
-    // ── Rate limiting: client-side burst guard (UX) ──────────────────────────
+    // ── Rate limiting: daily volume limit ────────────────────────────────────
     if (!isGoldPlus) {
-      const now = Date.now();
-      const WINDOW_MS = 3000;
-      const MAX_IN_WINDOW = 5;
-      recentSendTimestamps.current = recentSendTimestamps.current.filter(
-        (t) => now - t < WINDOW_MS
-      );
-      if (recentSendTimestamps.current.length >= MAX_IN_WINDOW) {
-        toast.error("Slow down — you're sending messages too fast");
-        return;
-      }
-      recentSendTimestamps.current.push(now);
-    }
-
-    // ── Rate limiting: server-side check (bypass-proof) ──────────────────────
-    if (!isGoldPlus) {
-      const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
-      const { count: recentCount } = await supabase
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const { count: todayCount } = await supabase
         .from("messages")
         .select("id", { count: "exact", head: true })
         .eq("sender_id", user.id)
-        .gte("created_at", oneMinuteAgo);
-      if ((recentCount ?? 0) >= 30) {
-        toast.error("You're sending too many messages. Please wait a minute.");
+        .gte("created_at", todayStart.toISOString());
+      if ((todayCount ?? 0) >= FREE_MESSAGES_PER_DAY) {
+        toast("Daily message limit reached", {
+          description: "Upgrade to Gold for unlimited messaging.",
+          action: { label: "Upgrade", onClick: () => navigate("/settings") },
+        });
         return;
       }
     }

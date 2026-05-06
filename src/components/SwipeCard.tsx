@@ -178,25 +178,11 @@ export default function SwipeCard({ user, matchPercent, matchBreakdown, onSwipe,
             {user.occupation}
           </div>
           <p className="text-primary-foreground/70 text-sm mt-2 line-clamp-2">{user.bio}</p>
-          {/* TODO [SPRINT 2]: Flip the pill ordering — show STRENGTHS first, conflicts last.
-              Currently conflicts are shown first (index 0), which makes every card
-              feel negative before the user has read the strengths. Hinge and Bumble
-              always lead with the positive signal. Show conflicts as a subtle secondary
-              indicator, not the first thing the eye lands on.
-
-              CHANGE TO:
-              {[
-                ...matchBreakdown.filter((f) => !f.isConflict).slice(0, 2),  // strengths first
-                ...matchBreakdown.filter((f) => f.isConflict).slice(0, 1),   // then conflict
-              ].slice(0, 3).map((f) => ( ... ))}
-
-              Also consider: if there are no conflicts, show up to 3 strengths instead of 2. */}
           {matchBreakdown && matchBreakdown.length > 0 ? (
             <div className="flex flex-wrap gap-1.5 mt-3">
-              {/* Show conflicts first, then top positives — max 3 pills */}
               {[
+                ...matchBreakdown.filter((f) => !f.isConflict).slice(0, matchBreakdown.some((f) => f.isConflict) ? 2 : 3),
                 ...matchBreakdown.filter((f) => f.isConflict).slice(0, 1),
-                ...matchBreakdown.filter((f) => !f.isConflict).slice(0, 2),
               ].slice(0, 3).map((f) => (
                 <span
                   key={f.label}

@@ -760,27 +760,22 @@ export default function Onboarding() {
               {t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}
               {step === 0 && <span className="ltr:ml-2 rtl:mr-2 text-primary font-medium">· {t("threeMin")}</span>}
             </p>
-            {/* TODO [SPRINT 2]: Add a real-time match quality % counter here.
-                Framing data collection as "unlocking match quality" motivates
-                completion. Shows users their answers directly improve results.
-
-                IMPLEMENTATION — add below the <p> above:
-                (() => {
-                  const fields = [
-                    form.name, form.age, form.city, form.occupation, form.budget,
-                    form.sleep_schedule, form.cooking_habits, form.smoking_preference,
-                    form.pet_preference, form.religious_level, form.lifestyle_vibe,
-                    String(form.social_level), String(form.noise_level), form.partying,
-                    form.bio, form.photos.length > 0 ? "yes" : "",
-                  ];
-                  const pct = Math.round((fields.filter(Boolean).length / fields.length) * 100);
-                  if (pct <= 10) return null;
-                  return (
-                    <p className="text-xs text-primary font-bold mt-0.5">
-                      {pct}% match quality unlocked
-                    </p>
-                  );
-                })()  */}
+            {(() => {
+              const fields = [
+                form.name, form.age, form.city, form.occupation, form.budget,
+                form.sleep_schedule, form.cooking_habits, form.smoking_preference,
+                form.pet_preference, form.religious_level, form.lifestyle_vibe,
+                String(form.social_level), String(form.noise_level), form.partying,
+                form.bio, form.photos.length > 0 ? "yes" : "",
+              ];
+              const pct = Math.round((fields.filter(Boolean).length / fields.length) * 100);
+              if (pct <= 10) return null;
+              return (
+                <p className="text-xs text-primary font-bold mt-0.5">
+                  {pct}% match quality unlocked
+                </p>
+              );
+            })()}
           </div>
           {isEdit && (
             <button

@@ -479,28 +479,6 @@ export default function RoommateProfile() {
           </motion.div>
         )}
 
-        {/* TODO [SPRINT 2]: Improve the Compatibility section — show strengths FIRST,
-            conflicts collapsed. Currently the breakdown shows items sorted by the
-            algorithm output order, which often starts with conflicts. This makes
-            the profile feel negative before the user has seen the strengths.
-
-            FIX: Sort breakdown items before rendering so green (score >= 75) items
-            appear first, then amber, then red (conflicts):
-              const sortedBreakdown = [...breakdown].sort((a, b) => {
-                if (a.isConflict !== b.isConflict) return a.isConflict ? 1 : -1;
-                return b.score - a.score;
-              });
-            Use sortedBreakdown instead of breakdown in the .map() below.
-
-            ALSO: Add a "Top strengths" summary line above the breakdown bars when
-            matchPercent >= 70. E.g.:
-              <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-3">
-                ✨ Great match on {breakdown.filter(f => f.score >= 75).length} out
-                of {breakdown.length} factors
-              </p>
-
-            This makes the algorithm feel like an insight, not a report card. */}
-
         {/* Compatibility */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -536,7 +514,15 @@ export default function RoommateProfile() {
 
           {breakdown.length > 0 ? (
             <div className="space-y-2">
-              {breakdown.map((factor: MatchFactor) => {
+              {matchPercent >= 70 && (
+                <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-3">
+                  ✨ Great match on {breakdown.filter((f: MatchFactor) => f.score >= 75).length} out of {breakdown.length} factors
+                </p>
+              )}
+              {[...breakdown].sort((a: MatchFactor, b: MatchFactor) => {
+                if (a.isConflict !== b.isConflict) return a.isConflict ? 1 : -1;
+                return b.score - a.score;
+              }).map((factor: MatchFactor) => {
                 const isGood = factor.score >= 75;
                 const isMid = factor.score >= 45;
                 const barColor = isGood ? "bg-green-500" : isMid ? "bg-amber-500" : "bg-rose-500";

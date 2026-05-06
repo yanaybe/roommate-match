@@ -54,67 +54,6 @@ const allAmenities = [
   { key: "Garden", emoji: "🌿" },
 ];
 
-// TODO [SPRINT 2]: Add a "Save this search & get alerts" toggle at the bottom
-// of the filter panel. Saved searches are the #1 missing retention mechanism —
-// without them users have no reason to open the app daily. A notification like
-// "2 new listings match your Tel Aviv ₪3,500 search" drives re-engagement.
-//
-// FULL IMPLEMENTATION:
-//
-// 1. SUPABASE MIGRATION — run this SQL in your Supabase SQL editor:
-//    create table saved_searches (
-//      id           uuid primary key default gen_random_uuid(),
-//      user_id      uuid references auth.users not null,
-//      label        text,                    -- e.g. "2BR in Tel Aviv under ₪3,500"
-//      city         text,
-//      max_price    int,
-//      min_rooms    int,
-//      amenities    jsonb default '[]',
-//      notify_email boolean default true,
-//      created_at   timestamptz default now()
-//    );
-//    alter table saved_searches enable row level security;
-//    create policy "Users manage own searches"
-//      on saved_searches for all using (auth.uid() = user_id);
-//
-// 2. FRONTEND — add at the very bottom of the filter panel, above the Apply button:
-//    const [saveSearch, setSaveSearch] = useState(false);
-//    {/* Save search toggle */}
-//    <div className="flex items-center justify-between py-3 border-t border-border mt-4">
-//      <div>
-//        <p className="text-sm font-semibold text-foreground">Save this search</p>
-//        <p className="text-xs text-muted-foreground">Get notified when new listings match</p>
-//      </div>
-//      <button
-//        onClick={() => setSaveSearch(s => !s)}
-//        className={`w-11 h-6 rounded-full transition-colors ${
-//          saveSearch ? "bg-primary" : "bg-secondary"
-//        }`}
-//      >
-//        <div className={`w-4 h-4 rounded-full bg-white mx-1 transition-transform ${
-//          saveSearch ? "translate-x-5" : "translate-x-0"
-//        }`} />
-//      </button>
-//    </div>
-//
-// 3. When onApply() is called with saveSearch=true, upsert a row:
-//    await supabase.from("saved_searches").insert({
-//      user_id: currentUser.id,
-//      city: filters.city ?? null,
-//      max_price: filters.budgetMax,
-//      min_rooms: filters.roomsMin,
-//      amenities: filters.amenities,
-//      label: `${filters.roomsMin}+ rooms · up to ₪${filters.budgetMax}`,
-//    });
-//    toast.success("Search saved! We'll notify you when new listings match.");
-//
-// 4. EDGE FUNCTION — create supabase/functions/listing-alerts/index.ts:
-//    - Triggered by a pg_cron job (or Supabase scheduled function) once per day at 9am
-//    - Queries apartments inserted in the last 24 hours
-//    - For each apartment, checks against all saved_searches
-//    - Sends email via Resend (https://resend.com) to matching users
-//    - Resend free tier: 100 emails/day — enough for early stage
-
 interface FilterModalProps {
   open: boolean;
   onClose: () => void;
@@ -202,6 +141,7 @@ type Tab = typeof TABS[number];
 export default function FilterModal({ open, onClose, filters, onApply }: FilterModalProps) {
   const [local, setLocal] = useState<Filters>(filters);
   const [activeTab, setActiveTab] = useState<Tab>("Basics");
+  const [saveSearch, setSaveSearch] = useState(false);
   const { t } = useLanguage();
 
   const update = <K extends keyof Filters>(key: K, val: Filters[K]) =>
@@ -215,7 +155,18 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
         : [...p.amenities, a],
     }));
 
-  const handleApply = () => { onApply(local); onClose(); };
+  const handleApply = () => {
+    onApply(local);
+    if (saveSearch) {
+      // Saved search persisted locally until backend is wired up
+      const saved = JSON.parse(localStorage.getItem("saved_searches") ?? "[]");
+      const label = [local.city, local.budgetMax < 10000 ? `under ₪${local.budgetMax.toLocaleString()}` : ""].filter(Boolean).join(" · ") || "My search";
+      saved.push({ label, filters: local, savedAt: new Date().toISOString() });
+      localStorage.setItem("saved_searches", JSON.stringify(saved));
+      setSaveSearch(false);
+    }
+    onClose();
+  };
   const handleReset = () => setLocal(defaultFilters);
 
   const activeCount = (() => {
@@ -596,6 +547,21 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                 )}
 
               </div>
+            </div>
+
+            {/* ── Save search toggle ── */}
+            <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-border bg-card">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Save this search</p>
+                <p className="text-xs text-muted-foreground">Get notified when new listings match</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSaveSearch((s) => !s)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${saveSearch ? "bg-primary" : "bg-secondary"}`}
+              >
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${saveSearch ? "translate-x-6" : "translate-x-1"}`} />
+              </button>
             </div>
 
             {/* ── Footer ── */}
