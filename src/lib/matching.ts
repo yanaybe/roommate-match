@@ -31,47 +31,9 @@ export interface ProfileData {
   cleanliness_expectations: number;
   activity_hours: string;
   bio: string;
-  // TODO [SPRINT 3]: Add move_in_date as an optional field here after adding
-  // the column to the profiles table and the onboarding form.
-  // move_in_date?: string | null; // ISO date string "YYYY-MM-DD"
+  move_in_date?: string | null;
 }
 
-// TODO [SPRINT 3]: Add a move-in timing factor to calculateUserMatch().
-// Move-in date compatibility is the #1 practical failure point in roommate
-// matching — lifestyle can be perfect but if timing is 3 months apart it won't
-// work. No competitor surfaces this in their algorithm. It's a real differentiator.
-//
-// IMPLEMENTATION — add this block inside calculateUserMatch() after the budget
-// penalty check, before the base compatibility score calculation:
-//
-//   // Move-in timing bonus/penalty (only when both users have a date set)
-//   if (a.move_in_date && b.move_in_date) {
-//     const aDate = new Date(a.move_in_date).getTime();
-//     const bDate = new Date(b.move_in_date).getTime();
-//     const diffDays = Math.abs(aDate - bDate) / (1000 * 60 * 60 * 24);
-//     if (diffDays <= 30) {
-//       penalties -= 8; // reward: reduce existing penalties (bonus points)
-//     } else if (diffDays <= 60) {
-//       penalties -= 4;
-//     } else if (diffDays > 90) {
-//       penalties += 8; // same timing gap is a soft deal-breaker
-//     }
-//   }
-//
-// Also add to calculateUserMatchBreakdown() as a new MatchFactor so it appears
-// in the compatibility card in chat and on the RoommateProfile page:
-//   if (a.move_in_date && b.move_in_date) {
-//     const diffDays = ...;
-//     breakdown.push({
-//       label: "Move-in timing",
-//       emoji: "📅",
-//       score: diffDays <= 30 ? 95 : diffDays <= 60 ? 75 : diffDays <= 90 ? 50 : 20,
-//       detail: diffDays <= 30 ? "Both looking to move in around the same time"
-//             : diffDays <= 90 ? `Move-in dates are ${Math.round(diffDays / 30)} months apart`
-//             : "Move-in timing may not align",
-//       isConflict: diffDays > 90,
-//     });
-//   }
 
 function numericSimilarity(a: number, b: number, max: number): number {
   return 1 - Math.abs(a - b) / max;
@@ -169,6 +131,14 @@ export function calculateUserMatch(a: ProfileData, b: ProfileData): number {
     if (ratio > 0.6) penalties += 12;
     else if (ratio > 0.4) penalties += 7;
     else if (ratio > 0.25) penalties += 3;
+  }
+
+  // Move-in timing: gap > 90 days is a soft deal-breaker
+  if (a.move_in_date && b.move_in_date) {
+    const diffDays = Math.abs(new Date(a.move_in_date).getTime() - new Date(b.move_in_date).getTime()) / 86_400_000;
+    if (diffDays <= 30) penalties -= 8;
+    else if (diffDays <= 60) penalties -= 4;
+    else if (diffDays > 90) penalties += 8;
   }
 
   // ─── Layer 2: Base compatibility score ────────────────────────────────────
@@ -356,6 +326,19 @@ export function calculateUserMatchBreakdown(a: ProfileData, b: ProfileData): Mat
     detail: budgetDetail,
     isConflict: budgetScore < 40,
   });
+
+  if (a.move_in_date && b.move_in_date) {
+    const diffDays = Math.abs(new Date(a.move_in_date).getTime() - new Date(b.move_in_date).getTime()) / 86_400_000;
+    factors.push({
+      label: "Move-in timing",
+      emoji: "📅",
+      score: diffDays <= 30 ? 95 : diffDays <= 60 ? 75 : diffDays <= 90 ? 50 : 20,
+      detail: diffDays <= 30 ? "Both looking to move in around the same time"
+            : diffDays <= 90 ? `Move-in dates are ${Math.round(diffDays / 30)} month${Math.round(diffDays / 30) === 1 ? "" : "s"} apart`
+            : "Move-in timing may not align",
+      isConflict: diffDays > 90,
+    });
+  }
 
   // Sort: conflicts first, then by score ascending so worst issues surface
   return factors.sort((x, y) => {

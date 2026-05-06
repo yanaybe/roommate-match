@@ -110,30 +110,13 @@ export default function SwipeCard({ user, matchPercent, matchBreakdown, onSwipe,
           </>
         )}
 
-        {/* TODO [SPRINT 3]: Add an "Active today" green dot badge when the user
-            was last seen within the past 24 hours. This creates urgency and trust
-            — users know they're swiping on real, active people, not ghost profiles.
-
-            STEPS:
-            1. Add `last_seen: string | null` to the UserProfile type in mockData.ts.
-            2. Add a `last_seen` column (timestamptz, nullable) to the `profiles` table.
-            3. Update `last_seen` on auth state change in useAuth.tsx:
-               supabase.auth.onAuthStateChange((event) => {
-                 if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-                   supabase.from("profiles")
-                     .update({ last_seen: new Date().toISOString() })
-                     .eq("user_id", user.id);
-                 }
-               });
-            4. In Roommates.tsx profileToUser(), map `p.last_seen` onto the user object.
-            5. Add this badge in SwipeCard.tsx ABOVE the match badge (top-right corner):
-               {user.lastSeen && (Date.now() - new Date(user.lastSeen).getTime() < 86_400_000) && (
-                 <div className="absolute top-4 right-4 z-10 flex items-center gap-1
-                                  bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
-                   <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                   <span className="text-white text-xs font-medium">Active today</span>
-                 </div>
-               )}  */}
+        {/* Active today badge */}
+        {user.lastSeen && (Date.now() - new Date(user.lastSeen).getTime() < 86_400_000) && (
+          <div className="absolute top-14 right-4 z-10 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-white text-xs font-medium">Active today</span>
+          </div>
+        )}
         {/* Match badge */}
         <div className="absolute top-4 left-4 z-10">
           <MatchBadge percent={matchPercent} />

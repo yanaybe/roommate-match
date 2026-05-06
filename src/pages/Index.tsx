@@ -1,6 +1,6 @@
-import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw } from "lucide-react";
+import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useMemo, lazy, Suspense, useEffect } from "react";
+import React, { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import FilterModal, { defaultFilters, type Filters } from "@/components/FilterModal";
@@ -159,48 +159,17 @@ export default function Index() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // TODO [SPRINT 3]: Build a "Recommended for you" section at the top of the
-  // apartment list. This is the #1 missing personalization feature — every listing
-  // currently shows with zero personalisation signal, like a generic classifieds page.
-  //
-  // Even a simple budget + city match creates a meaningfully better experience:
-  //   const recommended = useMemo(() => {
-  //     if (!profile?.budget || !profile?.city) return [];
-  //     return apartments
-  //       .filter(apt => {
-  //         const withinBudget = apt.price <= profile.budget * 1.15; // 15% buffer
-  //         const cityMatch = apt.location.toLowerCase().includes(profile.city.toLowerCase());
-  //         return withinBudget && cityMatch;
-  //       })
-  //       .slice(0, 3);
-  //   }, [apartments, profile]);
-  //
-  // Render a horizontal scroll row with these 3 cards above the main grid,
-  // with a "Picked for you" header and a "Based on your budget & location" subtext.
-  //
-  // In the apartment grid, inject an inline Squad promotion card after the 3rd
-  // listing (if user has no squad yet). This is in addition to the squad banner
-  // at the top — this one is persistent in the grid and catches scrollers:
-  //   if (index === 2 && squads.length === 0) {
-  //     return (
-  //       <div key="squad-promo" className="col-span-full bg-amber-50 dark:bg-amber-900/20
-  //                border border-amber-200 dark:border-amber-800 rounded-2xl p-4
-  //                cursor-pointer flex items-center gap-4"
-  //            onClick={() => navigate("/create-squad")}>
-  //         <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center
-  //                          justify-center shrink-0">
-  //           <Users className="w-6 h-6 text-white" />
-  //         </div>
-  //         <div className="flex-1 min-w-0">
-  //           <p className="font-bold text-foreground text-sm">Searching with friends?</p>
-  //           <p className="text-xs text-muted-foreground">
-  //             Create a Squad — browse, vote, and move in together.
-  //           </p>
-  //         </div>
-  //         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-  //       </div>
-  //     );
-  //   }
+  const recommended = useMemo(() => {
+    if (!profile?.budget || !profile?.city) return [];
+    return apartments
+      .filter((apt) => {
+        const withinBudget = apt.price <= profile.budget * 1.15;
+        const cityMatch = apt.location.toLowerCase().includes(profile.city.toLowerCase());
+        return withinBudget && cityMatch;
+      })
+      .slice(0, 3);
+  }, [apartments, profile]);
+
   const filtered = useMemo(() => {
     return apartments.filter((apt) => {
       if (search.trim()) {
@@ -352,11 +321,45 @@ export default function Index() {
               ))}
             </div>
           ) : filtered.length > 0 ? (
+            <>
+            {recommended.length > 0 && (
+              <div className="mb-5">
+                <div className="flex items-baseline justify-between mb-2">
+                  <h2 className="text-base font-extrabold text-foreground">Picked for you</h2>
+                  <p className="text-xs text-muted-foreground">Based on your budget & location</p>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  {recommended.map((apt, i) => (
+                    <div key={apt.id} className="shrink-0 w-56">
+                      <ApartmentCard apartment={apt} index={i} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div key={gridKey} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.map((apt, i) => (
-                <ApartmentCard key={apt.id} apartment={apt} index={i} />
+                <React.Fragment key={apt.id}>
+                  <ApartmentCard apartment={apt} index={i} />
+                  {i === 2 && squads.length === 0 && (
+                    <div
+                      className="col-span-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 cursor-pointer flex items-center gap-4"
+                      onClick={() => navigate("/create-squad")}
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center shrink-0">
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-foreground text-sm">Searching with friends?</p>
+                        <p className="text-xs text-muted-foreground">Create a Squad — browse, vote, and move in together.</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                    </div>
+                  )}
+                </React.Fragment>
               ))}
             </div>
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-5">

@@ -22,9 +22,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setLoading(false);
+        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+          supabase.from("profiles").update({ last_seen: new Date().toISOString() }).eq("user_id", session.user.id);
+        }
       }
     );
 

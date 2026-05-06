@@ -45,6 +45,7 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subsc
     photos: photos?.length ? photos : undefined,
     phoneVerified: (p as any).phone_verified ?? false,
     subscriptionTier: (p as any).subscription_tier ?? "free",
+    lastSeen: (p as any).last_seen ?? null,
   };
 }
 

@@ -33,6 +33,7 @@ interface FormData {
   city: string;
   occupation: string;
   budget: string;
+  move_in_date: string;
   desired_room_type: string;
   sleep_schedule: string;
   cleanliness: number;
@@ -62,7 +63,7 @@ interface FormData {
 }
 
 const initial: FormData = {
-  name: "", age: "", city: "", occupation: "", budget: "", desired_room_type: "Private",
+  name: "", age: "", city: "", occupation: "", budget: "", move_in_date: "", desired_room_type: "Private",
   sleep_schedule: "Flexible", cleanliness: 3, cooking_habits: "Sometimes", shared_space_org: "Moderate",
   smoking: false, smoking_preference: "Non-smoker, okay with smokers",
   religious_level: "Not religious", alcohol: "Socially",
@@ -165,43 +166,6 @@ export default function Onboarding() {
   };
   const to = (val: string) => optMap[val] ?? val;
 
-  // TODO [SPRINT 3 — GROWTH]: Add a squad-first onboarding path to create virality.
-  // Every squad invitation is a user acquisition event. One signup can trigger 2–4 more.
-  // Currently there's no way to start the onboarding flow as "searching with friends"
-  // — users land in the solo flow by default and never think to create a squad.
-  //
-  // THE PATTERN: Add an intent screen as Step -1 (before the current Step 0):
-  //   "Are you searching alone or with friends?"
-  //   [Solo — take me to full onboarding]
-  //   [With friends → create a squad]
-  //
-  // SQUAD PATH FLOW (minimal onboarding, faster):
-  //   Step 1: Name + Budget + City (30 seconds)
-  //   → Auto-create a draft squad
-  //   → Show a shareable invite link card ("Share this with your friends")
-  //   → Friends who click the link land on /onboarding?squad=<id>
-  //   → They complete their own onboarding and are auto-added to the squad
-  //
-  // IMPLEMENTATION:
-  // 1. Add a URL param check: const squadId = searchParams.get("squad");
-  //    If present, after completing onboarding auto-join the squad via:
-  //    await supabase.from("squad_members").insert({
-  //      squad_id: squadId, user_id: user.id, status: "joined", role: "member"
-  //    });
-  //    Then navigate to `/squad/${squadId}`.
-  //
-  // 2. Create a new component `OnboardingIntentScreen` that shows before Step 0
-  //    when `!isEdit && !squadId`. It shows two large tap targets.
-  //    If "With friends" → after Step 1 (basic info), call:
-  //    const { data } = await supabase.from("squads").insert({
-  //      name: `${form.name}'s Squad`, creator_id: user.id,
-  //      target_size: 3, status: "draft"
-  //    }).select().single();
-  //    Then show a shareable card: `${window.location.origin}/onboarding?squad=${data.id}`
-  //
-  // 3. The squad invite link is the viral loop. Post to WhatsApp groups → multiple
-  //    signups per squad. This is Airbnb's referral loop applied to roommate search.
-
   // Guard: redirect unverified users to verify-email, unauthenticated to auth
   useEffect(() => {
     if (authLoading) return;
@@ -219,6 +183,7 @@ export default function Onboarding() {
         city: profile.city || "",
         occupation: profile.occupation || "",
         budget: profile.budget?.toString() || "",
+        move_in_date: (profile as any).move_in_date || "",
         desired_room_type: profile.desired_room_type || "Private",
         sleep_schedule: profile.sleep_schedule || "Flexible",
         cleanliness: profile.cleanliness ?? 3,
@@ -333,6 +298,7 @@ export default function Onboarding() {
       city: sanitizeText(currentForm.city) || null,
       occupation: sanitizeText(currentForm.occupation) || null,
       budget: parseInt(currentForm.budget) || 0,
+      move_in_date: currentForm.move_in_date || null,
       desired_room_type: currentForm.desired_room_type,
       sleep_schedule: currentForm.sleep_schedule,
       cleanliness: currentForm.cleanliness,
@@ -429,6 +395,7 @@ export default function Onboarding() {
       cleanliness_expectations: form.cleanliness_expectations,
       activity_hours: form.activity_hours,
       bio: safeBio,
+      move_in_date: form.move_in_date || null,
       onboarding_complete: true,
       avatar_url: avatarUrl,
       photos: form.photos,
@@ -452,37 +419,6 @@ export default function Onboarding() {
       case 0:
         return (
           <div className="space-y-4">
-            {/* TODO [SPRINT 3]: Add a "move_in_date" field to this step.
-                Move-in timing is the #1 failure point in roommate searching — even a
-                perfect lifestyle match fails if one person needs to move in October
-                and the other in January. No competitor surfaces this.
-
-                STEPS:
-                1. Add `move_in_date: string` to the FormData interface (above, line ~30).
-                2. Add `move_in_date: ""` to the `initial` object (line ~64).
-                3. Add `move_in_date` column (type: date, nullable) to the `profiles`
-                   Supabase table via a migration.
-                4. Add to the payload in both saveProgress() and handleSubmit().
-                5. Add this UI below the budget field:
-                   <div>
-                     <label className="text-sm font-semibold text-foreground block mb-1.5">
-                       When are you looking to move in?
-                     </label>
-                     <input
-                       type="month"
-                       value={form.move_in_date}
-                       onChange={(e) => update("move_in_date", e.target.value)}
-                       className="w-full bg-secondary text-secondary-foreground px-4 py-3
-                                  rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                     />
-                     <p className="text-xs text-muted-foreground mt-1">Optional — helps match timing</p>
-                   </div>
-                6. In SwipeCard.tsx, display the move-in month below the user's city.
-                7. In src/lib/matching.ts, add a timing factor to calculateUserMatch():
-                   if both users have move_in_date set and the gap is ≤ 30 days: +8 pts
-                   if the gap is 31–60 days: +4 pts
-                   if the gap is > 90 days: -8 pts
-                   Weight this factor at ~5% of the base score. */}
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("nameLbl")}</label>
               <input
@@ -543,6 +479,18 @@ export default function Onboarding() {
                 className={`w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.budget ? "ring-2 ring-destructive" : ""}`}
               />
               <ErrorMsg msg={errors.budget} />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">
+                When are you looking to move in?
+              </label>
+              <input
+                type="month"
+                value={form.move_in_date}
+                onChange={(e) => update("move_in_date", e.target.value)}
+                className="w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Optional — helps match timing</p>
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("desiredRoomType")}</label>

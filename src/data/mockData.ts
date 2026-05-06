@@ -16,6 +16,7 @@ export interface UserProfile {
   wfh: boolean;
   bio: string;
   phoneVerified?: boolean;
+  lastSeen?: string | null;
 }
 
 export interface Apartment {

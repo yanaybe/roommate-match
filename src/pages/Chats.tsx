@@ -9,7 +9,7 @@ import { ArrowLeft, Send, CheckCheck, Trash2, MoreVertical, Ban, Flag, ChevronDo
 import { useLanguage } from "@/hooks/useLanguage";
 import { useBlockReport } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
-import { calculateUserMatch } from "@/lib/matching";
+import { calculateUserMatch, calculateUserMatchBreakdown } from "@/lib/matching";
 import MatchBadge from "@/components/MatchBadge";
 import { sanitizeText } from "@/lib/security";
 import { toast } from "sonner";
@@ -129,50 +129,10 @@ export default function Chats() {
     return calculateUserMatch(myProfile, otherProfile);
   }, [myProfile, otherProfile]);
 
-  // TODO [SPRINT 3]: Add a compatibility breakdown for the "Why you matched" card.
-  // The matchPercent is already computed above. Now also compute the breakdown
-  // so you can display the top strength factors at the top of the chat thread.
-  //
-  // IMPLEMENTATION:
-  // 1. Import `calculateUserMatchBreakdown` (already imported in RoommateProfile.tsx
-  //    as a reference — it exists in src/lib/matching.ts).
-  // 2. Add:
-  //    const matchBreakdown = useMemo(() => {
-  //      if (!myProfile || !otherProfile) return [];
-  //      return calculateUserMatchBreakdown(myProfile, otherProfile);
-  //    }, [myProfile, otherProfile]);
-  // 3. Render this card at the TOP of the messages list (before the messages map),
-  //    hidden once `contextDismissed` is true (contextDismissed state already exists):
-  //    {!contextDismissed && matchPercent > 0 && matchBreakdown.length > 0 && (
-  //      <div className="bg-secondary/60 rounded-2xl p-3 mx-1 mb-3 flex-shrink-0">
-  //        <div className="flex items-center justify-between mb-2">
-  //          <span className="text-xs font-bold text-foreground">
-  //            {matchPercent}% compatible
-  //          </span>
-  //          <button onClick={() => setContextDismissed(true)}
-  //            className="text-muted-foreground hover:text-foreground">
-  //            <X className="w-3.5 h-3.5" />
-  //          </button>
-  //        </div>
-  //        <div className="flex flex-wrap gap-1.5">
-  //          {matchBreakdown
-  //            .filter(f => !f.isConflict)
-  //            .slice(0, 3)
-  //            .map(f => (
-  //              <span key={f.label}
-  //                className="text-xs bg-green-100 dark:bg-green-900/30
-  //                           text-green-700 dark:text-green-300
-  //                           px-2 py-0.5 rounded-full font-medium">
-  //                {f.emoji} {f.detail}
-  //              </span>
-  //            ))
-  //          }
-  //        </div>
-  //      </div>
-  //    )}
-  //
-  // This makes the matching algorithm visible and builds trust in the product.
-  // The contextDismissed state already exists for the ice-breaker card — reuse it.
+  const matchBreakdown = useMemo(() => {
+    if (!myProfile || !otherProfile) return [];
+    return calculateUserMatchBreakdown(myProfile, otherProfile);
+  }, [myProfile, otherProfile]);
 
   const sharedTraits = useMemo(() => getSharedTraits(myProfile, otherProfile), [myProfile, otherProfile]);
   const icebreakers = useMemo(
@@ -638,7 +598,15 @@ export default function Chats() {
                   </button>
                 </div>
               </div>
-              {sharedTraits.length > 0 && (
+              {matchBreakdown.filter((f) => !f.isConflict).length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+                  {matchBreakdown.filter((f) => !f.isConflict).slice(0, 3).map((f) => (
+                    <span key={f.label} className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2.5 py-1 rounded-full font-medium">
+                      {f.emoji} {f.detail}
+                    </span>
+                  ))}
+                </div>
+              ) : sharedTraits.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5 px-4 pb-3">
                   {sharedTraits.map((trait) => (
                     <span key={trait} className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
@@ -646,7 +614,7 @@ export default function Chats() {
                     </span>
                   ))}
                 </div>
-              )}
+              ) : null}
             </motion.div>
           )}
         </AnimatePresence>
