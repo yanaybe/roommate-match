@@ -14,6 +14,23 @@ const fadeUp = {
 };
 
 // Static preview cards (no auth needed)
+// TODO [PRIORITY: HIGH] [AREA: TRUST]
+// Problem: The landing page has zero social proof. No testimonials, no "X roommates found
+//          this month," no press mentions. The "50+ active searchers" minimum floor actively
+//          signals the platform is small. Trust is critical when strangers will share a home.
+// Fix: Add a testimonials section between "How it works" and "Features" with 3 real quotes
+//      (collect from beta users). Format: avatar + name + city + quote + star rating.
+//      Also consider a "As seen in" press logo bar, or partner logos (real estate agencies).
+// Expected Result: Reduced "is this legit?" bounce rate; improved sign-up conversion.
+
+// TODO [PRIORITY: MEDIUM] [AREA: GROWTH]
+// Problem: Cold-start — the app needs listings to attract roommate-seekers and roommate-seekers
+//          to attract listers. With zero real content, first users land on an empty feed and churn.
+// Fix: Before public launch, seed at least 20–30 real listings in the primary launch city (Tel Aviv):
+//      (a) Partner with 3–5 local agencies to post rooms for free in exchange for early exposure
+//      (b) Offer early-bird listers a 3-month Gold subscription at no cost
+//      (c) Pre-load 15–20 real beta user profiles before opening public sign-up
+// Expected Result: First-time visitors see real content → lower bounce rate, higher sign-up rate.
 const PREVIEW_LISTINGS = [
   { title: "Modern Flat · Florentin", price: "₪3,200", match: 92, city: "Tel Aviv", img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=260&fit=crop" },
   { title: "Penthouse · Neve Tzedek", price: "₪3,800", match: 87, city: "Tel Aviv", img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=260&fit=crop" },
@@ -36,6 +53,13 @@ export default function Landing() {
       });
   }, []);
 
+  // TODO [PRIORITY: MEDIUM] [AREA: COPYWRITING]
+  // Problem: "3 languages" is a product feature, not a user benefit. Visitors don't sign up
+  //          because an app supports Hebrew — they sign up because it solves their housing problem.
+  // Fix: Replace the languages stat with something benefit-driven, e.g.:
+  //      { value: "2 min", label: "Setup time" }  or  { value: "85%", label: "Avg match quality" }
+  //      "14 compatibility checks" is also clearer than "14 matching factors" (more concrete).
+  // Expected Result: All three stats communicate direct user value, improving hero conversion rate.
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
     { value: "3", label: t("statsLanguagesLabel") },
@@ -79,6 +103,14 @@ export default function Landing() {
     },
   ];
 
+  // TODO [PRIORITY: MEDIUM] [AREA: CONVERSION]
+  // Problem: Each plan shows only 3 feature bullets. Users comparing tiers can't understand
+  //          what they're actually gaining for ₪29 or ₪39/month. Competitors show 6–10 bullets.
+  // Fix: Expand each plan to 6–8 bullets covering: daily like limit, who-liked-me access,
+  //      profile boosts per month, message-before-match, map view, squad features,
+  //      profile visibility ranking in search results, and support tier (email vs priority).
+  //      Consider a "Compare all features" toggle that expands to a full comparison table.
+  // Expected Result: Clearer upgrade value proposition → higher Gold and Platinum conversion rate.
   const PLANS = [
     { name: t("planFree"), price: "₪0", features: [t("planBrowseListings"), t("plan8Likes"), t("planMatchChat")] },
     { name: t("planGold"), price: "₪29", features: [t("planUnlimitedLikes"), t("planSeeWhoLiked"), t("planWeeklyBoost")], highlight: true },
@@ -189,6 +221,15 @@ export default function Landing() {
               {t("findMyRoommate")}
               <ChevronRight className="w-4 h-4" />
             </button>
+            {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
+                Problem: Both "Find my roommate" and "Browse listings" navigate identically to /auth.
+                         Users who click "Browse listings" expect to browse without committing to sign up.
+                         Presenting two buttons that do the same thing erodes trust and looks lazy.
+                Fix: Scroll "Browse listings" to the preview section below instead of gating it:
+                     onClick={() => document.getElementById("preview-listings")?.scrollIntoView({ behavior: "smooth" })}
+                     Add id="preview-listings" to the preview listings section div.
+                     OR: create a public /browse route that shows real apartments without auth.
+                Expected Result: Visitors experience product value before being asked to sign up. */}
             <button
               onClick={() => navigate("/auth")}
               className="w-full sm:w-auto bg-secondary text-secondary-foreground font-bold px-8 py-3.5 rounded-2xl text-base"
@@ -212,6 +253,16 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* TODO [PRIORITY: HIGH] [AREA: CONVERSION]
+          Problem: The landing page has no screenshots or mockups of the actual app UI.
+                   Visitors cannot see the swipe interface, match cards, or chat experience
+                   before signing up. "Show don't tell" is a core landing page principle —
+                   without it, users don't know what they're committing to.
+          Fix: Add a phone frame mockup section between the hero and the preview listings,
+               showing (1) a swipe card with a match %, and (2) the chat screen.
+               Use static PNG exports or a CSS phone frame. Tools: Shots.so, Mockuuups Studio.
+               A short 5-second autoplay silent video loop of the swipe UI would be even better.
+          Expected Result: Visitors understand the product before signing up; estimated 30–50% conversion lift. */}
       {/* ── Preview listings ── */}
       <section className="px-5 pb-16 max-w-5xl mx-auto">
         <motion.div
@@ -359,6 +410,14 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
+              {/* TODO [PRIORITY: LOW] [AREA: UX]
+                  Problem: The squad section has two overlapping explainers rendered back-to-back:
+                           (1) The SQUAD_STEPS checkmark bullet list above this comment
+                           (2) This 3-step numbered circles explainer immediately below
+                           They convey the same information twice, creating visual redundancy.
+                  Fix: Delete the SQUAD_STEPS flex/map block above and keep only this numbered
+                       circle explainer — it's more scannable and visually distinctive.
+                  Expected Result: The squad section is cleaner; the message lands with more impact. */}
               {/* Squad 3-step explainer */}
               <div className="flex items-center gap-2 mb-5">
                 {[
@@ -389,6 +448,21 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* TODO [PRIORITY: CRITICAL] [AREA: MONETIZATION]
+          Problem: The pricing UI exists and looks good, but every "Get Started" button on every
+                   plan goes to /auth — there is no actual payment flow. Stripe is not integrated.
+                   Users cannot subscribe. Revenue is zero. This is the single hardest launch blocker.
+          Fix: Integrate Stripe Checkout:
+               1. Install: bun add stripe @stripe/stripe-js
+               2. Create Supabase Edge Function: POST /functions/v1/create-checkout-session
+                  Accepts: { priceId, userId } → returns { sessionId }
+               3. On "Get Started" click (for paid tiers): call the function, then redirect to
+                  Stripe Checkout: stripe.redirectToCheckout({ sessionId })
+               4. Stripe webhook (Edge Function): listen for checkout.session.completed →
+                  update profiles SET subscription_tier = 'gold'|'platinum' WHERE user_id = ...
+               5. Stripe price IDs: create products in Stripe dashboard for ₪29/mo and ₪39/mo
+               See: stripe.com/docs/checkout/quickstart
+          Expected Result: End-to-end payment flow working; first real revenue possible. */}
       {/* ── Pricing ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
         <motion.div

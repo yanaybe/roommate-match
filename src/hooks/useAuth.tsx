@@ -19,6 +19,20 @@ import { supabase } from "@/integrations/supabase/client";
 //        Use Resend (resend.com) — free tier covers 100 emails/day, enough for early stage.
 // Expected Result: Users receive timely alerts that bring them back — target 40%+ week-2 retention.
 
+// TODO [PRIORITY: HIGH] [AREA: RETENTION]
+// Problem: No daily discovery nudges exist. Users who leave after day 1 have no external
+//          trigger to return. Without a "3 new roommates match you 80%+" email, the app is
+//          forgotten within 48 hours. Day-2 visit triggers are the single biggest driver of
+//          week-2 retention in consumer apps.
+// Fix: Supabase Edge Function triggered by pg_cron daily at 10:00am user local time:
+//      1. For each user with onboarding_complete = true and last_seen > 24h ago:
+//         Query top 3 new profiles in their city with match ≥ 70% since their last_seen timestamp
+//      2. If results exist: send email via Resend — subject: "3 new roommates match you in {city}"
+//         Body: first name, match %, city, and CTA button "See your matches →" linking to /roommates
+//      3. Write last_nudge_sent_at to profiles to prevent duplicate sends on the same day
+//      Include a one-click unsubscribe link using a signed token; honor it immediately.
+// Expected Result: 30–40% improvement in D7 retention among users who receive the daily digest.
+
 interface AuthCtx {
   session: Session | null;
   user: User | null;

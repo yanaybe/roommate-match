@@ -3,6 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import PremiumSheet from "@/components/PremiumSheet";
 
+// TODO [PRIORITY: MEDIUM] [AREA: GROWTH]
+// Problem: The right free limit depends on when users experience their first mutual match.
+//          Too low = paywall before user feels value and churns; too high = no upgrade pressure.
+//          Without data, the current value (30) is a guess that may be too generous to convert.
+// Fix: Instrument this before changing the number:
+//      (a) Track how many likes it takes a user to get their first mutual match (median)
+//      (b) Track at what like count users who DO upgrade typically converted
+//      A/B test: group A = 15/day, group B = 30/day — measure D7 retention AND paid conversion.
+//      Also fire an analytics event the first time a user hits the daily limit (canary metric).
+// Expected Result: Data-driven limit that maximizes both D7 retention and free-to-paid conversion.
 const FREE_LIKES_LIMIT = 30;
 const FREE_SAVES_LIMIT = 10;
 

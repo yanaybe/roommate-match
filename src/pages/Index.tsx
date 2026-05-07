@@ -170,15 +170,10 @@ export default function Index() {
       .slice(0, 3);
   }, [apartments, profile]);
 
-  // TODO [PRIORITY: MEDIUM] [AREA: UX]
-  // Problem: The "Picked for you" row only appears when profile.budget AND profile.city are both set.
-  //          New users who skipped budget during onboarding see a blank space where personalization
-  //          should be — making the app feel generic on their first visit.
-  // Fix: Add a fallback state when recommended.length === 0 but the user IS logged in:
-  //      Show a single "Complete your profile to get personalized picks" banner card in the row slot,
-  //      styled like the other horizontal cards, with a CTA to /onboarding?edit=true.
-  //      Only hide the row entirely for logged-out users.
-  // Expected Result: Every logged-in user sees something meaningful in the "Picked for you" slot.
+  // TODO [PRIORITY: LOW] [AREA: CLEANUP]
+  // Note: This TODO is DONE. The "Complete your profile" fallback banner has been implemented
+  //       at lines 349–363 below (the else branch of recommended.length > 0). Delete this
+  //       entire comment block — it is stale and no longer reflects the current code state.
 
   const filtered = useMemo(() => {
     return apartments.filter((apt) => {
@@ -226,7 +221,13 @@ export default function Index() {
         <div className="max-w-5xl mx-auto px-4 pt-12 desk:pt-6 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
+              {/* TODO [PRIORITY: HIGH] [AREA: BRANDING]
+                Problem: This renders "Roomatch" (lowercase 'm') while the landing page nav and
+                         brand identity use "RoomMatch" (capital M). This is the most-visited screen
+                         for logged-in users — the inconsistency looks like a typo on your own product name.
+                Fix: Change to: Room<span className="text-primary">Match</span>
+                Expected Result: Consistent branding across every page. */}
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
                 Roo<span className="text-primary">match</span>
               </h1>
               <p className="text-muted-foreground text-sm">Find your perfect roommate or apartment</p>
@@ -338,6 +339,14 @@ export default function Index() {
                   <h2 className="text-base font-extrabold text-foreground">Picked for you</h2>
                   <p className="text-xs text-muted-foreground">Based on your budget & location</p>
                 </div>
+                {/* TODO [PRIORITY: LOW] [AREA: UX]
+                    Problem: Each card is w-56 (224px), showing ~1.2 cards on most phones.
+                             The partial card does not clearly signal horizontal scrollability.
+                             Many users will miss the recommendations row entirely.
+                    Fix: Widen to w-64 or trim to ~85% screen width so the next card peeks
+                         in from the right edge — a standard mobile scroll affordance.
+                         Verify snap-start behavior works correctly on iOS Safari.
+                    Expected Result: Users discover and engage with the recommendations row. */}
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
                   {recommended.map((apt, i) => (
                     <div key={apt.id} className="shrink-0 w-56">
@@ -446,6 +455,17 @@ export default function Index() {
       </div>
       </div>{/* end overflow-x clip wrapper */}
 
+      {/* TODO [PRIORITY: LOW] [AREA: ENGAGEMENT]
+          Problem: The home feed is static — users see the same listings each visit with no
+                   sense of community activity or social momentum. This reduces FOMO and repeat
+                   visit motivation. New users have no signal that the platform is alive.
+          Fix: Add a small "Recent activity" strip near the top of the feed (below the header banners):
+               e.g. "🎉 Yael & Dana just matched in Tel Aviv" / "🏠 New listing: Florentin · ₪3,200"
+               Feed from a public_activity table (anonymized, no PII) updated by DB triggers on:
+               - mutual like inserts → liked_profiles mutual match
+               - apartment inserts → new listing
+               Show 3 rotating items, auto-cycling every 4s. Dismiss after 5 visits per user.
+          Expected Result: Social proof increases trust; activity signals platform health to new users. */}
       <FilterModal
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}

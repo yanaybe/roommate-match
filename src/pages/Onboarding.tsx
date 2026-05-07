@@ -492,6 +492,16 @@ export default function Onboarding() {
               />
               <ErrorMsg msg={errors.occupation} />
             </div>
+            {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
+                Problem: Budget is a required field with no skip affordance. Users casually browsing
+                         or undecided on their budget will abandon onboarding rather than commit to a
+                         number. This is one of the highest drop-off points in sign-up flows.
+                Fix: Add a "Skip for now →" text link below the budget input that clears the value
+                     and bypasses the validation error for this field only. Remove budget from the
+                     required-fields check in handleNext for step 0.
+                     The "Picked for you" section in Index.tsx already handles a missing budget
+                     gracefully (shows a "complete profile" nudge), so skipping is safe.
+                Expected Result: Higher step-0 completion rate; budget collected later via in-app nudges. */}
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("monthlyBudget")}</label>
               <input
@@ -565,6 +575,14 @@ export default function Onboarding() {
       case 2:
         return substep === 0 ? (
           <div className="space-y-5">
+            {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
+                Problem: "Deal-breakers · Part 1 of 2" alongside the "Step 2 of 6" progress bar makes
+                         users feel they are on step 2 of 8 total. User testing consistently shows this
+                         fraction triggers abandonment — the form feels longer than expected.
+                Fix: Remove the "Part X of 2" fraction entirely. Progress to substep 1 silently.
+                     The label can simply read "Deal-breakers" with no fraction counter.
+                     The outer progress bar still shows one dot for step 2, so overall progress is clear.
+                Expected Result: Reduced drop-off at step 2; simpler, less intimidating onboarding flow. */}
             <p className="text-xs text-muted-foreground -mt-1">Deal-breakers · Part 1 of 2</p>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">🚬 {t("smoking")}</label>
