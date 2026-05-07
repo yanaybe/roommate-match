@@ -43,4 +43,5 @@ export const analytics = {
   squadCreate: () => track("squad_create"),
   messageSent: () => track("message_sent"),
   phoneVerified: () => track("phone_verified"),
+  dailyLimitHit: (limit: number) => track("daily_like_limit_hit", { limit, tier: "free" }),
 };

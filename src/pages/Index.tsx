@@ -1,6 +1,6 @@
-import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, ChevronRight, Zap } from "lucide-react";
 import { toast } from "sonner";
-import React, { useState, useMemo, lazy, Suspense, useEffect } from "react";
+import React, { useState, useMemo, lazy, Suspense, useEffect, useRef } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import FilterModal, { defaultFilters, type Filters } from "@/components/FilterModal";
@@ -106,6 +106,9 @@ export default function Index() {
   const [gridKey, setGridKey] = useState(0);
   const [newApartments, setNewApartments] = useState<Apartment[]>([]);
   const [squadBannerDismissed, setSquadBannerDismissed] = useState(isSquadBannerDismissed);
+  const [activityItems, setActivityItems] = useState<string[]>([]);
+  const [activityIndex, setActivityIndex] = useState(0);
+  const activityTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { t } = useLanguage();
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -116,6 +119,31 @@ export default function Index() {
     try { localStorage.setItem(SQUAD_BANNER_KEY, String(Date.now())); } catch {}
     setSquadBannerDismissed(true);
   };
+
+  // Activity feed: pull recent listings and new profiles to show social proof
+  useEffect(() => {
+    const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    Promise.all([
+      supabase.from("apartments").select("title, price, city").gte("created_at", since).order("created_at", { ascending: false }).limit(3),
+      supabase.from("profiles").select("city", { count: "exact", head: false }).eq("onboarding_complete", true).gte("created_at", since).limit(10),
+    ]).then(([aptRes, profileRes]) => {
+      const items: string[] = [];
+      (aptRes.data ?? []).forEach((a) => {
+        items.push(`🏠 New listing: ${a.title} · ₪${Number(a.price).toLocaleString()}`);
+      });
+      const newProfiles = profileRes.data?.length ?? 0;
+      if (newProfiles > 0) items.push(`👥 ${newProfiles} new roommate${newProfiles > 1 ? "s" : ""} joined in the last 48h`);
+      if (items.length > 0) setActivityItems(items);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (activityItems.length <= 1) return;
+    activityTimerRef.current = setInterval(() => {
+      setActivityIndex((i) => (i + 1) % activityItems.length);
+    }, 4000);
+    return () => { if (activityTimerRef.current) clearInterval(activityTimerRef.current); };
+  }, [activityItems]);
 
   useEffect(() => {
     supabase
@@ -170,16 +198,6 @@ export default function Index() {
       .slice(0, 3);
   }, [apartments, profile]);
 
-  // TODO [PRIORITY: MEDIUM] [AREA: UX]
-  // Problem: The "Picked for you" row only appears when profile.budget AND profile.city are both set.
-  //          New users who skipped budget during onboarding see a blank space where personalization
-  //          should be — making the app feel generic on their first visit.
-  // Fix: Add a fallback state when recommended.length === 0 but the user IS logged in:
-  //      Show a single "Complete your profile to get personalized picks" banner card in the row slot,
-  //      styled like the other horizontal cards, with a CTA to /onboarding?edit=true.
-  //      Only hide the row entirely for logged-out users.
-  // Expected Result: Every logged-in user sees something meaningful in the "Picked for you" slot.
-
   const filtered = useMemo(() => {
     return apartments.filter((apt) => {
       if (search.trim()) {
@@ -226,8 +244,8 @@ export default function Index() {
         <div className="max-w-5xl mx-auto px-4 pt-12 desk:pt-6 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
-                Roo<span className="text-primary">match</span>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
+                Room<span className="text-primary">Match</span>
               </h1>
               <p className="text-muted-foreground text-sm">Find your perfect roommate or apartment</p>
             </div>
@@ -272,6 +290,25 @@ export default function Index() {
 
       {/* content below sticky header — clipped so nothing bleeds horizontally */}
       <div className="w-full" style={{ overflowX: "clip" }}>
+
+      {/* Activity feed strip — shows recent listings and new profile joins */}
+      {activityItems.length > 0 && (
+        <div className="max-w-5xl mx-auto px-4 pt-3">
+          <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/10 rounded-xl overflow-hidden">
+            <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
+            <p className="text-xs text-muted-foreground font-medium truncate transition-all duration-500">
+              {activityItems[activityIndex]}
+            </p>
+            {activityItems.length > 1 && (
+              <div className="flex gap-1 ml-auto shrink-0">
+                {activityItems.map((_, i) => (
+                  <div key={i} className={`w-1 h-1 rounded-full transition-colors ${i === activityIndex ? "bg-primary" : "bg-primary/20"}`} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {newApartments.length > 0 && (
         <div className="max-w-5xl mx-auto px-4 pt-3">
@@ -340,7 +377,7 @@ export default function Index() {
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
                   {recommended.map((apt, i) => (
-                    <div key={apt.id} className="shrink-0 w-56">
+                    <div key={apt.id} className="shrink-0 w-72">
                       <ApartmentCard apartment={apt} index={i} />
                     </div>
                   ))}

@@ -8,6 +8,7 @@ import ActivitySheet from "@/components/profile/ActivitySheet";
 import NotificationsSheet from "@/components/profile/NotificationsSheet";
 import MyListingsSheet from "@/components/profile/MyListingsSheet";
 import WhoLikedMeSheet from "@/components/profile/WhoLikedMeSheet";
+import SubscriptionManagementSheet from "@/components/profile/SubscriptionManagementSheet";
 import VerificationBadges from "@/components/VerificationBadges";
 import PhoneVerifySheet from "@/components/PhoneVerifySheet";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,8 +17,11 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 
-const getMenuItems = (t: (key: string) => string, hasListings: boolean) => [
-  { icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" },
+const getMenuItems = (t: (key: string) => string, hasListings: boolean, isPaid: boolean) => [
+  ...(isPaid
+    ? [{ icon: TrendingUp, label: "Manage Subscription", desc: "View plan, billing date & cancel", accent: false, action: "manageSubscription" }]
+    : [{ icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" }]),
+  { icon: Heart, label: t("whoLikedMe"), desc: t("whoLikedMeDesc"), accent: false, action: "whoLikedMe" },
   { icon: Heart, label: t("whoLikedMe"), desc: t("whoLikedMeDesc"), accent: false, action: "whoLikedMe" },
   { icon: ShieldCheck, label: t("getVerified"), desc: t("addPhoneBadge"), accent: false, action: "verify" },
   { icon: Bookmark, label: t("myActivity"), desc: t("myActivityDesc"), accent: false, action: "activity" },
@@ -40,6 +44,14 @@ export default function Profile() {
   const [hasListings, setHasListings] = useState(false);
   const [listingsOpen, setListingsOpen] = useState(false);
   const [whoLikedMeOpen, setWhoLikedMeOpen] = useState(false);
+  const [subscriptionOpen, setSubscriptionOpen] = useState(false);
+  const [subscriptionTier, setSubscriptionTier] = useState("free");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("subscription_tier").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => { if (data) setSubscriptionTier((data as any).subscription_tier ?? "free"); });
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -121,6 +133,7 @@ export default function Profile() {
     if (action === "verify") setPhoneVerifyOpen(true);
     if (action === "listings") setListingsOpen(true);
     if (action === "whoLikedMe") setWhoLikedMeOpen(true);
+    if (action === "manageSubscription") setSubscriptionOpen(true);
   };
 
   const verificationStatus = {
@@ -235,7 +248,7 @@ export default function Profile() {
         )}
 
         <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-4">
-          {getMenuItems(t, hasListings).map((item, i) => {
+          {getMenuItems(t, hasListings, subscriptionTier !== "free").map((item, i) => {
             const Icon = item.icon;
             return (
               <motion.button
@@ -275,6 +288,7 @@ export default function Profile() {
       <MyListingsSheet open={listingsOpen} onOpenChange={setListingsOpen} user={user} t={t} isPremium={(profile as any)?.is_premium ?? false} />
       <PremiumSheet open={premiumOpen} onOpenChange={setPremiumOpen} />
       <PhoneVerifySheet open={phoneVerifyOpen} onOpenChange={setPhoneVerifyOpen} onVerified={() => window.location.reload()} />
+      <SubscriptionManagementSheet open={subscriptionOpen} onOpenChange={setSubscriptionOpen} subscriptionTier={subscriptionTier} />
     </div>
   );
 }

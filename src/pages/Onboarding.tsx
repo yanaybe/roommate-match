@@ -260,13 +260,14 @@ export default function Onboarding() {
       }
 
       const budget = Number(form.budget);
-      if (!form.budget.trim()) {
-        e.budget = t("budgetRequired");
-      } else if (isNaN(budget) || budget < 500) {
-        e.budget = t("budgetMin500");
-      } else if (budget > 100000) {
-        e.budget = t("budgetMax100k");
+      if (form.budget.trim()) {
+        if (isNaN(budget) || budget < 500) {
+          e.budget = t("budgetMin500");
+        } else if (budget > 100000) {
+          e.budget = t("budgetMax100k");
+        }
       }
+      // budget is optional — skip is allowed
     }
 
     if (step === 4) {
@@ -287,7 +288,7 @@ export default function Onboarding() {
   };
 
   const canProceed = () => {
-    if (step === 0) return !!(form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget);
+    if (step === 0) return !!(form.name.trim() && form.age && form.city.trim() && form.occupation.trim());
     return true;
   };
 
@@ -493,12 +494,21 @@ export default function Onboarding() {
               <ErrorMsg msg={errors.occupation} />
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("monthlyBudget")}</label>
+              <div className="flex items-baseline justify-between mb-1.5">
+                <label className="text-sm font-semibold text-foreground">{t("monthlyBudget")}</label>
+                <button
+                  type="button"
+                  onClick={() => { update("budget", ""); }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Skip for now →
+                </button>
+              </div>
               <input
                 type="number"
                 value={form.budget}
                 onChange={(e) => update("budget", e.target.value)}
-                placeholder="3500"
+                placeholder="3500 (optional)"
                 min="500"
                 max="100000"
                 className={`w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.budget ? "ring-2 ring-destructive" : ""}`}
@@ -565,7 +575,7 @@ export default function Onboarding() {
       case 2:
         return substep === 0 ? (
           <div className="space-y-5">
-            <p className="text-xs text-muted-foreground -mt-1">Deal-breakers · Part 1 of 2</p>
+            <p className="text-xs text-muted-foreground -mt-1">Deal-breakers</p>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">🚬 {t("smoking")}</label>
               <div className="flex flex-wrap gap-2">
@@ -588,7 +598,7 @@ export default function Onboarding() {
           </div>
         ) : (
           <div className="space-y-5">
-            <p className="text-xs text-muted-foreground -mt-1">Lifestyle details · Part 2 of 2</p>
+            <p className="text-xs text-muted-foreground -mt-1">Lifestyle details</p>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("religiousLevel")}</label>
               <div className="flex flex-wrap gap-2">

@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import PremiumSheet from "@/components/PremiumSheet";
+import { analytics } from "@/lib/analytics";
 
 const FREE_LIKES_LIMIT = 30;
 const FREE_SAVES_LIMIT = 10;
@@ -38,6 +39,8 @@ export function DailyLimitsProvider({ children }: { children: ReactNode }) {
   const [likesUsed, setLikesUsed] = useState(0);
   const [savesUsed, setSavesUsed] = useState(0);
   const [premiumOpen, setPremiumOpen] = useState(false);
+  // Tracks whether we've fired the limit-hit event this session to avoid duplicate events
+  const limitHitFiredRef = useRef(false);
 
   const isFree = subscriptionTier === "free";
   const likesLimit = isFree ? FREE_LIKES_LIMIT : Infinity;
@@ -78,7 +81,16 @@ export function DailyLimitsProvider({ children }: { children: ReactNode }) {
     });
   }, [user]);
 
-  const recordLike = useCallback(() => setLikesUsed((n) => n + 1), []);
+  const recordLike = useCallback(() => {
+    setLikesUsed((n) => {
+      const next = n + 1;
+      if (isFree && next >= FREE_LIKES_LIMIT && !limitHitFiredRef.current) {
+        limitHitFiredRef.current = true;
+        analytics.dailyLimitHit(FREE_LIKES_LIMIT);
+      }
+      return next;
+    });
+  }, [isFree]);
   const recordSave = useCallback(() => setSavesUsed((n) => n + 1), []);
   const openPremiumSheet = useCallback(() => setPremiumOpen(true), []);
 

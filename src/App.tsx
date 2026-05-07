@@ -35,6 +35,7 @@ const RoommateProfile = lazy(() => import("./pages/RoommateProfile"));
 const BillingHistory = lazy(() => import("./pages/BillingHistory"));
 const Landing = lazy(() => import("./pages/Landing"));
 const Welcome = lazy(() => import("./pages/Welcome"));
+const Admin = lazy(() => import("./pages/Admin"));
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
@@ -214,6 +215,7 @@ const App = () => (
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/billing-history" element={<BillingHistory />} />
                 <Route path="/help-center" element={<HelpCenter />} />
+                <Route path="/admin/reports" element={<Admin />} />
 
                 {/* Require completed onboarding profile */}
                 <Route element={<OnboardedLayout />}>
