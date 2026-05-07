@@ -332,7 +332,7 @@ export default function Index() {
             </div>
           ) : filtered.length > 0 ? (
             <>
-            {recommended.length > 0 && (
+            {recommended.length > 0 ? (
               <div className="mb-5">
                 <div className="flex items-baseline justify-between mb-2">
                   <h2 className="text-base font-extrabold text-foreground">Picked for you</h2>
@@ -346,21 +346,26 @@ export default function Index() {
                   ))}
                 </div>
               </div>
+            ) : user && profile?.onboarding_complete && (
+              <div className="mb-5">
+                <button
+                  onClick={() => navigate("/onboarding?edit=true")}
+                  className="w-full flex items-center gap-3 p-3.5 bg-primary/5 border border-primary/20 rounded-2xl text-left hover:bg-primary/10 transition-colors"
+                >
+                  <span className="text-2xl">✨</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground">Complete your profile to get personalized picks</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Add your budget & city to unlock tailored recommendations</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-primary shrink-0" />
+                </button>
+              </div>
             )}
             <div key={gridKey} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.map((apt, i) => (
                 <React.Fragment key={apt.id}>
                   <ApartmentCard apartment={apt} index={i} />
-                  {/* TODO [PRIORITY: LOW] [AREA: LOGIC]
-                      Problem: The squad promo card is injected after index 2 (3rd listing). If filtered results
-                               contain fewer than 3 items the card never renders — and if there are exactly 3 items
-                               the card appears at the very bottom which feels like a footer, not inline content.
-                      Fix: Change the injection logic to show after the LAST apartment card when filtered.length < 3,
-                           or after the 3rd card when filtered.length >= 3:
-                           {(i === Math.min(2, filtered.length - 1)) && squads.length === 0 && ( ... )}
-                           Also add a minimum of 1 apartment before showing the promo (don't show it as the first item).
-                      Expected Result: Squad promo always appears inline at a natural position regardless of result count. */}
-                  {i === 2 && squads.length === 0 && (
+                  {i === Math.min(2, filtered.length - 1) && filtered.length > 1 && squads.length === 0 && (
                     <div
                       className="col-span-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 cursor-pointer flex items-center gap-4"
                       onClick={() => navigate("/create-squad")}
@@ -381,38 +386,50 @@ export default function Index() {
             </>
           ) : (
             <>
-            {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
-                Problem: When there are no apartments in the user's city (common for new markets), the empty state
-                         shows a generic "No results found — try adjusting filters" message. This feels broken,
-                         not like a growing product.
-                Fix: Detect whether the empty state is due to filters (activeFilterCount > 0 || search.trim())
-                     or due to genuinely no listings in the city.
-                     For the city-empty case, show a different message:
-                     "No listings in {profile.city} yet — be the first to post one!" with a CTA to /post-apartment.
-                     Also add a "Notify me when new listings appear" button that saves a subscription to Supabase.
-                Expected Result: Empty state feels like an early market opportunity, not a broken product. */}
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-5">
-                <Search className="w-9 h-9 text-primary" />
+            {activeFilterCount > 0 || search.trim() ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-5">
+                  <Search className="w-9 h-9 text-primary" />
+                </div>
+                <h2 className="text-xl font-extrabold text-foreground mb-2">{t("noResultsFound")}</h2>
+                <p className="text-muted-foreground text-sm mb-6 max-w-xs">{t("tryAdjusting")}</p>
+                {JSON.stringify(filters) !== JSON.stringify(defaultFilters) ? (
+                  <button
+                    onClick={() => setFilters(defaultFilters)}
+                    className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
+                  >
+                    {t("clearFilters")}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setSearch("")}
+                    className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
+                  >
+                    Clear search
+                  </button>
+                )}
               </div>
-              <h2 className="text-xl font-extrabold text-foreground mb-2">{t("noResultsFound")}</h2>
-              <p className="text-muted-foreground text-sm mb-6 max-w-xs">{t("tryAdjusting")}</p>
-              {JSON.stringify(filters) !== JSON.stringify(defaultFilters) ? (
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-5">
+                  <Search className="w-9 h-9 text-primary" />
+                </div>
+                <h2 className="text-xl font-extrabold text-foreground mb-2">
+                  {profile?.city ? `No listings in ${profile.city} yet` : t("noResultsFound")}
+                </h2>
+                <p className="text-muted-foreground text-sm mb-6 max-w-xs">
+                  {profile?.city
+                    ? `Be the first to post a listing in ${profile.city}!`
+                    : t("tryAdjusting")}
+                </p>
                 <button
-                  onClick={() => setFilters(defaultFilters)}
+                  onClick={() => navigate("/post-apartment")}
                   className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
                 >
-                  {t("clearFilters")}
+                  Post a listing
                 </button>
-              ) : search.trim() ? (
-                <button
-                  onClick={() => setSearch("")}
-                  className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
-                >
-                  Clear search
-                </button>
-              ) : null}
-            </div>
+              </div>
+            )}
             </>
           )
         ) : (

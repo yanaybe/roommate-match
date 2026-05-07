@@ -5,7 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { useProfile } from "@/hooks/useProfile";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, CheckCheck, Trash2, MoreVertical, Ban, Flag, ChevronDown, Sparkles } from "lucide-react";
+import { ArrowLeft, Send, CheckCheck, Check, Trash2, MoreVertical, Ban, Flag, ChevronDown, Sparkles } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useBlockReport } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
@@ -31,6 +32,7 @@ interface Conversation {
   other_avatar: string | null;
   last_message: string | null;
   last_message_at: string | null;
+  created_at: string | null;
   unread_count: number;
 }
 
@@ -99,6 +101,9 @@ export default function Chats() {
   const [reportOpen, setReportOpen] = useState(false);
   const [otherProfile, setOtherProfile] = useState<any>(null);
   const [contextDismissed, setContextDismissed] = useState(false);
+  const [otherIsTyping, setOtherIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const activeConvData = conversations.find((c) => c.id === activeConv);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(activeConvData?.other_user_id);
@@ -178,7 +183,14 @@ export default function Chats() {
       : { data: [] };
     const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
 
-    // 4. Batch: get all messages for all conversations (for last message + unread counts)
+    // 4a. Batch: get conversation created_at timestamps
+    const { data: convRows } = await supabase
+      .from("conversations")
+      .select("id, created_at")
+      .in("id", convIds);
+    const convCreatedAt = new Map((convRows ?? []).map((c) => [c.id, c.created_at]));
+
+    // 4b. Batch: get all messages for all conversations (for last message + unread counts)
     const { data: allMessages } = await supabase
       .from("messages")
       .select("id, conversation_id, content, sender_id, created_at")
@@ -227,6 +239,7 @@ export default function Chats() {
         other_avatar: otherAvatar,
         last_message: lastMsg?.content ?? null,
         last_message_at: lastMsg?.created_at ?? null,
+        created_at: convCreatedAt.get(convId) ?? null,
         unread_count: unreadCount,
       };
 
@@ -334,8 +347,21 @@ export default function Chats() {
       )
       .subscribe();
 
+    // Subscribe to typing presence
+    const presenceChannel = supabase.channel(`typing:${activeConv}`)
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceChannel.presenceState();
+        const others = Object.values(state).flat() as Array<{ user_id: string; typing: boolean }>;
+        setOtherIsTyping(others.some((p) => p.user_id !== user.id && p.typing));
+      })
+      .subscribe();
+    presenceChannelRef.current = presenceChannel;
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(presenceChannel);
+      presenceChannelRef.current = null;
+      setOtherIsTyping(false);
     };
   }, [activeConv, user, refreshUnread]);
 
@@ -532,18 +558,13 @@ export default function Chats() {
           )}
           <div className="flex-1">
             <h2 className="font-bold text-foreground text-sm">{conv?.other_name}</h2>
-            {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
-                Problem: The chat header shows the other person's name and avatar but gives no temporal context.
-                         Users don't know when they matched, how long the conversation has been open, or how
-                         recently the other person was active. This makes old matches feel stale and forgotten.
-                Fix: Add "Matched [X days ago]" below the name in the chat header.
-                     The conversation created_at timestamp is already available in activeConvData — compute
-                     the relative time: const matchedAgo = formatDistanceToNow(new Date(activeConvData.created_at), { addSuffix: true });
-                     Show: <p className="text-xs text-muted-foreground">Matched {matchedAgo}</p>
-                     Also show last_seen if the other user's profile has it: "Active 2 hours ago"
-                Expected Result: Chat header gives temporal context — users feel the connection is meaningful,
-                                 not just a forgotten match from weeks ago. */}
-            <p className="text-muted-foreground text-xs">{t("online")}</p>
+            <p className="text-muted-foreground text-xs">
+              {activeConvData?.created_at
+                ? `Matched ${formatDistanceToNow(new Date(activeConvData.created_at), { addSuffix: true })}`
+                : otherProfile?.last_seen
+                  ? `Active ${formatDistanceToNow(new Date(otherProfile.last_seen), { addSuffix: true })}`
+                  : t("online")}
+            </p>
           </div>
           <div className="relative">
             <button
@@ -643,21 +664,10 @@ export default function Chats() {
                   <p className="text-sm leading-relaxed">{msg.content}</p>
                   <div className={`flex items-center justify-end gap-1 mt-0.5 ${isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                     <span className="text-xs">{formatTime(msg.created_at)}</span>
-                    {/* TODO [PRIORITY: LOW] [AREA: UX]
-                        Problem: Read receipts use two identical CheckCheck icons with only a color change (blue vs muted).
-                                 This is easy to miss at a glance. Users who want to know if their message was read
-                                 have to squint to compare icon colors — this is poor UX.
-                        Fix: Use two distinct icon states:
-                             - Sent (not read): single Check icon in muted color
-                             - Read: double CheckCheck icon in blue
-                             import { Check, CheckCheck } from "lucide-react"
-                             {isMine && (msg.is_read
-                               ? <CheckCheck className="w-3.5 h-3.5 text-blue-400" />
-                               : <Check className="w-3.5 h-3.5 opacity-50" />
-                             )}
-                             This matches WhatsApp / Telegram visual language that users already understand.
-                        Expected Result: Read status is immediately clear without squinting — cleaner message UI. */}
-                    {isMine && (msg.is_read ? <CheckCheck className="w-3.5 h-3.5 text-blue-400" /> : <CheckCheck className="w-3.5 h-3.5" />)}
+                    {isMine && (msg.is_read
+                      ? <CheckCheck className="w-3.5 h-3.5 text-blue-400" />
+                      : <Check className="w-3.5 h-3.5 opacity-50" />
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -685,17 +695,24 @@ export default function Chats() {
         </div>
       )}
 
-      {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
-          Problem: There is no typing indicator. When the other person is composing a message,
-                   the recipient has no feedback. This makes the chat feel unresponsive and dead
-                   compared to WhatsApp, Telegram, or any modern messaging app.
-          Fix: Use Supabase Realtime Presence to broadcast typing state:
-               1. On input onChange, broadcast: channel.track({ typing: true, user_id: user.id })
-               2. Clear after 2 seconds of inactivity: setTimeout(() => channel.track({ typing: false }), 2000)
-               3. Subscribe to presence state: channel.on("presence", { event: "sync" }, () => { ... })
-               4. Show "Name is typing..." with animated dots above the input bar when other user is typing.
-               The presence channel can be scoped per conversation_id.
-          Expected Result: Chat feels live and responsive — users stay engaged waiting for the reply. */}
+      {/* Typing indicator */}
+      {otherIsTyping && (
+        <div className="px-5 py-1.5 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-0.5">
+              {[0, 1, 2].map((i) => (
+                <motion.span
+                  key={i}
+                  animate={{ y: [0, -4, 0] }}
+                  transition={{ repeat: Infinity, duration: 0.7, delay: i * 0.15 }}
+                  className="w-1.5 h-1.5 rounded-full bg-muted-foreground inline-block"
+                />
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground">{activeConvData?.other_name} is typing…</span>
+          </div>
+        </div>
+      )}
       {/* Input bar */}
       <div className="shrink-0 bg-background border-t border-border">
         <div className="px-4 py-3 flex items-center gap-2">
@@ -703,7 +720,16 @@ export default function Chats() {
             ref={inputRef}
             type="text"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => {
+              setNewMessage(e.target.value);
+              if (presenceChannelRef.current && user) {
+                presenceChannelRef.current.track({ typing: true, user_id: user.id });
+                if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                typingTimeoutRef.current = setTimeout(() => {
+                  presenceChannelRef.current?.track({ typing: false, user_id: user.id });
+                }, 2000);
+              }
+            }}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder={t("typeMessage")}
             maxLength={2000}
