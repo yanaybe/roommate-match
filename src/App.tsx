@@ -34,6 +34,7 @@ const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const RoommateProfile = lazy(() => import("./pages/RoommateProfile"));
 const BillingHistory = lazy(() => import("./pages/BillingHistory"));
 const Landing = lazy(() => import("./pages/Landing"));
+const Welcome = lazy(() => import("./pages/Welcome"));
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
@@ -107,13 +108,48 @@ function EmailVerificationBanner() {
   );
 }
 
+function OAuthWelcome({ onContinue }: { onContinue: () => void }) {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center px-6">
+      <div className="w-full max-w-sm text-center">
+        <div className="w-20 h-20 gradient-primary rounded-3xl flex items-center justify-center mb-6 mx-auto shadow-lg">
+          <span className="text-4xl">🏠</span>
+        </div>
+        <h1 className="text-2xl font-extrabold text-foreground mb-2">Welcome to Roomatch!</h1>
+        <p className="text-muted-foreground text-sm mb-8 max-w-xs mx-auto">
+          You're 3 minutes away from your first match. Let's set up your profile so we can find you the perfect roommate.
+        </p>
+        <button
+          onClick={onContinue}
+          className="w-full gradient-primary text-primary-foreground font-bold py-3.5 rounded-xl text-sm"
+        >
+          Set up my profile
+        </button>
+        <p className="text-xs text-muted-foreground mt-4">Takes about 3 minutes · Free forever</p>
+      </div>
+    </div>
+  );
+}
+
 function HomeRoute() {
   const { user, loading } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { collapsed } = useSidebar();
+  const [showOAuthWelcome, setShowOAuthWelcome] = useState(false);
   const offsetClass = collapsed ? "desk:ltr:pl-14 desk:rtl:pr-14" : "desk:ltr:pl-64 desk:rtl:pr-64";
+
+  useEffect(() => {
+    if (!loading && !profileLoading && user && profile && !profile.onboarding_complete) {
+      const provider = (user as any).app_metadata?.provider;
+      if (provider && provider !== "email") {
+        setShowOAuthWelcome(true);
+      }
+    }
+  }, [loading, profileLoading, user, profile]);
+
   if (loading || profileLoading) return <PageLoader />;
   if (!user) return <Landing />;
+  if (showOAuthWelcome) return <OAuthWelcome onContinue={() => { setShowOAuthWelcome(false); }} />;
   if (!profile?.onboarding_complete) return <Navigate to="/onboarding" replace />;
   return <div className={`transition-all duration-200 ${offsetClass}`}><div className="desk:max-w-[1400px] desk:mx-auto"><Index /></div></div>;
 }
@@ -161,6 +197,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/welcome" element={<Welcome />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/contact-support" element={<ContactSupport />} />

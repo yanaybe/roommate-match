@@ -31,6 +31,7 @@ interface FormData {
   name: string;
   age: string;
   city: string;
+  neighborhood: string;
   occupation: string;
   budget: string;
   move_in_date: string;
@@ -63,7 +64,7 @@ interface FormData {
 }
 
 const initial: FormData = {
-  name: "", age: "", city: "", occupation: "", budget: "", move_in_date: "", desired_room_type: "Private",
+  name: "", age: "", city: "", neighborhood: "", occupation: "", budget: "", move_in_date: "", desired_room_type: "Private",
   sleep_schedule: "Flexible", cleanliness: 3, cooking_habits: "Sometimes", shared_space_org: "Moderate",
   smoking: false, smoking_preference: "Non-smoker, okay with smokers",
   religious_level: "Not religious", alcohol: "Socially",
@@ -137,6 +138,7 @@ export default function Onboarding() {
   const [searchParams] = useSearchParams();
   const isEdit = searchParams.get("edit") === "true";
   const [step, setStep] = useState(0);
+  const [substep, setSubstep] = useState(0);
   const [form, setForm] = useState<FormData>(initial);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
@@ -181,6 +183,7 @@ export default function Onboarding() {
         name: profile.name || "",
         age: profile.age?.toString() || "",
         city: profile.city || "",
+        neighborhood: (profile as any).neighborhood || "",
         occupation: profile.occupation || "",
         budget: profile.budget?.toString() || "",
         move_in_date: (profile as any).move_in_date || "",
@@ -296,6 +299,7 @@ export default function Onboarding() {
       name: sanitizeText(currentForm.name) || null,
       age: parseInt(currentForm.age) || null,
       city: sanitizeText(currentForm.city) || null,
+      neighborhood: sanitizeText(currentForm.neighborhood) || null,
       occupation: sanitizeText(currentForm.occupation) || null,
       budget: parseInt(currentForm.budget) || 0,
       move_in_date: currentForm.move_in_date || null,
@@ -370,6 +374,7 @@ export default function Onboarding() {
       name: safeName,
       age: ageNum,
       city: safeCity,
+      neighborhood: sanitizeText(form.neighborhood) || null,
       occupation: safeOccupation,
       budget: budgetNum,
       desired_room_type: form.desired_room_type,
@@ -409,24 +414,18 @@ export default function Onboarding() {
       toast.error(t("failedToSaveProfile") + error.message);
     } else {
       toast.success(isEdit ? t("preferencesUpdated") : t("profileCreated"));
-      if (!isEdit) analytics.onboardingComplete();
-      // TODO [PRIORITY: HIGH] [AREA: UX]
-      // Problem: After spending 3–5 minutes completing a detailed profile, users are silently redirected
-      //          to the apartment browser with zero acknowledgment or payoff. The reward for all that effort
-      //          is invisible — no "here's what we found" moment.
-      // Fix: Before navigating to "/", show a full-screen "match reveal" interstitial:
-      //      1. Query how many profiles share the user's city:
-      //         const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true })
-      //                                          .eq("city", form.city).eq("onboarding_complete", true)
-      //                                          .neq("user_id", user.id);
-      //      2. Navigate to a new route "/welcome" that shows:
-      //         "🎉 We found {count} potential roommates in {city}!"
-      //         with an animated counter and a "See your matches →" CTA.
-      //      3. That CTA navigates to "/roommates".
-      //      Keep the welcome screen simple — 1 page, 1 CTA, 3 seconds max.
-      // Expected Result: Onboarding completion feels rewarding. Users start the matching experience
-      //                  with excitement rather than landing cold on apartment listings.
-      navigate(isEdit ? "/profile" : "/", { replace: true });
+      if (!isEdit) {
+        analytics.onboardingComplete();
+        const { count } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("city", form.city)
+          .eq("onboarding_complete", true)
+          .neq("user_id", user.id);
+        navigate(`/welcome?city=${encodeURIComponent(form.city)}&count=${count ?? 0}`, { replace: true });
+      } else {
+        navigate("/profile", { replace: true });
+      }
     }
   };
 
@@ -471,6 +470,16 @@ export default function Onboarding() {
                 />
                 <ErrorMsg msg={errors.city} />
               </div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">Neighborhood <span className="text-muted-foreground font-normal">(optional)</span></label>
+              <input
+                value={form.neighborhood}
+                onChange={(e) => update("neighborhood", e.target.value)}
+                placeholder="e.g. Florentin, Neve Tzedek"
+                maxLength={80}
+                className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("workStudies")}</label>
@@ -554,18 +563,9 @@ export default function Onboarding() {
           </div>
         );
       case 2:
-        return (
+        return substep === 0 ? (
           <div className="space-y-5">
-            {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
-                Problem: This step packs 6+ distinct preference categories (smoking, pets, WFH, religion, alcohol,
-                         fitness, guests) into a single scrolling view. It's the longest step and has the highest
-                         drop-off. Users feel overwhelmed and quit at this exact point.
-                Fix: Split into two sub-steps within this step using an inner "substep" state:
-                     Sub-step A: Smoking preference, Pet preference, WFH toggle (deal-breakers — most important)
-                     Sub-step B: Religion, Alcohol, Fitness, Guests (nice-to-have lifestyle details)
-                     Use the same Next button but advance the substep first before advancing to step 3.
-                     Alternatively, move Fitness and Guests to the Personality step (step 3) which is shorter.
-                Expected Result: No single step feels overwhelming — completion rate improves at the midpoint. */}
+            <p className="text-xs text-muted-foreground -mt-1">Deal-breakers · Part 1 of 2</p>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">🚬 {t("smoking")}</label>
               <div className="flex flex-wrap gap-2">
@@ -585,6 +585,10 @@ export default function Onboarding() {
             <div className="flex flex-wrap gap-2">
               <Toggle label={`🏠 ${t("workFromHome")}`} value={form.wfh} onChange={(v) => update("wfh", v)} />
             </div>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <p className="text-xs text-muted-foreground -mt-1">Lifestyle details · Part 2 of 2</p>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("religiousLevel")}</label>
               <div className="flex flex-wrap gap-2">
@@ -734,18 +738,11 @@ export default function Onboarding() {
               {t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}
               {step === 0 && <span className="ltr:ml-2 rtl:mr-2 text-primary font-medium">· {t("threeMin")}</span>}
             </p>
-            {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
-                Problem: Users can't see what steps are coming after the current one. The progress bar shows position
-                         but not content — "Step 3 of 6" tells you nothing about what's left. This creates anxiety
-                         and silent drop-off at the midpoint (steps 3–4).
-                Fix: Below the current step label, render the NEXT step name in muted text:
-                     {step < STEPS.length - 1 && (
-                       <p className="text-[10px] text-muted-foreground mt-0.5">
-                         Next: {STEPS[step + 1]}
-                       </p>
-                     )}
-                     This tiny addition tells users exactly what they're committing to next.
-                Expected Result: Users make an informed decision to continue rather than dropping off due to uncertainty. */}
+            {step < STEPS.length - 1 && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Next: {STEPS[step + 1]}
+              </p>
+            )}
             {(() => {
               const fields = [
                 form.name, form.age, form.city, form.occupation, form.budget,
@@ -784,7 +781,7 @@ export default function Onboarding() {
         <div className="max-w-lg mx-auto px-4 py-3">
           <AnimatePresence mode="wait">
             <motion.div
-              key={step}
+              key={`${step}-${substep}`}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
@@ -799,8 +796,14 @@ export default function Onboarding() {
       {/* Fixed footer: back / next buttons */}
       <div className="shrink-0 bg-background/95 backdrop-blur-sm border-t border-border pb-16 desk:pb-0">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
-          {step > 0 && (
-            <button onClick={() => { setStep(step - 1); setErrors({}); }} className="flex items-center gap-1 px-5 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm">
+          {(step > 0 || (step === 2 && substep > 0)) && (
+            <button
+              onClick={() => {
+                if (step === 2 && substep === 1) { setSubstep(0); setErrors({}); }
+                else { setStep(step - 1); setSubstep(0); setErrors({}); }
+              }}
+              className="flex items-center gap-1 px-5 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm"
+            >
               <ArrowLeft className="w-4 h-4" /> {t("back")}
             </button>
           )}
@@ -812,9 +815,12 @@ export default function Onboarding() {
                 return;
               }
               setErrors({});
-              if (step < STEPS.length - 1) {
+              if (step === 2 && substep === 0) {
+                setSubstep(1);
+              } else if (step < STEPS.length - 1) {
                 saveProgress(form);
                 setStep(step + 1);
+                setSubstep(0);
               } else {
                 handleSubmit();
               }

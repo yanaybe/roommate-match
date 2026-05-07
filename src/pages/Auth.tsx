@@ -34,15 +34,6 @@ export default function Auth() {
 
   const pwAnalysis = analyzePassword(password);
 
-  // TODO [PRIORITY: HIGH] [AREA: LOGIC]
-  // Problem: After Google OAuth the user is redirected to "/" and HomeRoute checks onboarding_complete.
-  //          But there is no welcoming transition — the user lands cold on the apartment browser
-  //          with no guidance. New Google OAuth users often have a half-loaded profile with just email.
-  // Fix: After OAuth redirect, detect new users (profile.onboarding_complete === false) and show
-  //      a brief "Welcome! Let's set up your profile" interstitial before /onboarding.
-  //      This can be a simple full-screen modal in HomeRoute: if user exists but onboarding is incomplete,
-  //      show a "You're 3 minutes away from your first match" card with a CTA to /onboarding.
-  // Expected Result: Google OAuth users understand the next step and don't land confused on apartment grid.
   const handleGoogleAuth = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -208,55 +199,28 @@ export default function Auth() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-primary/15 via-primary/5 to-background">
-      {/* Hero */}
-      {/* TODO [PRIORITY: HIGH] [AREA: UX]
-          Problem: The sign-up view shows a full marketing hero (features list, headline, subtitle) ABOVE the form.
-                   Users who clicked "Sign Up" have already decided to try it — re-selling them adds scroll
-                   and delays reaching the form. On a small phone the form is completely off-screen on load.
-          Fix: Remove or collapse the hero section for the sign-up view. Replace with just the logo +
-               a single line: "Create your account — it takes 2 minutes."
-               Move the features list below the form as a reassurance block, not a barrier.
-          Expected Result: Users see the email input immediately on the sign-up screen — higher conversion. */}
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Compact header — form is immediately visible on mobile */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center flex-1 px-6 pt-16 pb-10 text-center"
+        className="flex flex-col items-center pt-10 pb-5 px-6 text-center"
       >
-        <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mb-5 shadow-lg">
-          <span className="text-3xl">🏠</span>
+        <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+          <span className="text-2xl">🏠</span>
         </div>
-        <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">
-          {t("heroFindPerfectRoommate")}
+        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
+          Roo<span className="text-primary">match</span>
         </h1>
-        <p className="text-muted-foreground text-sm mb-8 max-w-xs">
-          {t("heroSubtitle")}
-        </p>
-
-        <div className="flex flex-col gap-3 w-full max-w-xs">
-          {features.map(({ icon: Icon, text }, i) => (
-            <motion.div
-              key={text}
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 + i * 0.08 }}
-              className="flex items-center gap-3 bg-card/80 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-sm"
-            >
-              <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="text-sm font-medium text-card-foreground text-left">{text}</span>
-            </motion.div>
-          ))}
-        </div>
+        <p className="text-muted-foreground text-sm mt-1">Create your account — it takes 2 minutes.</p>
       </motion.div>
 
       {/* Form sheet */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15, duration: 0.4 }}
-        className="bg-card rounded-t-3xl px-6 pt-6 pb-10 shadow-[0_-8px_32px_rgba(0,0,0,0.10)]"
+        transition={{ delay: 0.1, duration: 0.35 }}
+        className="flex-1 bg-card rounded-t-3xl px-6 pt-6 pb-10 shadow-[0_-8px_32px_rgba(0,0,0,0.10)]"
       >
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-extrabold text-foreground">{t("createYourAccount")}</h2>
@@ -393,6 +357,18 @@ export default function Auth() {
             {t("signIn")}
           </button>
         </p>
+
+        {/* Reassurance block — features below the form */}
+        <div className="mt-6 pt-5 border-t border-border space-y-2.5">
+          {features.map(({ icon: Icon, text }) => (
+            <div key={text} className="flex items-center gap-3">
+              <div className="w-7 h-7 gradient-primary rounded-lg flex items-center justify-center shrink-0">
+                <Icon className="w-3.5 h-3.5 text-primary-foreground" />
+              </div>
+              <span className="text-sm text-muted-foreground">{text}</span>
+            </div>
+          ))}
+        </div>
       </motion.div>
     </div>
   );

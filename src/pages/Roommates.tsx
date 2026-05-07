@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { X, Heart, RotateCcw, ArrowRight, Lock } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { X, Heart, RotateCcw, ArrowRight, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
 import MatchModal from "@/components/MatchModal";
@@ -18,6 +18,39 @@ import { toast } from "sonner";
 
 import { isUUID } from "@/lib/profileUtils";
 import { analytics } from "@/lib/analytics";
+
+function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    timerRef.current = setTimeout(onDismiss, 2500);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [onDismiss]);
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onDismiss}
+      className="absolute inset-0 z-20 flex items-center justify-between px-6 rounded-3xl bg-black/40 backdrop-blur-[2px] cursor-pointer"
+    >
+      <div className="flex flex-col items-center gap-1 text-white">
+        <ChevronLeft className="w-8 h-8 opacity-90" />
+        <span className="text-sm font-bold">Pass</span>
+      </div>
+      <motion.div
+        animate={{ x: [-12, 12, -12] }}
+        transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+        className="text-3xl select-none"
+      >
+        👆
+      </motion.div>
+      <div className="flex flex-col items-center gap-1 text-white">
+        <ChevronRight className="w-8 h-8 opacity-90" />
+        <span className="text-sm font-bold">Like</span>
+      </div>
+    </motion.div>
+  );
+}
 
 // Convert DB profile to mock format for SwipeCard compatibility
 function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subscriptionTier?: string } {
@@ -64,6 +97,12 @@ export default function Roommates() {
   const [hasViewedSquads, setHasViewedSquads] = useState(
     () => localStorage.getItem("squads_tab_viewed") === "true"
   );
+  const [showAllCities, setShowAllCities] = useState(
+    () => localStorage.getItem("show_all_cities") === "true"
+  );
+  const [showTutorial, setShowTutorial] = useState(
+    () => !localStorage.getItem("swipe_tutorial_seen")
+  );
   const { canLike, likesUsed, likesLimit, recordLike, openPremiumSheet, subscriptionTier } = useDailyLimits();
   const canUndo = subscriptionTier !== "free";
 
@@ -98,23 +137,15 @@ export default function Roommates() {
       }));
   }, [allProfiles, myProfile, user?.id]);
 
-  // TODO [PRIORITY: HIGH] [AREA: LOGIC]
-  // Problem: The swipe deck shows ALL profiles regardless of city. A Tel Aviv user sees profiles from
-  //          Haifa, Beer Sheva, and Eilat — matches that are geographically impossible for roommate
-  //          searching. Even though the match score penalizes budget gaps, there is no city filter.
-  //          Users who swipe through 5 wrong-city profiles feel the product doesn't understand them.
-  // Fix: Add a city-match filter before building the swipe deck:
-  //      const cityFiltered = allProfiles.filter(p =>
-  //        !myProfile?.city ||
-  //        !p.city ||
-  //        p.city.toLowerCase() === myProfile.city.toLowerCase()
-  //      );
-  //      Use cityFiltered instead of allProfiles when building items.
-  //      Add a "Show all cities" toggle in the header for users who opt into seeing all profiles.
-  //      Store this preference in localStorage ("show_all_cities").
-  // Expected Result: Swipe deck shows only geographically relevant profiles by default.
-  //                  Users feel the algorithm understands their actual situation.
-  const items = otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent, matchBreakdown: p.matchBreakdown }));
+  const items = useMemo(() => {
+    const cityFiltered = showAllCities
+      ? otherProfiles
+      : otherProfiles.filter((p) =>
+          !myProfile?.city || !p.profile.city ||
+          p.profile.city.toLowerCase() === myProfile.city.toLowerCase()
+        );
+    return cityFiltered.map((p) => ({ user: p.user, matchPercent: p.matchPercent, matchBreakdown: p.matchBreakdown }));
+  }, [otherProfiles, myProfile, showAllCities]);
 
   const swipedSet = useMemo(() => new Set(swiped), [swiped]);
   const blockedSet = useMemo(() => new Set(blockedIds), [blockedIds]);
@@ -214,7 +245,21 @@ export default function Roommates() {
     <div className="min-h-screen bg-background pb-28 desk:pb-8 flex flex-col">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 desk:pt-6 pb-3">
-          <h1 className="text-2xl font-extrabold text-foreground tracking-tight mb-3">{t("findRoommates")}</h1>
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">{t("findRoommates")}</h1>
+            {myProfile?.city && activeTab === "people" && (
+              <button
+                onClick={() => {
+                  const next = !showAllCities;
+                  setShowAllCities(next);
+                  localStorage.setItem("show_all_cities", String(next));
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 bg-secondary rounded-lg"
+              >
+                {showAllCities ? `📍 ${myProfile.city} only` : "🌍 All cities"}
+              </button>
+            )}
+          </div>
         <div className="flex bg-secondary rounded-xl p-1">
             {(["people", "squads"] as const).map((tab) => (
               <button
@@ -278,22 +323,6 @@ export default function Roommates() {
                 </div>
               ) : remaining.length > 0 ? (
                 <div className="relative w-full aspect-[3/4] max-h-[520px]">
-                  {/* TODO [PRIORITY: HIGH] [AREA: UX]
-                      Problem: First-time users land on the swipe stack with zero instruction. The LIKE/NOPE overlay
-                               only appears mid-drag, so users who don't know to drag just stare at a static card.
-                               This is a silent drop-off point — confused users leave, not complain.
-                      Fix: Show a one-time animated tutorial overlay on the FIRST visit only (track with localStorage key
-                           "swipe_tutorial_seen"). The overlay should:
-                           1. Appear for 2 seconds over the first card
-                           2. Show a left-swipe arrow with "Pass" label and right-swipe arrow with "Like" label
-                           3. Use a subtle animated hand icon dragging left-then-right
-                           4. Dismiss on any tap or after the animation completes
-                           Implementation:
-                             const [showTutorial, setShowTutorial] = useState(
-                               () => !localStorage.getItem("swipe_tutorial_seen")
-                             );
-                             // After dismiss: localStorage.setItem("swipe_tutorial_seen", "true")
-                      Expected Result: First-time users immediately understand the gesture — zero confusion, higher engagement. */}
                   <AnimatePresence>
                     {visibleCards
                       .slice()
@@ -308,6 +337,15 @@ export default function Roommates() {
                           isTop={i === visibleCards.length - 1}
                         />
                       ))}
+                  </AnimatePresence>
+                  {/* One-time swipe tutorial overlay */}
+                  <AnimatePresence>
+                    {showTutorial && (
+                      <SwipeTutorial onDismiss={() => {
+                        setShowTutorial(false);
+                        localStorage.setItem("swipe_tutorial_seen", "true");
+                      }} />
+                    )}
                   </AnimatePresence>
                 </div>
               ) : (

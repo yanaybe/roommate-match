@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home, Users, MessageCircle, Zap, Star, Shield,
   ChevronRight, Heart, MapPin, Check, Sparkles, Globe
 } from "lucide-react";
 import { useLanguage, languages } from "@/hooks/useLanguage";
+import { supabase } from "@/integrations/supabase/client";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -23,21 +24,22 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t, language, setLanguage, languageInfo } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
+  const [activeSearcherCount, setActiveSearcherCount] = useState<number | null>(null);
 
-  // TODO [PRIORITY: HIGH] [AREA: UX]
-  // Problem: All three stats are static features ("3 languages", "14 factors") — nobody is impressed by this.
-  //          There is zero social proof that real people use this product.
-  // Fix: Replace at least one stat with a live dynamic count from Supabase:
-  //      const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true })
-  //                                       .eq("onboarding_complete", true);
-  //      Then show e.g. { value: `${count}+`, label: "Active searchers" } or
-  //      filter by city to show "340 searching in Tel Aviv".
-  //      Fetch this in a useEffect with useState, fall back to a static floor number if count < 50.
-  // Expected Result: First-time visitors see a credibility signal that real users exist in their city.
+  useEffect(() => {
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("onboarding_complete", true)
+      .then(({ count }) => {
+        if (count !== null) setActiveSearcherCount(Math.max(count, 50));
+      });
+  }, []);
+
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
     { value: "3", label: t("statsLanguagesLabel") },
-    { value: "100%", label: t("statsFreeToStart") },
+    { value: activeSearcherCount ? `${activeSearcherCount}+` : "50+", label: "Active searchers" },
   ];
 
   const HOW_IT_WORKS = [
@@ -210,14 +212,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
-          Problem: Preview listings are hardcoded mock data. If a user taps/clicks them they go nowhere
-                   or show fake data, which immediately breaks trust.
-          Fix: Either (a) load 3 real published apartments from Supabase and render them here,
-               or (b) add a clear "Example listing" label/badge on each card and make them non-clickable.
-               Option (a) is preferred — real listings show the product is live.
-               Query: supabase.from("apartments").select("*").order("created_at", { ascending: false }).limit(3)
-          Expected Result: Landing page preview cards are real or clearly marked as examples — no broken trust. */}
       {/* ── Preview listings ── */}
       <section className="px-5 pb-16 max-w-5xl mx-auto">
         <motion.div
@@ -236,6 +230,9 @@ export default function Landing() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 <div className="absolute top-3 left-3 gradient-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
                   {l.match}% match
+                </div>
+                <div className="absolute top-3 right-3 bg-black/50 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm">
+                  Example
                 </div>
               </div>
               <div className="p-3">
@@ -362,13 +359,24 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
-              {/* TODO [PRIORITY: MEDIUM] [AREA: UX]
-                  Problem: The Squad CTA asks users to "Create a Squad" before explaining what a Squad actually is.
-                           New visitors have no context — "Squad" is jargon until explained.
-                  Fix: Add a 3-step visual explainer inline:
-                       1. "Invite 2–4 friends" → 2. "Browse & vote on apartments together" → 3. "Move in as a group"
-                       Use icons + short labels. Keep it to 2 lines per step. Place it ABOVE the CTA button.
-                  Expected Result: Users understand the Squad concept before clicking — higher Squad creation rate. */}
+              {/* Squad 3-step explainer */}
+              <div className="flex items-center gap-2 mb-5">
+                {[
+                  { step: "1", label: "Invite 2–4 friends" },
+                  { step: "2", label: "Browse & vote together" },
+                  { step: "3", label: "Move in as a group" },
+                ].map(({ step, label }, i) => (
+                  <div key={step} className="flex items-center gap-1.5">
+                    {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center mb-1 shrink-0">
+                        <span className="text-[11px] font-bold text-primary-foreground">{step}</span>
+                      </div>
+                      <span className="text-[10px] text-foreground font-medium leading-tight max-w-[56px]">{label}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
               <button
                 onClick={() => navigate("/auth")}
                 className="gradient-primary text-primary-foreground font-bold px-6 py-3 rounded-xl text-sm flex items-center gap-2 w-fit"
