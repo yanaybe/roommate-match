@@ -194,7 +194,10 @@ export default function ApartmentDetail() {
       if (data) {
         setDbApartment(dbRowToApartment(data));
         if (!user || user.id !== data.user_id) {
-          (supabase as any).from("apartment_views").insert({ apartment_id: data.id }).then(() => {});
+          supabase.from("apartment_views").insert({
+            apartment_id: data.id,
+            viewer_id: user?.id ?? null,
+          }).then(() => {});
         }
       }
     });
@@ -576,7 +579,7 @@ export default function ApartmentDetail() {
                   }
                 }
                 if (!existingConvId) {
-                  await supabase.rpc("create_conversation_with_participant", { other_user_id: ownerId });
+                  await supabase.rpc("find_or_create_conversation", { other_user_id: ownerId });
                 }
                 navigate("/chats");
               } catch {

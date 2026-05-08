@@ -13,8 +13,8 @@ interface State {
 class ErrorBoundaryClass extends Component<Props & { t: (key: string) => string }, State> {
   state: State = { hasError: false, message: "" };
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, message: error.message };
+  static getDerivedStateFromError(_error: Error): State {
+    return { hasError: true, message: "" };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
@@ -30,7 +30,7 @@ class ErrorBoundaryClass extends Component<Props & { t: (key: string) => string 
             <span className="text-3xl">⚠️</span>
           </div>
           <h2 className="text-xl font-extrabold text-foreground mb-2">{t("somethingWentWrong")}</h2>
-          <p className="text-muted-foreground text-sm mb-6 max-w-xs">{this.state.message || t("unexpectedErrorDesc")}</p>
+          <p className="text-muted-foreground text-sm mb-6 max-w-xs">{t("unexpectedErrorDesc")}</p>
           <button
             onClick={() => { this.setState({ hasError: false, message: "" }); window.location.href = "/"; }}
             className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm"

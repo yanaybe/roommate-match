@@ -175,7 +175,13 @@ export default function Onboarding() {
       navigate("/auth", { replace: true });
       return;
     }
-  }, [user, authLoading, navigate, isEdit]);
+    if (!user.email_confirmed_at) {
+      toast(t("pleaseVerifyEmailFirst"), {
+        description: t("verifyEmailBeforeProfile"),
+      });
+      navigate("/verify-email", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (profile) {

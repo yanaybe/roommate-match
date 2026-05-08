@@ -8,9 +8,16 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// TODO [LONG-TERM]: sessionStorage breaks cross-tab auth — opening a shared apartment
+// link in a new tab logs the user out and redirects to /auth. Most users share links
+// this way. Fix: replace with an HttpOnly cookie relay via a Supabase Edge Function:
+//   1. Create supabase/functions/auth-session/index.ts that exchanges the Supabase JWT
+//      for a short-lived HttpOnly SameSite=Strict cookie.
+//   2. Replace storage: sessionStorage with storage: cookieStorage (custom adapter).
+// Reference: https://supabase.com/docs/guides/auth/server-side/creating-a-client
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    storage: sessionStorage,
     persistSession: true,
     autoRefreshToken: true,
   }

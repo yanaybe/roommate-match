@@ -56,11 +56,10 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
       });
       if (error) throw error;
 
-      // Mark phone as verified in profile
-      await supabase
-        .from("profiles")
-        .update({ phone_verified: true, phone_number: cleaned } as any)
-        .eq("user_id", user!.id);
+      await supabase.rpc("mark_phone_verified", {
+        p_user_id: user!.id,
+        p_phone: cleaned,
+      });
 
       setStep("done");
       toast.success("Phone verified! ✅");

@@ -82,6 +82,12 @@ export default function RoommateProfile() {
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
+  // Track profile view (only for other users' profiles, not your own)
+  useEffect(() => {
+    if (!id || !authUser || authUser.id === id) return;
+    supabase.from("profile_views").insert({ profile_id: id, viewer_id: authUser.id }).then(() => {});
+  }, [id, authUser]);
+
   const { userData, fullProfile, matchPercent, breakdown } = useMemo(() => {
     const dbProfile = allProfiles.find((p) => p.user_id === id);
     if (dbProfile) {
@@ -208,17 +214,11 @@ export default function RoommateProfile() {
       }
 
       if (!conversationId) {
-        const { data: newConv } = await supabase
-          .from("conversations")
-          .insert({})
-          .select("id")
-          .single();
-        if (!newConv) throw new Error("Failed to create conversation");
-        conversationId = newConv.id;
-        await supabase.from("conversation_participants").insert([
-          { conversation_id: conversationId, user_id: authUser.id },
-          { conversation_id: conversationId, user_id: userData.id },
-        ]);
+        const { data: newConvId, error: rpcErr } = await supabase.rpc("find_or_create_conversation", {
+          other_user_id: userData.id,
+        });
+        if (rpcErr || !newConvId) throw new Error("Failed to create conversation");
+        conversationId = newConvId as string;
       }
 
       navigate(`/chats?conv=${conversationId}`);

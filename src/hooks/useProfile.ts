@@ -64,6 +64,11 @@ const TIER_ORDER: Record<string, number> = {
   free: 3,
 };
 
+// TODO [POST-LAUNCH]: No rate limiting on profile listing. The anon key is public and
+// anyone can paginate through all profiles without authentication, scraping the full
+// user base (names, ages, cities, photos). At scale this is a privacy and competitor risk.
+// Fix: move this query behind a Supabase Edge Function that enforces per-IP or per-user
+// rate limiting (e.g. 10 requests/minute) using Vercel Edge Middleware or Cloudflare Workers.
 export function useAllProfiles() {
   const { user } = useAuth();
   const [profiles, setProfiles] = useState<FullProfile[]>([]);
@@ -78,6 +83,7 @@ export function useAllProfiles() {
       .from("profiles")
       .select("*, profile_visibility")
       .eq("onboarding_complete", true)
+      .neq("profile_visibility", "hidden")
       .order("created_at", { ascending: false })
       .limit(PAGE_SIZE);
 
@@ -91,7 +97,7 @@ export function useAllProfiles() {
       setError(fetchError.message);
     } else {
       const raw = (data as unknown as FullProfile[]) ?? [];
-      // Filter out hidden profiles unless it's the current user's own profile
+      // Client-side filter kept as UI safety net; server-side .neq() above is the real guard.
       const batch = raw.filter((p) => {
         if (p.user_id === user?.id) return true;
         return (p as any).profile_visibility !== "hidden";

@@ -8,6 +8,7 @@ import { useSquadDetail } from "@/hooks/useSquad";
 import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
 import { calculateUserMatch } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeText } from "@/lib/security";
 import { toast } from "sonner";
 import MatchBadge from "@/components/MatchBadge";
 import SwipeCard from "@/components/SwipeCard";
@@ -86,6 +87,7 @@ export default function SquadHub() {
   const [chatLoading, setChatLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const lastMsgTimeRef = useRef<number>(0);
 
   // Discover state
   const [swiped, setSwiped] = useState<string[]>([]);
@@ -420,7 +422,7 @@ export default function SquadHub() {
       }
 
       if (user?.id === leader.user_id) {
-        const { data: convId, error } = await supabase.rpc("create_conversation_with_participant", {
+        const { data: convId, error } = await supabase.rpc("find_or_create_conversation", {
           other_user_id: apt.user_id,
         });
         if (!error && convId) {
@@ -480,7 +482,9 @@ export default function SquadHub() {
     }
   }, [tab, id, loadMessages]);
 
-  // Realtime chat subscription
+  // Realtime chat subscription — protected by squad_messages SELECT RLS:
+  // "Squad members can view messages" USING (is_squad_member(auth.uid(), squad_id))
+  // postgres_changes respects RLS so non-members receive no events even if they subscribe.
   useEffect(() => {
     if (!id || tab !== "chat") return;
     const channel = supabase
@@ -506,7 +510,11 @@ export default function SquadHub() {
 
   const sendMessage = async () => {
     if (!newMsg.trim() || !user || !id) return;
-    const content = newMsg.trim();
+    const now = Date.now();
+    if (now - lastMsgTimeRef.current < 500) return;
+    lastMsgTimeRef.current = now;
+    const content = sanitizeText(newMsg.trim()).substring(0, 2000);
+    if (!content) return;
     setNewMsg("");
     await supabase.from("squad_messages").insert({
       squad_id: id,

@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import PremiumSheet from "@/components/PremiumSheet";
 import { useLanguage, languages } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfileStats } from "@/hooks/useProfileStats";
 
 function SectionHeader({ title }: { title: string }) {
   return (
@@ -124,6 +125,7 @@ export default function Settings() {
   const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
   const [profileVisibility, setProfileVisibility] = useState<"everyone" | "hidden">("everyone");
   const [visibilityLoading, setVisibilityLoading] = useState(false);
+  const { profileViews, likesReceived, loading: statsLoading } = useProfileStats();
 
   useEffect(() => {
     if (!user) return;
@@ -258,14 +260,14 @@ export default function Settings() {
             <InsightCard
               icon={Eye}
               label={t("profileViews")}
-              value={42}
+              value={statsLoading ? "…" : profileViews}
               locked={currentPlan === "Free"}
               onUpgrade={() => setPremiumOpen(true)}
             />
             <InsightCard
               icon={Heart}
               label={t("likesReceived")}
-              value={18}
+              value={statsLoading ? "…" : likesReceived}
               locked={currentPlan === "Free"}
               onUpgrade={() => setPremiumOpen(true)}
             />

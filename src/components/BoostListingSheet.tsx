@@ -123,41 +123,31 @@ export default function BoostListingSheet({ open, onOpenChange, apartmentId, apa
     if (!user || freeBoostsInfo.available === 0) return;
     setLoading(true);
     try {
-      const now = new Date().toISOString();
-      let updateField: Record<string, string> = {};
-
-      if (subscriptionTier === "gold") {
-        updateField = { gold_boost_used_at: now };
-      } else if (subscriptionTier === "platinum") {
-        // Use the first empty/expired slot
-        const slots: Array<keyof typeof boostDates> = [
-          "platinum_boost_used_at_1",
-          "platinum_boost_used_at_2",
-          "platinum_boost_used_at_3",
-        ];
-        const emptySlot = slots.find((s) => !isWithinLastWeek(boostDates[s]));
-        if (!emptySlot) { toast.error("No free boost slots available."); setLoading(false); return; }
-        updateField = { [emptySlot]: now };
+      const { data: result, error } = await supabase.rpc("use_free_boost", {
+        p_apartment_id: apartmentId,
+      });
+      if (error) throw error;
+      const res = result as { ok?: boolean; error?: string } | null;
+      if (res?.error === "no_boosts_available") {
+        toast.error("No free boost slots available this week.");
+        return;
       }
-
-      await supabase.from("profiles").update(updateField as any).eq("user_id", user.id);
-
-      // Mark the apartment as featured for 7 days
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      await supabase
-        .from("apartments")
-        .update({ is_featured: true, featured_until: expiresAt } as any)
-        .eq("id", apartmentId);
-
+      if (res?.error === "not_owner") {
+        toast.error("You can only boost your own listings.");
+        return;
+      }
+      if (res?.error) {
+        toast.error("Could not apply boost. Please try again.");
+        return;
+      }
       toast.success("Free boost applied! Your listing is now featured for 7 days.");
-      setBoostDates((prev) => ({ ...prev, ...Object.fromEntries(Object.entries(updateField)) } as typeof prev));
       onOpenChange(false);
     } catch {
       toast.error("Could not apply boost. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [user, subscriptionTier, boostDates, freeBoostsInfo.available, apartmentId, onOpenChange]);
+  }, [user, freeBoostsInfo.available, apartmentId, onOpenChange]);
 
   const handleBoost = useCallback(async () => {
     const tier = BOOST_TIERS.find((t) => t.key === selected);

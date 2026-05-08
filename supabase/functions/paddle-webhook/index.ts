@@ -10,7 +10,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const PADDLE_WEBHOOK_SECRET = Deno.env.get("PADDLE_WEBHOOK_SECRET")!;
+const PADDLE_WEBHOOK_SECRET = Deno.env.get("PADDLE_WEBHOOK_SECRET");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -64,12 +64,14 @@ Deno.serve(async (req) => {
   const rawBody = await req.text();
   const signatureHeader = req.headers.get("paddle-signature") ?? "";
 
-  if (PADDLE_WEBHOOK_SECRET) {
-    const valid = await verifySignature(rawBody, signatureHeader, PADDLE_WEBHOOK_SECRET);
-    if (!valid) {
-      console.error("Invalid Paddle webhook signature");
-      return new Response("Unauthorized", { status: 401 });
-    }
+  if (!PADDLE_WEBHOOK_SECRET) {
+    console.error("PADDLE_WEBHOOK_SECRET is not configured");
+    return new Response("Server misconfiguration", { status: 500 });
+  }
+  const valid = await verifySignature(rawBody, signatureHeader, PADDLE_WEBHOOK_SECRET);
+  if (!valid) {
+    console.error("Invalid Paddle webhook signature");
+    return new Response("Unauthorized", { status: 401 });
   }
 
   let event: Record<string, any>;
@@ -167,9 +169,31 @@ Deno.serve(async (req) => {
     // One-time purchase completed — handle listing boosts
     case "transaction.completed": {
       const apartmentId: string = data.custom_data?.apartment_id ?? "";
-      const boostDays: number = parseInt(data.custom_data?.boost_days ?? "0");
+      const boostDays: number = Math.min(parseInt(data.custom_data?.boost_days ?? "0"), 30);
 
       if (apartmentId && boostDays > 0) {
+        const profileId = await findProfile();
+        if (!profileId) {
+          console.error("No profile found for boost transaction");
+          break;
+        }
+
+        const { data: apt, error: aptErr } = await supabase
+          .from("apartments")
+          .select("user_id")
+          .eq("id", apartmentId)
+          .maybeSingle();
+
+        if (aptErr || !apt) {
+          console.error("Apartment not found for boost:", apartmentId);
+          break;
+        }
+
+        if (apt.user_id !== profileId) {
+          console.error("Boost ownership mismatch: apartment", apartmentId, "does not belong to", profileId);
+          break;
+        }
+
         const featuredUntil = new Date();
         featuredUntil.setDate(featuredUntil.getDate() + boostDays);
 

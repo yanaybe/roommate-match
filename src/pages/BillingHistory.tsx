@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Receipt, CreditCard, Crown, Zap, Star, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowLeft, Receipt, CheckCircle2, XCircle, Clock, CreditCard, Crown, Zap, Star, ExternalLink, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
+
+const PADDLE_ENV = import.meta.env.VITE_PADDLE_ENV as string | undefined;
+const PADDLE_PORTAL =
+  PADDLE_ENV === "production"
+    ? "https://customer.paddle.com/subscriptions"
+    : "https://sandbox-customer.paddle.com/subscriptions";
 
 const TIER_LABELS: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   free:     { label: "Free",     color: "bg-secondary text-secondary-foreground", icon: Zap },
@@ -14,11 +20,16 @@ const TIER_LABELS: Record<string, { label: string; color: string; icon: React.El
   platinum: { label: "Platinum", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400", icon: Crown },
 };
 
-const PADDLE_ENV = import.meta.env.VITE_PADDLE_ENV as string | undefined;
-const PADDLE_PORTAL =
-  PADDLE_ENV === "production"
-    ? "https://customer.paddle.com/subscriptions"
-    : "https://sandbox-customer.paddle.com/subscriptions";
+type TransactionStatus = "completed" | "pending" | "failed" | "refunded";
+
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: string;
+  status: TransactionStatus;
+  type: "subscription" | "boost" | "extra";
+}
 
 interface SubscriptionInfo {
   tier: string;
@@ -26,15 +37,56 @@ interface SubscriptionInfo {
   subscription_expires_at: string | null;
 }
 
+const statusConfig: Record<TransactionStatus, { labelKey: string; icon: React.ElementType; color: string }> = {
+  completed: { labelKey: "billingStatusCompleted", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40" },
+  pending:   { labelKey: "billingStatusPending",   icon: Clock,        color: "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/40" },
+  failed:    { labelKey: "billingStatusFailed",    icon: XCircle,      color: "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950/40" },
+  refunded:  { labelKey: "billingStatusRefunded",  icon: XCircle,      color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/40" },
+};
+
+const typeIcons: Record<string, React.ElementType> = {
+  subscription: Crown,
+  boost: Zap,
+  extra: Star,
+};
+
+const typeColors: Record<string, string> = {
+  subscription: "bg-primary/10 text-primary",
+  boost: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  extra: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+};
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function groupByMonth(transactions: Transaction[]) {
+  const groups: Record<string, Transaction[]> = {};
+  for (const tx of transactions) {
+    const d = new Date(tx.date);
+    const key = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(tx);
+  }
+  return groups;
+}
+
+type FilterType = "all" | "subscription" | "boost" | "extra";
+
 export default function BillingHistory() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { user } = useAuth();
   const [info, setInfo] = useState<SubscriptionInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [subLoading, setSubLoading] = useState(true);
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [txLoading, setTxLoading] = useState(true);
 
+  // Load subscription info
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setSubLoading(false); return; }
     supabase
       .from("profiles")
       .select("subscription_tier, paddle_subscription_id, subscription_expires_at")
@@ -48,13 +100,51 @@ export default function BillingHistory() {
             subscription_expires_at: (data as any).subscription_expires_at ?? null,
           });
         }
-        setLoading(false);
+        setSubLoading(false);
       });
   }, [user]);
+
+  // Load real transaction history from Paddle via edge function
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setTxLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { setTxLoading(false); return; }
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/billing-history`,
+          { headers: { Authorization: `Bearer ${session.access_token}` } },
+        );
+        if (!res.ok) throw new Error("fetch failed");
+        const json = await res.json();
+        if (!cancelled) setTransactions(json.transactions ?? []);
+      } catch {
+        // Paddle not configured yet or no transactions — show empty state
+      } finally {
+        if (!cancelled) setTxLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   const tierInfo = TIER_LABELS[info?.tier ?? "free"] ?? TIER_LABELS.free;
   const TierIcon = tierInfo.icon;
   const isPaid = info?.tier !== "free" && info?.tier != null;
+
+  const filtered = filter === "all" ? transactions : transactions.filter((tx) => tx.type === filter);
+  const grouped = groupByMonth(filtered);
+  const totalSpent = transactions
+    .filter((tx) => tx.status === "completed")
+    .reduce((sum, tx) => sum + parseFloat(tx.amount.replace("₪", "")), 0);
+
+  const filters: { key: FilterType; label: string }[] = [
+    { key: "all",          label: t("billingFilterAll") },
+    { key: "subscription", label: t("billingFilterSubscriptions") },
+    { key: "boost",        label: t("billingFilterBoosts") },
+    { key: "extra",        label: t("billingFilterExtras") },
+  ];
 
   return (
     <div className="min-h-screen bg-background pb-28 desk:pb-8">
@@ -72,7 +162,7 @@ export default function BillingHistory() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 pt-5 space-y-5">
-        {loading ? (
+        {subLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
@@ -128,36 +218,6 @@ export default function BillingHistory() {
               </motion.a>
             )}
 
-            {/* Transaction History Note */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-card rounded-2xl shadow-card p-5"
-            >
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0 mt-0.5">
-                  <Receipt size={18} className="text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground mb-1">{t("billingTransactionHistory")}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {t("billingTransactionDesc")}
-                  </p>
-                  {isPaid && info?.paddle_subscription_id && (
-                    <a
-                      href={PADDLE_PORTAL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary mt-2 hover:underline"
-                    >
-                      {t("billingViewInPaddle")} <ExternalLink size={11} />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-
             {/* Upgrade CTA for free users */}
             {!isPaid && (
               <motion.button
@@ -172,6 +232,115 @@ export default function BillingHistory() {
             )}
           </>
         )}
+
+        {/* Transaction History */}
+        <div>
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+            {t("billingTransactionHistory") || "Transaction History"}
+          </h3>
+
+          {/* Summary */}
+          {!txLoading && transactions.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="gradient-primary rounded-2xl p-4 shadow-elevated mb-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-primary-foreground/70 text-xs font-medium mb-0.5">{t("billingTotalSpent")}</p>
+                  <p className="text-2xl font-bold text-primary-foreground">₪{totalSpent.toFixed(2)}</p>
+                  <p className="text-primary-foreground/50 text-xs mt-0.5">
+                    {transactions.filter((tx) => tx.status === "completed").length} {t("billingTransactions")}
+                  </p>
+                </div>
+                <Receipt size={28} className="text-primary-foreground/70" />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar mb-3">
+            {filters.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  filter === f.key
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-secondary text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {txLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 size={24} className="text-muted-foreground animate-spin" />
+            </div>
+          ) : Object.keys(grouped).length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-10"
+            >
+              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-3">
+                <Receipt size={24} className="text-muted-foreground" />
+              </div>
+              <p className="text-sm font-semibold text-muted-foreground">{t("billingNoTransactions")}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">{t("billingHistoryAppearHere")}</p>
+            </motion.div>
+          ) : (
+            Object.entries(grouped).map(([month, txns], gi) => (
+              <motion.section
+                key={month}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: gi * 0.05 }}
+                className="mb-4"
+              >
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+                  {month}
+                </h4>
+                <div className="bg-card rounded-2xl shadow-card divide-y divide-border/30 overflow-hidden">
+                  {txns.map((tx, i) => {
+                    const status = statusConfig[tx.status];
+                    const StatusIcon = status.icon;
+                    const TxIcon = typeIcons[tx.type] ?? Receipt;
+                    return (
+                      <motion.div
+                        key={tx.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: gi * 0.05 + i * 0.03 }}
+                        className="flex items-center gap-3 px-4 py-3.5"
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${typeColors[tx.type]}`}>
+                          <TxIcon size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{tx.description}</p>
+                          <p className="text-[11px] text-muted-foreground">{formatDate(tx.date)}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className={`text-sm font-bold ${tx.status === "refunded" ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                            {tx.amount}
+                          </span>
+                          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${status.color}`}>
+                            <StatusIcon size={10} />
+                            {t(status.labelKey)}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.section>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
