@@ -126,7 +126,7 @@ Fix within first week after launch.
   ```
   Upload path in PostApartment.tsx already prefixes with `${user.id}/` — the RLS just needs to enforce it.
 - **Difficulty:** Easy (20 min)
-- **Status:** [ ] TODO
+- **Status:** [x] DONE (2026-05-11) — migration `20260507000005_apartment_images_path_restriction.sql` applied.
 
 ---
 
@@ -159,7 +159,7 @@ Fix before scaling to real users.
 - **Risk:** Table doesn't exist. Every apartment view throws a Supabase 42P01 error. Analytics broken. Error may expose table name via ErrorBoundary.
 - **Fix:** Create migration (see TODO comment in ApartmentDetail.tsx for full SQL).
 - **Difficulty:** Easy (15 min)
-- **Status:** [ ] TODO
+- **Status:** [x] DONE (2026-05-11) — migration `20260508000000_apartment_views.sql` applied.
 
 ---
 
@@ -168,7 +168,7 @@ Fix before scaling to real users.
 - **Risk:** User email + support messages sent to Formspree without a DPA. GDPR data processor violation. Formspree breach = all support history leaked.
 - **Fix:** Remove Formspree call. Support messages already saved to `support_messages` DB table — just send notification email via Resend Edge Function.
 - **Difficulty:** Medium (1 hour)
-- **Status:** [ ] TODO
+- **Status:** [x] DONE (2026-05-11) — Formspree was already removed; ContactSupport.tsx writes only to `support_messages` Supabase table.
 
 ---
 
@@ -213,7 +213,7 @@ Fix before scaling to real users.
 - **Risk:** Users cannot see their payment history. Legal exposure under Israeli Consumer Protection Law and GDPR (right to receipts).
 - **Fix:** Create `supabase/functions/billing-history/index.ts` that fetches real Paddle transactions.
 - **Difficulty:** Hard (4 hours)
-- **Status:** [ ] TODO
+- **Status:** [x] DONE (2026-05-11) — `billing-history` Edge Function implemented; BillingHistory.tsx fetches and displays real Paddle transactions.
 
 ---
 
