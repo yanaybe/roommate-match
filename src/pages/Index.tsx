@@ -221,14 +221,8 @@ export default function Index() {
         <div className="max-w-5xl mx-auto px-4 pt-12 desk:pt-6 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div>
-              {/* TODO [PRIORITY: HIGH] [AREA: BRANDING]
-                Problem: This renders "Roomatch" (lowercase 'm') while the landing page nav and
-                         brand identity use "RoomMatch" (capital M). This is the most-visited screen
-                         for logged-in users — the inconsistency looks like a typo on your own product name.
-                Fix: Change to: Room<span className="text-primary">Match</span>
-                Expected Result: Consistent branding across every page. */}
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
-                Roo<span className="text-primary">match</span>
+                Room<span className="text-primary">Match</span>
               </h1>
               <p className="text-muted-foreground text-sm">Find your perfect roommate or apartment</p>
             </div>
