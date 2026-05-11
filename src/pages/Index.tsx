@@ -28,6 +28,52 @@ const CITY_COORDS: Record<string, [number, number]> = {
   "Ashdod": [31.8010, 34.6550],
 };
 
+// Rotating live-activity strip — hides after 5 visits or user dismissal
+function ActivityStrip() {
+  const [items, setItems] = React.useState<string[]>([]);
+  const [idx, setIdx] = React.useState(0);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const views = parseInt(localStorage.getItem("activity_strip_views") ?? "0", 10);
+    if (views >= 5) return;
+    localStorage.setItem("activity_strip_views", String(views + 1));
+    supabase
+      .from("public_activity" as any)
+      .select("display_text")
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setItems(data.map((d: any) => d.display_text));
+          setVisible(true);
+        }
+      });
+  }, []);
+
+  React.useEffect(() => {
+    if (items.length <= 1) return;
+    const timer = setInterval(() => setIdx((i) => (i + 1) % items.length), 4000);
+    return () => clearInterval(timer);
+  }, [items.length]);
+
+  if (!visible || items.length === 0) return null;
+
+  return (
+    <div className="mx-4 mb-3 flex items-center gap-2 bg-primary/5 border border-primary/15 rounded-xl px-3 py-2 text-xs">
+      <span className="font-bold text-primary shrink-0">Live</span>
+      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+      <span className="flex-1 truncate text-foreground">{items[idx]}</span>
+      <button
+        onClick={() => { setVisible(false); localStorage.setItem("activity_strip_views", "5"); }}
+        className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  );
+}
+
 function ApartmentCardSkeleton() {
   return (
     <div className="bg-card rounded-2xl overflow-hidden shadow-card">
@@ -169,11 +215,6 @@ export default function Index() {
       })
       .slice(0, 3);
   }, [apartments, profile]);
-
-  // TODO [PRIORITY: LOW] [AREA: CLEANUP]
-  // Note: This TODO is DONE. The "Complete your profile" fallback banner has been implemented
-  //       at lines 349–363 below (the else branch of recommended.length > 0). Delete this
-  //       entire comment block — it is stale and no longer reflects the current code state.
 
   const filtered = useMemo(() => {
     return apartments.filter((apt) => {
@@ -317,6 +358,8 @@ export default function Index() {
         </div>
       )}
 
+      <ActivityStrip />
+
       <div className="max-w-5xl mx-auto px-4 pt-4">
         {view === "list" ? (
           apartmentsLoading ? (
@@ -333,17 +376,9 @@ export default function Index() {
                   <h2 className="text-base font-extrabold text-foreground">Picked for you</h2>
                   <p className="text-xs text-muted-foreground">Based on your budget & location</p>
                 </div>
-                {/* TODO [PRIORITY: LOW] [AREA: UX]
-                    Problem: Each card is w-56 (224px), showing ~1.2 cards on most phones.
-                             The partial card does not clearly signal horizontal scrollability.
-                             Many users will miss the recommendations row entirely.
-                    Fix: Widen to w-64 or trim to ~85% screen width so the next card peeks
-                         in from the right edge — a standard mobile scroll affordance.
-                         Verify snap-start behavior works correctly on iOS Safari.
-                    Expected Result: Users discover and engage with the recommendations row. */}
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory">
                   {recommended.map((apt, i) => (
-                    <div key={apt.id} className="shrink-0 w-56">
+                    <div key={apt.id} className="shrink-0 w-64 snap-start">
                       <ApartmentCard apartment={apt} index={i} />
                     </div>
                   ))}
@@ -449,17 +484,6 @@ export default function Index() {
       </div>
       </div>{/* end overflow-x clip wrapper */}
 
-      {/* TODO [PRIORITY: LOW] [AREA: ENGAGEMENT]
-          Problem: The home feed is static — users see the same listings each visit with no
-                   sense of community activity or social momentum. This reduces FOMO and repeat
-                   visit motivation. New users have no signal that the platform is alive.
-          Fix: Add a small "Recent activity" strip near the top of the feed (below the header banners):
-               e.g. "🎉 Yael & Dana just matched in Tel Aviv" / "🏠 New listing: Florentin · ₪3,200"
-               Feed from a public_activity table (anonymized, no PII) updated by DB triggers on:
-               - mutual like inserts → liked_profiles mutual match
-               - apartment inserts → new listing
-               Show 3 rotating items, auto-cycling every 4s. Dismiss after 5 visits per user.
-          Expected Result: Social proof increases trust; activity signals platform health to new users. */}
       <FilterModal
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}

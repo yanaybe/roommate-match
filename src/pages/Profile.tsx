@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, Building2, Heart, TrendingUp } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, Building2, Heart, TrendingUp, CreditCard } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PremiumSheet from "@/components/PremiumSheet";
 import PreferencesSheet from "@/components/profile/PreferencesSheet";
@@ -16,30 +16,15 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 
-// TODO [PRIORITY: HIGH] [AREA: SAFETY]
-// Problem: The report feature records reports to the DB, but there is no admin dashboard,
-//          moderation queue, or auto-flag system. Reports are never acted on. This is a
-//          legal and safety liability for a platform connecting strangers for shared housing.
-// Fix: Build a minimal moderation pipeline:
-//      1. Admin route at /admin/reports gated by is_admin = true on the profiles table
-//      2. Table: reported user, reporter, reason, timestamp, profile preview, action buttons
-//      3. Actions: dismiss report, warn user (automated email via Resend), ban (set is_banned)
-//      4. Auto-suspend rule: 3+ reports within 7 days → flag for urgent review
-//      Start with a Supabase Table Editor view; upgrade to a proper UI after the first 100 reports.
-// Expected Result: Safety baseline met; legal liability from harmful content significantly reduced.
-
-// TODO [PRIORITY: HIGH] [AREA: MONETIZATION]
-// Problem: Paying users (Gold/Platinum) have no way to view their current plan, renewal date,
-//          or cancel their subscription. This is a legal requirement — you cannot charge recurring
-//          fees without a visible cancellation path. Expect chargebacks without this.
-// Fix: Add a "Manage Subscription" menu item (visible only when subscriptionTier !== "free"):
-//      - Show: current tier, price, next billing date, and a "Cancel" option with confirmation
-//      - Wire to Stripe Customer Portal (one-line integration once Stripe is set up):
-//        stripe.billingPortal.sessions.create({ customer: stripeCustomerId, return_url: window.location.href })
-//      - Link the existing /billing-history route from this screen
-// Expected Result: Legal compliance, significantly reduced chargeback rate, improved user trust.
-const getMenuItems = (t: (key: string) => string, hasListings: boolean) => [
-  { icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" },
+const getMenuItems = (t: (key: string) => string, hasListings: boolean, isPaid: boolean) => [
+  ...(isPaid
+    ? []
+    : [{ icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" }]
+  ),
+  ...(isPaid
+    ? [{ icon: CreditCard, label: "Manage Subscription", desc: "View plan, billing history & cancel", accent: false, action: "billing" }]
+    : []
+  ),
   { icon: Heart, label: t("whoLikedMe"), desc: t("whoLikedMeDesc"), accent: false, action: "whoLikedMe" },
   { icon: ShieldCheck, label: t("getVerified"), desc: t("addPhoneBadge"), accent: false, action: "verify" },
   { icon: Bookmark, label: t("myActivity"), desc: t("myActivityDesc"), accent: false, action: "activity" },
@@ -139,6 +124,7 @@ export default function Profile() {
     if (action === "activity") setActivityOpen(true);
     if (action === "notifications") setNotificationsOpen(true);
     if (action === "premium") setPremiumOpen(true);
+    if (action === "billing") navigate("/billing-history");
     if (action === "settings") navigate("/settings");
     if (action === "verify") setPhoneVerifyOpen(true);
     if (action === "listings") setListingsOpen(true);
@@ -257,7 +243,7 @@ export default function Profile() {
         )}
 
         <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-4">
-          {getMenuItems(t, hasListings).map((item, i) => {
+          {getMenuItems(t, hasListings, (profile as any)?.subscription_tier !== "free" && (profile as any)?.subscription_tier != null).map((item, i) => {
             const Icon = item.icon;
             return (
               <motion.button

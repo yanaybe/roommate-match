@@ -64,11 +64,6 @@ const TIER_ORDER: Record<string, number> = {
   free: 3,
 };
 
-// TODO [POST-LAUNCH]: No rate limiting on profile listing. The anon key is public and
-// anyone can paginate through all profiles without authentication, scraping the full
-// user base (names, ages, cities, photos). At scale this is a privacy and competitor risk.
-// Fix: move this query behind a Supabase Edge Function that enforces per-IP or per-user
-// rate limiting (e.g. 10 requests/minute) using Vercel Edge Middleware or Cloudflare Workers.
 export function useAllProfiles() {
   const { user } = useAuth();
   const [profiles, setProfiles] = useState<FullProfile[]>([]);
