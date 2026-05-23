@@ -13,7 +13,7 @@ import MatchBadge from "@/components/MatchBadge";
 import MatchModal from "@/components/MatchModal";
 import { type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile, type FullProfile } from "@/hooks/useProfile";
+import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
 import { calculateUserMatch, calculateUserMatchBreakdown, type MatchFactor } from "@/lib/matching";
 import VerificationBadges from "@/components/VerificationBadges";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,8 +69,7 @@ export default function RoommateProfile() {
   const { user: authUser } = useAuth();
   const { profile: myProfile } = useProfile();
   const { t } = useLanguage();
-  const [profilesLoading, setProfilesLoading] = useState(true);
-  const [fullProfile, setFullProfile] = useState<FullProfile | null>(null);
+  const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles();
   const [imgIndex, setImgIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);

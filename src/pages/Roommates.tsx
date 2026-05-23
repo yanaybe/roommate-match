@@ -227,7 +227,7 @@ export default function Roommates() {
       return;
     }
     setSwiped((prev) => prev.slice(0, -1));
-  }, [swiped, user]);
+  };
 
   useEffect(() => {
     if (remaining.length <= 2 && hasMore && !profilesLoading) {
