@@ -7,7 +7,7 @@ import {
   DollarSign, Home, Users, Volume2,
   UtensilsCrossed, Dumbbell,
   Wine, PartyPopper, Clock, BookOpen, Smile,
-  MoreVertical, Ban, Flag, Sparkles, Heart, X
+  MoreVertical, Ban, Flag, Sparkles, Heart, X, MessageCircle
 } from "lucide-react";
 import MatchBadge from "@/components/MatchBadge";
 import MatchModal from "@/components/MatchModal";
@@ -76,35 +76,29 @@ export default function RoommateProfile() {
   const [reportOpen, setReportOpen] = useState(false);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [likeLoading, setLikeLoading] = useState(false);
+  const [messageLoading, setMessageLoading] = useState(false);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(id);
-  const { canLike, likesLimit, recordLike, openPremiumSheet } = useDailyLimits();
+  const { canLike, likesLimit, recordLike, openPremiumSheet, subscriptionTier } = useDailyLimits();
+  const isPlatinum = subscriptionTier === "platinum";
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  // Direct single-profile fetch — no need to load 50 profiles just to find one
+  // Track profile view (only for other users' profiles, not your own)
   useEffect(() => {
-    if (!id) return;
-    setProfilesLoading(true);
-    supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setFullProfile(data as FullProfile | null);
-        setProfilesLoading(false);
-      });
-  }, [id]);
+    if (!id || !authUser || authUser.id === id) return;
+    supabase.from("profile_views").insert({ profile_id: id, viewer_id: authUser.id }).then(() => {});
+  }, [id, authUser]);
 
-  const userData = useMemo(() => (fullProfile ? profileToUser(fullProfile) : null), [fullProfile]);
-  const matchPercent = useMemo(
-    () => (myProfile?.onboarding_complete && fullProfile ? calculateUserMatch(myProfile, fullProfile) : 0),
-    [myProfile, fullProfile],
-  );
-  const breakdown = useMemo(
-    () => (myProfile?.onboarding_complete && fullProfile ? calculateUserMatchBreakdown(myProfile, fullProfile) : []),
-    [myProfile, fullProfile],
-  );
+  const { userData, fullProfile, matchPercent, breakdown } = useMemo(() => {
+    const dbProfile = allProfiles.find((p) => p.user_id === id);
+    if (dbProfile) {
+      const u = profileToUser(dbProfile);
+      const match = myProfile?.onboarding_complete ? calculateUserMatch(myProfile, dbProfile) : 0;
+      const bd = myProfile?.onboarding_complete ? calculateUserMatchBreakdown(myProfile, dbProfile) : [];
+      return { userData: u, fullProfile: dbProfile, matchPercent: match, breakdown: bd };
+    }
+    return { userData: null, fullProfile: null, matchPercent: 0, breakdown: [] };
+  }, [id, allProfiles, myProfile]);
 
   if (profilesLoading && !userData) {
     return (
@@ -189,6 +183,50 @@ export default function RoommateProfile() {
       toast.error("Failed to like. Please try again.");
     } finally {
       setLikeLoading(false);
+    }
+  };
+
+  const handleMessage = async () => {
+    if (!authUser || !userData || isOwnProfile) return;
+    if (!isUUID(userData.id)) {
+      toast.info("Demo profile — messaging available with real users!");
+      return;
+    }
+    setMessageLoading(true);
+    try {
+      // Find or create a conversation between the two users
+      const { data: existingParticipations } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("user_id", authUser.id);
+
+      let conversationId: string | null = null;
+
+      if (existingParticipations?.length) {
+        const myConvIds = existingParticipations.map((p) => p.conversation_id);
+        const { data: otherParticipations } = await supabase
+          .from("conversation_participants")
+          .select("conversation_id")
+          .eq("user_id", userData.id)
+          .in("conversation_id", myConvIds);
+        if (otherParticipations?.length) {
+          conversationId = otherParticipations[0].conversation_id;
+        }
+      }
+
+      if (!conversationId) {
+        const { data: newConvId, error: rpcErr } = await supabase.rpc("find_or_create_conversation", {
+          other_user_id: userData.id,
+        });
+        if (rpcErr || !newConvId) throw new Error("Failed to create conversation");
+        conversationId = newConvId as string;
+      }
+
+      navigate(`/chats?conv=${conversationId}`);
+    } catch {
+      toast.error("Could not open conversation. Please try again.");
+    } finally {
+      setMessageLoading(false);
     }
   };
 
@@ -477,7 +515,15 @@ export default function RoommateProfile() {
 
           {breakdown.length > 0 ? (
             <div className="space-y-2">
-              {breakdown.map((factor: MatchFactor) => {
+              {matchPercent >= 70 && (
+                <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-3">
+                  ✨ Great match on {breakdown.filter((f: MatchFactor) => f.score >= 75).length} out of {breakdown.length} factors
+                </p>
+              )}
+              {[...breakdown].sort((a: MatchFactor, b: MatchFactor) => {
+                if (a.isConflict !== b.isConflict) return a.isConflict ? 1 : -1;
+                return b.score - a.score;
+              }).map((factor: MatchFactor) => {
                 const isGood = factor.score >= 75;
                 const isMid = factor.score >= 45;
                 const barColor = isGood ? "bg-green-500" : isMid ? "bg-amber-500" : "bg-rose-500";
@@ -542,6 +588,16 @@ export default function RoommateProfile() {
               <X className="w-5 h-5" />
               Pass
             </button>
+            {isPlatinum && (
+              <button
+                onClick={handleMessage}
+                disabled={messageLoading}
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-violet-500/40 bg-violet-500/10 text-violet-600 dark:text-violet-400 font-bold text-sm active:scale-95 transition-transform disabled:opacity-50 hover:bg-violet-500/20"
+              >
+                <MessageCircle className="w-5 h-5" />
+                {messageLoading ? "Opening…" : "Message"}
+              </button>
+            )}
             <button
               onClick={handleLike}
               disabled={likeLoading}

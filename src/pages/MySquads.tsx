@@ -47,6 +47,7 @@ export default function MySquads() {
 
   // Filter state
   const [filterLocation, setFilterLocation] = useState("");
+  const [squadExplainerSeen] = useState(() => localStorage.getItem("squad_created") === "true");
   const [filterBudgetMin, setFilterBudgetMin] = useState(0);
   const [filterBudgetMax, setFilterBudgetMax] = useState(15000);
   const [filterMinMatch, setFilterMinMatch] = useState(0);
@@ -271,6 +272,24 @@ export default function MySquads() {
                 <p className="text-muted-foreground text-sm">{t("loadingSquads")}</p>
               </div>
             ) : squads.length === 0 && invites.length === 0 ? (
+              <>
+              {!squadExplainerSeen && (
+                <div className="mb-4 bg-primary/5 border border-primary/20 rounded-2xl p-4">
+                  <h3 className="font-extrabold text-foreground text-base mb-3">What's a Squad?</h3>
+                  <div className="space-y-2.5">
+                    {[
+                      { emoji: "👥", text: "Invite 2–4 friends who are also apartment hunting" },
+                      { emoji: "🗳️", text: "Browse listings together and vote on your favorites" },
+                      { emoji: "🏠", text: "Move in as a group — easier search, more negotiating power" },
+                    ].map(({ emoji, text }) => (
+                      <div key={emoji} className="flex items-start gap-3">
+                        <span className="text-lg leading-none mt-0.5">{emoji}</span>
+                        <p className="text-sm text-foreground">{text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
                   <Users className="w-8 h-8 text-muted-foreground" />
@@ -292,6 +311,7 @@ export default function MySquads() {
                   </button>
                 </div>
               </div>
+              </>
             ) : (
               <div className="space-y-3">
                 {squads.map((squad, i) => (

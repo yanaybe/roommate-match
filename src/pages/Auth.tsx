@@ -8,6 +8,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { motion } from "framer-motion";
 import { Home, MessageCircle, ShieldCheck, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { analyzePassword } from "@/lib/security";
+import { analytics } from "@/lib/analytics";
 
 const emailSchema = z.string().email("Invalid email address");
 
@@ -35,14 +36,18 @@ export default function Auth() {
 
   const pwAnalysis = analyzePassword(password);
 
+  const handleGoogleAuth = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/` },
+    });
+    if (error) toast.error(error.message);
+  };
+
   useEffect(() => {
     if (!user) return;
-    // If email not verified, send to verification screen
-    if (!user.email_confirmed_at) {
-      navigate("/verify-email", { replace: true });
-      return;
-    }
-    // Check if user has completed onboarding
+    // Check if user has completed onboarding and route accordingly.
+    // Email verification is now a soft banner — no hard gate here.
     const checkProfile = async () => {
       const { data } = await supabase
         .from("profiles")
@@ -73,7 +78,7 @@ export default function Auth() {
       if (!password) { toast.error(t("passwordRequired")); setLoading(false); return; }
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
-      else navigate("/");
+      else { analytics.login(); navigate("/"); }
     } else {
       const pwResult = passwordSchema.safeParse(password);
       if (!pwResult.success) {
@@ -92,7 +97,7 @@ export default function Auth() {
         options: { emailRedirectTo: `${window.location.origin}/verify-email` },
       });
       if (error) toast.error(error.message);
-      else navigate("/verify-email");
+      else { analytics.signup(); navigate("/onboarding"); }
     }
     setLoading(false);
   };
@@ -111,6 +116,25 @@ export default function Auth() {
               Roo<span className="text-primary">match</span>
             </h1>
             <p className="text-muted-foreground text-sm mt-1">{t("welcomeBack")}</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleAuth}
+            className="w-full flex items-center justify-center gap-3 bg-secondary text-secondary-foreground font-semibold py-3 rounded-xl text-sm border border-border hover:bg-secondary/70 transition-colors"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Continue with Google
+          </button>
+          <div className="flex items-center gap-3 my-1">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="flex-1 h-px bg-border" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">
@@ -177,53 +201,52 @@ export default function Auth() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-primary/15 via-primary/5 to-background">
-      {/* Hero */}
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Compact header — form is immediately visible on mobile */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center flex-1 px-6 pt-16 pb-10 text-center"
+        className="flex flex-col items-center pt-10 pb-5 px-6 text-center"
       >
-        <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mb-5 shadow-lg">
-          <span className="text-3xl">🏠</span>
+        <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+          <span className="text-2xl">🏠</span>
         </div>
-        <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">
-          {t("heroFindPerfectRoommate")}
+        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
+          Roo<span className="text-primary">match</span>
         </h1>
-        <p className="text-muted-foreground text-sm mb-8 max-w-xs">
-          {t("heroSubtitle")}
-        </p>
-
-        <div className="flex flex-col gap-3 w-full max-w-xs">
-          {features.map(({ icon: Icon, text }, i) => (
-            <motion.div
-              key={text}
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 + i * 0.08 }}
-              className="flex items-center gap-3 bg-card/80 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-sm"
-            >
-              <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="text-sm font-medium text-card-foreground text-left">{text}</span>
-            </motion.div>
-          ))}
-        </div>
+        <p className="text-muted-foreground text-sm mt-1">Create your account — it takes 2 minutes.</p>
       </motion.div>
 
       {/* Form sheet */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15, duration: 0.4 }}
-        className="bg-card rounded-t-3xl px-6 pt-6 pb-10 shadow-[0_-8px_32px_rgba(0,0,0,0.10)]"
+        transition={{ delay: 0.1, duration: 0.35 }}
+        className="flex-1 bg-card rounded-t-3xl px-6 pt-6 pb-10 shadow-[0_-8px_32px_rgba(0,0,0,0.10)]"
       >
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-extrabold text-foreground">{t("createYourAccount")}</h2>
-          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">Step 1 of 2</span>
+          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">{t("stepOneOfTwo")}</span>
         </div>
 
+        <button
+          type="button"
+          onClick={handleGoogleAuth}
+          className="w-full flex items-center justify-center gap-3 bg-secondary text-secondary-foreground font-semibold py-3 rounded-xl text-sm border border-border hover:bg-secondary/70 transition-colors mb-4"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Continue with Google
+        </button>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-xs text-muted-foreground">or</span>
+          <div className="flex-1 h-px bg-border" />
+        </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="email"
@@ -278,7 +301,7 @@ export default function Auth() {
                   : pwAnalysis.strength === "fair" ? "text-yellow-500"
                   : "text-green-500"
                 }`}>
-                  {pwAnalysis.strength === "weak" ? t("weakPasswordLabel") : pwAnalysis.strength === "fair" ? t("fairPasswordLabel") : t("strongPasswordLabel")} password
+                  {pwAnalysis.strength === "weak" ? t("weakPasswordLabel") : pwAnalysis.strength === "fair" ? t("fairPasswordLabel") : t("strongPasswordLabel")}
                 </p>
                 {pwAnalysis.missing.length > 0 && (
                   <ul className="space-y-0.5">
@@ -336,6 +359,18 @@ export default function Auth() {
             {t("signIn")}
           </button>
         </p>
+
+        {/* Reassurance block — features below the form */}
+        <div className="mt-6 pt-5 border-t border-border space-y-2.5">
+          {features.map(({ icon: Icon, text }) => (
+            <div key={text} className="flex items-center gap-3">
+              <div className="w-7 h-7 gradient-primary rounded-lg flex items-center justify-center shrink-0">
+                <Icon className="w-3.5 h-3.5 text-primary-foreground" />
+              </div>
+              <span className="text-sm text-muted-foreground">{text}</span>
+            </div>
+          ))}
+        </div>
       </motion.div>
     </div>
   );

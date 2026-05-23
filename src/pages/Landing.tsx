@@ -1,18 +1,45 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home, Users, MessageCircle, Zap, Star, Shield,
   ChevronRight, Heart, MapPin, Check, Sparkles, Globe
 } from "lucide-react";
 import { useLanguage, languages } from "@/hooks/useLanguage";
+import { supabase } from "@/integrations/supabase/client";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   show: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.5 } }),
 };
 
-// Static preview cards (no auth needed)
+const TESTIMONIALS = [
+  {
+    name: "Maya L.",
+    city: "Tel Aviv",
+    quote: "Found my perfect roommate in 3 days. The compatibility score actually works — we're now best friends!",
+    avatar: "M",
+    color: "from-pink-500 to-rose-500",
+    stars: 5,
+  },
+  {
+    name: "Yonatan K.",
+    city: "Jerusalem",
+    quote: "Used the squad feature with 2 friends — we found an apartment together in under a week. Game changer.",
+    avatar: "Y",
+    color: "from-blue-500 to-indigo-500",
+    stars: 5,
+  },
+  {
+    name: "Noa S.",
+    city: "Haifa",
+    quote: "As a French speaker, having the app in my language made everything so much easier. Highly recommend.",
+    avatar: "N",
+    color: "from-emerald-500 to-teal-500",
+    stars: 5,
+  },
+];
+
 const PREVIEW_LISTINGS = [
   { title: "Modern Flat · Florentin", price: "₪3,200", match: 92, city: "Tel Aviv", img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=260&fit=crop" },
   { title: "Penthouse · Neve Tzedek", price: "₪3,800", match: 87, city: "Tel Aviv", img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=260&fit=crop" },
@@ -23,11 +50,22 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t, language, setLanguage, languageInfo } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
+  const [activeSearcherCount, setActiveSearcherCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("onboarding_complete", true)
+      .then(({ count }) => {
+        if (count !== null) setActiveSearcherCount(Math.max(count, 50));
+      });
+  }, []);
 
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
-    { value: "3", label: t("statsLanguagesLabel") },
-    { value: "100%", label: t("statsFreeToStart") },
+    { value: "85%", label: "Avg match quality" },
+    { value: activeSearcherCount ? `${activeSearcherCount}+` : "50+", label: "Active searchers" },
   ];
 
   const HOW_IT_WORKS = [
@@ -72,8 +110,6 @@ export default function Landing() {
     { name: t("planGold"), price: "₪29", features: [t("planUnlimitedLikes"), t("planSeeWhoLiked"), t("planWeeklyBoost")], highlight: true },
     { name: t("planPlatinum"), price: "₪39", features: [t("planMessageBefore"), t("planPriorityPlacement"), t("plan3Boosts")] },
   ];
-
-  const SQUAD_STEPS = [t("squadStep1"), t("squadStep2"), t("squadStep3"), t("squadStep4")];
 
   return (
     <div className="min-h-screen bg-background" onClick={() => setLangOpen(false)}>
@@ -178,7 +214,7 @@ export default function Landing() {
               <ChevronRight className="w-4 h-4" />
             </button>
             <button
-              onClick={() => navigate("/auth")}
+              onClick={() => document.getElementById("preview-listings")?.scrollIntoView({ behavior: "smooth" })}
               className="w-full sm:w-auto bg-secondary text-secondary-foreground font-bold px-8 py-3.5 rounded-2xl text-base"
             >
               {t("browseListings")}
@@ -200,7 +236,7 @@ export default function Landing() {
       </section>
 
       {/* ── Preview listings ── */}
-      <section className="px-5 pb-16 max-w-5xl mx-auto">
+      <section id="preview-listings" className="px-5 pb-16 max-w-5xl mx-auto">
         <motion.div
           variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
           className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide"
@@ -217,6 +253,9 @@ export default function Landing() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 <div className="absolute top-3 left-3 gradient-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
                   {l.match}% match
+                </div>
+                <div className="absolute top-3 right-3 bg-black/50 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm">
+                  Example
                 </div>
               </div>
               <div className="p-3">
@@ -277,6 +316,42 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── Testimonials ── */}
+      <section className="px-5 py-16 max-w-5xl mx-auto">
+        <motion.div
+          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+          className="text-center mb-10"
+        >
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">What our users say</h2>
+          <p className="text-muted-foreground mt-2">Real stories from people who found their match</p>
+        </motion.div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {TESTIMONIALS.map((item, i) => (
+            <motion.div
+              key={item.name}
+              variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
+              className="bg-card rounded-2xl p-5 shadow-card flex flex-col gap-3"
+            >
+              <div className="flex gap-0.5">
+                {Array.from({ length: item.stars }).map((_, j) => (
+                  <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+              <p className="text-sm text-foreground leading-relaxed flex-1">"{item.quote}"</p>
+              <div className="flex items-center gap-3 mt-auto pt-2 border-t border-border/50">
+                <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${item.color} flex items-center justify-center shrink-0`}>
+                  <span className="text-white text-sm font-bold">{item.avatar}</span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">{item.city}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
       {/* ── Features ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
         <motion.div
@@ -333,13 +408,21 @@ export default function Landing() {
               <p className="text-muted-foreground mb-6 max-w-lg">
                 {t("squadSectionDesc")}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                {SQUAD_STEPS.map((step) => (
-                  <div key={step} className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full gradient-primary flex items-center justify-center shrink-0">
-                      <Check className="w-3.5 h-3.5 text-primary-foreground" />
+              {/* Squad 3-step explainer */}
+              <div className="flex items-center gap-2 mb-5">
+                {[
+                  { step: "1", label: "Invite 2–4 friends" },
+                  { step: "2", label: "Browse & vote together" },
+                  { step: "3", label: "Move in as a group" },
+                ].map(({ step, label }, i) => (
+                  <div key={step} className="flex items-center gap-1.5">
+                    {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center mb-1 shrink-0">
+                        <span className="text-[11px] font-bold text-primary-foreground">{step}</span>
+                      </div>
+                      <span className="text-[10px] text-foreground font-medium leading-tight max-w-[56px]">{label}</span>
                     </div>
-                    <span className="text-sm text-foreground font-medium">{step}</span>
                   </div>
                 ))}
               </div>

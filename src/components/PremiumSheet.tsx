@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown, Star, Gem, Zap, Check, Lock, Heart, MessageCircle,
-  Eye, Undo2, TrendingUp, BadgeCheck, Rocket, X, Loader2, Sparkles, Users, Shield
+  Eye, Undo2, TrendingUp, BadgeCheck, Rocket, X, Loader2, Sparkles, Users, Shield, RefreshCcw
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { analytics } from "@/lib/analytics";
 
 interface PremiumSheetProps {
   open: boolean;
@@ -23,6 +24,15 @@ const PRICE_IDS: Record<string, string> = {
   gold: import.meta.env.VITE_PADDLE_PRICE_GOLD as string,
   platinum: import.meta.env.VITE_PADDLE_PRICE_PLATINUM as string,
 };
+
+const ANNUAL_PRICE_IDS: Record<string, string> = {
+  plus: import.meta.env.VITE_PADDLE_PRICE_PLUS_ANNUAL as string,
+  gold: import.meta.env.VITE_PADDLE_PRICE_GOLD_ANNUAL as string,
+  platinum: import.meta.env.VITE_PADDLE_PRICE_PLATINUM_ANNUAL as string,
+};
+
+// Annual prices in ₪ — ~2 months free relative to monthly × 12
+const ANNUAL_PRICES: Record<string, number> = { plus: 129, gold: 199, platinum: 279 };
 
 const plans = [
   {
@@ -104,6 +114,7 @@ const avatarColors = ["bg-pink-400", "bg-violet-400", "bg-sky-400", "bg-amber-40
 export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) {
   const { user } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<string>("gold");
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [paddle, setPaddle] = useState<Paddle | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -114,10 +125,11 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
     });
   }, []);
 
-  const openCheckout = useCallback(async (priceId: string) => {
+  const openCheckout = useCallback(async (priceId: string, tier?: string) => {
     if (!paddle) { toast.error("Payment system not ready. Please try again."); return; }
     if (!priceId) { toast.error("This plan is not available yet."); return; }
     if (!user) { toast.error("Please sign in first."); return; }
+    analytics.upgradeClick("premium_sheet", tier);
     setLoading(true);
     try {
       paddle.Checkout.open({
@@ -135,8 +147,17 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
     }
   }, [paddle, user, onOpenChange]);
 
-  const handleSubscribe = () => openCheckout(PRICE_IDS[selectedPlan]);
+  const handleSubscribe = () => {
+    const priceId = billing === "annual"
+      ? (ANNUAL_PRICE_IDS[selectedPlan] || PRICE_IDS[selectedPlan])
+      : PRICE_IDS[selectedPlan];
+    openCheckout(priceId, selectedPlan);
+  };
   const activePlan = plans.find((p) => p.id === selectedPlan)!;
+  const activePrice = billing === "annual"
+    ? ANNUAL_PRICES[selectedPlan]
+    : activePlan.price;
+  const annualSavings = Math.round((1 - ANNUAL_PRICES[selectedPlan] / (activePlan.price * 12)) * 100);;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -144,14 +165,6 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
 
         {/* Hero header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary via-violet-600 to-amber-500 px-5 pt-8 pb-6">
-          {/* Close button */}
-          <button
-            onClick={() => onOpenChange(false)}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm"
-          >
-            <X className="w-4 h-4 text-white" />
-          </button>
-
           {/* Decorative circles */}
           <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full bg-white/10 blur-xl" />
           <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full bg-white/10 blur-lg" />
@@ -227,6 +240,35 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                 <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">Cancel anytime</span>
               </div>
 
+              {/* Billing toggle */}
+              <div className="flex items-center justify-center mb-4">
+                <div className="flex items-center bg-secondary rounded-xl p-1 gap-1">
+                  <button
+                    onClick={() => setBilling("monthly")}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      billing === "monthly"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setBilling("annual")}
+                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      billing === "annual"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    Annual
+                    <span className="bg-emerald-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
+                      SAVE {annualSavings}%
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-2.5">
                 {plans.map((plan, idx) => {
                   const isSelected = selectedPlan === plan.id;
@@ -287,8 +329,18 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
 
                         {/* Price */}
                         <div className="text-right shrink-0">
-                          <span className="text-lg font-extrabold text-foreground">₪{plan.price}</span>
-                          <span className="text-xs text-muted-foreground block">/mo</span>
+                          {billing === "annual" ? (
+                            <>
+                              <span className="text-lg font-extrabold text-foreground">₪{ANNUAL_PRICES[plan.id]}</span>
+                              <span className="text-xs text-muted-foreground block">/yr</span>
+                              <span className="text-[10px] text-emerald-500 font-bold">≈₪{Math.round(ANNUAL_PRICES[plan.id] / 12)}/mo</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-lg font-extrabold text-foreground">₪{plan.price}</span>
+                              <span className="text-xs text-muted-foreground block">/mo</span>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -336,13 +388,15 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5" />
-                    Get {activePlan.name} — ₪{activePlan.price}/month
+                    {billing === "annual"
+                      ? `Get ${activePlan.name} — ₪${ANNUAL_PRICES[selectedPlan]}/year`
+                      : `Get ${activePlan.name} — ₪${activePlan.price}/month`}
                   </>
                 )}
               </motion.button>
 
               {/* Trust signals */}
-              <div className="flex items-center justify-center gap-4 mt-3">
+              <div className="flex items-center justify-center gap-3 mt-3 flex-wrap">
                 <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <Shield className="w-3 h-3" />
                   Secure payment
@@ -353,9 +407,9 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                   Cancel anytime
                 </div>
                 <div className="w-px h-3 bg-border" />
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Users className="w-3 h-3" />
-                  Growing community
+                <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <RefreshCcw className="w-3 h-3" />
+                  7-day money-back guarantee
                 </div>
               </div>
             </div>

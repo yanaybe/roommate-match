@@ -44,6 +44,15 @@ const translations: Record<Language, Record<string, string>> = {
     billingStatusPending: "Pending",
     billingStatusFailed: "Failed",
     billingStatusRefunded: "Refunded",
+    billingCurrentPlan: "Current Plan",
+    billingActiveUntil: "Active until",
+    billingFreeDesc: "Upgrade to unlock unlimited likes and more",
+    billingManageSubscription: "Manage Subscription",
+    billingManageDesc: "Update payment method, cancel, or change plan",
+    billingTransactionHistory: "Transaction History",
+    billingTransactionDesc: "Your invoices and receipts are managed by Paddle, our payment provider. Click below to view your full billing history.",
+    billingViewInPaddle: "View in Paddle Customer Portal",
+    billingUpgradeCta: "Upgrade to Premium",
     activityAndInsights: "Activity & Insights",
     profileViews: "Profile Views",
     likesReceived: "Likes Received",
@@ -585,9 +594,11 @@ const translations: Record<Language, Record<string, string>> = {
     featureSmart: "Smart compatibility matching",
     featureChat: "Chat directly with roommates",
     featureVerified: "Verified profiles & safe community",
+    stepOneOfTwo: "Step 1 of 2",
 
     // ErrorBoundary
     somethingWentWrong: "Something went wrong",
+    unexpectedErrorDesc: "An unexpected error occurred.",
 
     // Index
     failedToLoadApartments: "Failed to load apartments",
@@ -669,6 +680,7 @@ const translations: Record<Language, Record<string, string>> = {
     findMyRoommate: "Find my roommate",
     browseListings: "Browse listings",
     statsFactorsLabel: "Compatibility factors",
+    statsMatchesMade: "Connections made",
     statsLanguagesLabel: "Languages",
     statsFreeToStart: "Free to start",
     previewSeeAll: "See all listings",
@@ -751,6 +763,15 @@ const translations: Record<Language, Record<string, string>> = {
     billingStatusPending: "ממתין",
     billingStatusFailed: "נכשל",
     billingStatusRefunded: "הוחזר",
+    billingCurrentPlan: "תוכנית נוכחית",
+    billingActiveUntil: "פעיל עד",
+    billingFreeDesc: "שדרג כדי לקבל לייקים ללא הגבלה ועוד",
+    billingManageSubscription: "ניהול מנוי",
+    billingManageDesc: "עדכן אמצעי תשלום, בטל או שנה תוכנית",
+    billingTransactionHistory: "היסטוריית עסקאות",
+    billingTransactionDesc: "החשבוניות והקבלות שלך מנוהלות על ידי Paddle, ספק התשלומים שלנו. לחץ למטה לצפייה בהיסטוריית החיובים המלאה.",
+    billingViewInPaddle: "צפה בפורטל לקוחות Paddle",
+    billingUpgradeCta: "שדרג לפרימיום",
     activityAndInsights: "פעילות ותובנות",
     profileViews: "צפיות בפרופיל",
     likesReceived: "לייקים שהתקבלו",
@@ -1293,9 +1314,11 @@ const translations: Record<Language, Record<string, string>> = {
     featureSmart: "התאמה חכמה לפי תאימות",
     featureChat: "שוחח ישירות עם שותפים פוטנציאליים",
     featureVerified: "פרופילים מאומתים וקהילה בטוחה",
+    stepOneOfTwo: "שלב 1 מתוך 2",
 
     // ErrorBoundary
     somethingWentWrong: "משהו השתבש",
+    unexpectedErrorDesc: "אירעה שגיאה בלתי צפויה.",
 
     // Index
     failedToLoadApartments: "טעינת הדירות נכשלה",
@@ -1377,6 +1400,7 @@ const translations: Record<Language, Record<string, string>> = {
     findMyRoommate: "מצא לי שותף",
     browseListings: "עיין במודעות",
     statsFactorsLabel: "פקטורי תאימות",
+    statsMatchesMade: "חיבורים שנוצרו",
     statsLanguagesLabel: "שפות",
     statsFreeToStart: "חינמי להתחלה",
     previewSeeAll: "ראה את כל המודעות",
@@ -2001,9 +2025,11 @@ const translations: Record<Language, Record<string, string>> = {
     featureSmart: "Correspondance intelligente par compatibilité",
     featureChat: "Discutez directement avec les colocataires",
     featureVerified: "Profils vérifiés & communauté sûre",
+    stepOneOfTwo: "Étape 1 sur 2",
 
     // ErrorBoundary
     somethingWentWrong: "Une erreur s'est produite",
+    unexpectedErrorDesc: "Une erreur inattendue s'est produite.",
 
     // Index
     failedToLoadApartments: "Échec du chargement des appartements",
@@ -2085,6 +2111,7 @@ const translations: Record<Language, Record<string, string>> = {
     findMyRoommate: "Trouver mon colocataire",
     browseListings: "Parcourir les annonces",
     statsFactorsLabel: "Facteurs de compatibilité",
+    statsMatchesMade: "Connexions créées",
     statsLanguagesLabel: "Langues",
     statsFreeToStart: "Gratuit pour commencer",
     previewSeeAll: "Voir toutes les annonces",

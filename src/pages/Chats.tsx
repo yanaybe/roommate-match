@@ -5,11 +5,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { useProfile } from "@/hooks/useProfile";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, CheckCheck, Trash2, MoreVertical, Ban, Flag, ChevronDown, Sparkles } from "lucide-react";
+import { ArrowLeft, Send, CheckCheck, Check, Trash2, MoreVertical, Ban, Flag, ChevronDown, Sparkles } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useBlockReport, fetchBlockedIds } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
-import { calculateUserMatch } from "@/lib/matching";
+import { calculateUserMatch, calculateUserMatchBreakdown } from "@/lib/matching";
 import MatchBadge from "@/components/MatchBadge";
 import { sanitizeText } from "@/lib/security";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ interface Conversation {
   other_avatar: string | null;
   last_message: string | null;
   last_message_at: string | null;
+  created_at: string | null;
   unread_count: number;
 }
 
@@ -92,16 +94,32 @@ export default function Chats() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  // Rate limiting: track timestamps of recent sends (max 5 per 3 seconds)
-  const recentSendTimestamps = useRef<number[]>([]);
+  const [subscriptionTier, setSubscriptionTier] = useState("free");
+  const FREE_MESSAGES_PER_DAY = 100;
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [otherProfile, setOtherProfile] = useState<any>(null);
   const [contextDismissed, setContextDismissed] = useState(false);
+  const [otherIsTyping, setOtherIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const activeConvData = conversations.find((c) => c.id === activeConv);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(activeConvData?.other_user_id);
+
+  // Fetch current user's subscription tier for rate-limit bypass
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setSubscriptionTier((data as any).subscription_tier ?? "free");
+      });
+  }, [user]);
 
   // Fetch other user's profile for context card
   useEffect(() => {
@@ -114,6 +132,11 @@ export default function Chats() {
   const matchPercent = useMemo(() => {
     if (!myProfile || !otherProfile) return 0;
     return calculateUserMatch(myProfile, otherProfile);
+  }, [myProfile, otherProfile]);
+
+  const matchBreakdown = useMemo(() => {
+    if (!myProfile || !otherProfile) return [];
+    return calculateUserMatchBreakdown(myProfile, otherProfile);
   }, [myProfile, otherProfile]);
 
   const sharedTraits = useMemo(() => getSharedTraits(myProfile, otherProfile), [myProfile, otherProfile]);
@@ -160,7 +183,14 @@ export default function Chats() {
       : { data: [] };
     const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
 
-    // 4. Batch: get all messages for all conversations (for last message + unread counts)
+    // 4a. Batch: get conversation created_at timestamps
+    const { data: convRows } = await supabase
+      .from("conversations")
+      .select("id, created_at")
+      .in("id", convIds);
+    const convCreatedAt = new Map((convRows ?? []).map((c) => [c.id, c.created_at]));
+
+    // 4b. Batch: get all messages for all conversations (for last message + unread counts)
     const { data: allMessages } = await supabase
       .from("messages")
       .select("id, conversation_id, content, sender_id, created_at")
@@ -212,6 +242,7 @@ export default function Chats() {
         other_avatar: otherAvatar,
         last_message: lastMsg?.content ?? null,
         last_message_at: lastMsg?.created_at ?? null,
+        created_at: convCreatedAt.get(convId) ?? null,
         unread_count: unreadCount,
       };
 
@@ -319,8 +350,21 @@ export default function Chats() {
       )
       .subscribe();
 
+    // Subscribe to typing presence
+    const presenceChannel = supabase.channel(`typing:${activeConv}`)
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceChannel.presenceState();
+        const others = Object.values(state).flat() as Array<{ user_id: string; typing: boolean }>;
+        setOtherIsTyping(others.some((p) => p.user_id !== user.id && p.typing));
+      })
+      .subscribe();
+    presenceChannelRef.current = presenceChannel;
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(presenceChannel);
+      presenceChannelRef.current = null;
+      setOtherIsTyping(false);
     };
   }, [activeConv, user, refreshUnread]);
 
@@ -331,29 +375,24 @@ export default function Chats() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !activeConv || !user) return;
 
-    // ── Rate limiting: client-side burst guard (UX) ──────────────────────────
-    const now = Date.now();
-    const WINDOW_MS = 3000;
-    const MAX_IN_WINDOW = 5;
-    recentSendTimestamps.current = recentSendTimestamps.current.filter(
-      (t) => now - t < WINDOW_MS
-    );
-    if (recentSendTimestamps.current.length >= MAX_IN_WINDOW) {
-      toast.error("Slow down — you're sending messages too fast");
-      return;
-    }
-    recentSendTimestamps.current.push(now);
+    const isGoldPlus = ["gold", "platinum"].includes(subscriptionTier);
 
-    // ── Rate limiting: server-side check (bypass-proof) ──────────────────────
-    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
-    const { count: recentCount } = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("sender_id", user.id)
-      .gte("created_at", oneMinuteAgo);
-    if ((recentCount ?? 0) >= 30) {
-      toast.error("You're sending too many messages. Please wait a minute.");
-      return;
+    // ── Rate limiting: daily volume limit ────────────────────────────────────
+    if (!isGoldPlus) {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const { count: todayCount } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("sender_id", user.id)
+        .gte("created_at", todayStart.toISOString());
+      if ((todayCount ?? 0) >= FREE_MESSAGES_PER_DAY) {
+        toast("Daily message limit reached", {
+          description: "Upgrade to Gold for unlimited messaging.",
+          action: { label: "Upgrade", onClick: () => navigate("/settings") },
+        });
+        return;
+      }
     }
 
     // ── Sanitize content (strip control chars + bidi overrides) ──────────────
@@ -522,6 +561,13 @@ export default function Chats() {
           )}
           <div className="flex-1">
             <h2 className="font-bold text-foreground text-sm">{conv?.other_name}</h2>
+            <p className="text-muted-foreground text-xs">
+              {activeConvData?.created_at
+                ? `Matched ${formatDistanceToNow(new Date(activeConvData.created_at), { addSuffix: true })}`
+                : otherProfile?.last_seen
+                  ? `Active ${formatDistanceToNow(new Date(otherProfile.last_seen), { addSuffix: true })}`
+                  : t("online")}
+            </p>
           </div>
           <div className="relative">
             <button
@@ -587,7 +633,15 @@ export default function Chats() {
                   </button>
                 </div>
               </div>
-              {sharedTraits.length > 0 && (
+              {matchBreakdown.filter((f) => !f.isConflict).length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+                  {matchBreakdown.filter((f) => !f.isConflict).slice(0, 3).map((f) => (
+                    <span key={f.label} className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2.5 py-1 rounded-full font-medium">
+                      {f.emoji} {f.detail}
+                    </span>
+                  ))}
+                </div>
+              ) : sharedTraits.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5 px-4 pb-3">
                   {sharedTraits.map((trait) => (
                     <span key={trait} className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
@@ -595,7 +649,7 @@ export default function Chats() {
                     </span>
                   ))}
                 </div>
-              )}
+              ) : null}
             </motion.div>
           )}
         </AnimatePresence>
@@ -613,7 +667,10 @@ export default function Chats() {
                   <p className="text-sm leading-relaxed">{msg.content}</p>
                   <div className={`flex items-center justify-end gap-1 mt-0.5 ${isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                     <span className="text-xs">{formatTime(msg.created_at)}</span>
-                    {isMine && (msg.is_read ? <CheckCheck className="w-3.5 h-3.5 text-blue-400" /> : <CheckCheck className="w-3.5 h-3.5" />)}
+                    {isMine && (msg.is_read
+                      ? <CheckCheck className="w-3.5 h-3.5 text-blue-400" />
+                      : <Check className="w-3.5 h-3.5 opacity-50" />
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -641,6 +698,24 @@ export default function Chats() {
         </div>
       )}
 
+      {/* Typing indicator */}
+      {otherIsTyping && (
+        <div className="px-5 py-1.5 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-0.5">
+              {[0, 1, 2].map((i) => (
+                <motion.span
+                  key={i}
+                  animate={{ y: [0, -4, 0] }}
+                  transition={{ repeat: Infinity, duration: 0.7, delay: i * 0.15 }}
+                  className="w-1.5 h-1.5 rounded-full bg-muted-foreground inline-block"
+                />
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground">{activeConvData?.other_name} is typing…</span>
+          </div>
+        </div>
+      )}
       {/* Input bar */}
       <div className="shrink-0 bg-background border-t border-border">
         <div className="px-4 py-3 flex items-center gap-2">
@@ -648,7 +723,16 @@ export default function Chats() {
             ref={inputRef}
             type="text"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => {
+              setNewMessage(e.target.value);
+              if (presenceChannelRef.current && user) {
+                presenceChannelRef.current.track({ typing: true, user_id: user.id });
+                if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                typingTimeoutRef.current = setTimeout(() => {
+                  presenceChannelRef.current?.track({ typing: false, user_id: user.id });
+                }, 2000);
+              }
+            }}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder={t("typeMessage")}
             maxLength={2000}

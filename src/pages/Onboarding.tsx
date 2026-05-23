@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
 import { useLanguage } from "@/hooks/useLanguage";
+import { analytics } from "@/lib/analytics";
 import { sanitizeText, isSafeImageUrl } from "@/lib/security";
 
 const sleepOptions = ["Early bird", "Night owl", "Flexible"];
@@ -30,8 +31,10 @@ interface FormData {
   name: string;
   age: string;
   city: string;
+  neighborhood: string;
   occupation: string;
   budget: string;
+  move_in_date: string;
   desired_room_type: string;
   sleep_schedule: string;
   cleanliness: number;
@@ -61,7 +64,7 @@ interface FormData {
 }
 
 const initial: FormData = {
-  name: "", age: "", city: "", occupation: "", budget: "", desired_room_type: "Private",
+  name: "", age: "", city: "", neighborhood: "", occupation: "", budget: "", move_in_date: "", desired_room_type: "Private",
   sleep_schedule: "Flexible", cleanliness: 3, cooking_habits: "Sometimes", shared_space_org: "Moderate",
   smoking: false, smoking_preference: "Non-smoker, okay with smokers",
   religious_level: "Not religious", alcohol: "Socially",
@@ -135,11 +138,12 @@ export default function Onboarding() {
   const [searchParams] = useSearchParams();
   const isEdit = searchParams.get("edit") === "true";
   const [step, setStep] = useState(0);
+  const [substep, setSubstep] = useState(0);
   const [form, setForm] = useState<FormData>(initial);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
 
-  const STEPS = [t("stepPhotos"), t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences")];
+  const STEPS = [t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences"), t("stepPhotos")];
 
   // Map English option values → translated display text
   const optMap: Record<string, string> = {
@@ -171,13 +175,13 @@ export default function Onboarding() {
       navigate("/auth", { replace: true });
       return;
     }
-    if (!isEdit && !user.email_confirmed_at) {
+    if (!user.email_confirmed_at) {
       toast(t("pleaseVerifyEmailFirst"), {
         description: t("verifyEmailBeforeProfile"),
       });
       navigate("/verify-email", { replace: true });
     }
-  }, [user, authLoading, navigate, isEdit]);
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (profile) {
@@ -185,8 +189,10 @@ export default function Onboarding() {
         name: profile.name || "",
         age: profile.age?.toString() || "",
         city: profile.city || "",
+        neighborhood: (profile as any).neighborhood || "",
         occupation: profile.occupation || "",
         budget: profile.budget?.toString() || "",
+        move_in_date: (profile as any).move_in_date || "",
         desired_room_type: profile.desired_room_type || "Private",
         sleep_schedule: profile.sleep_schedule || "Flexible",
         cleanliness: profile.cleanliness ?? 3,
@@ -224,7 +230,7 @@ export default function Onboarding() {
 
   const validateStep = (): Errors => {
     const e: Errors = {};
-    if (step === 1) {
+    if (step === 0) {
       const name = form.name.trim();
       if (!name) {
         e.name = t("nameRequired");
@@ -260,16 +266,14 @@ export default function Onboarding() {
       }
 
       const budget = Number(form.budget);
-      if (!form.budget.trim()) {
-        e.budget = t("budgetRequired");
-      } else if (isNaN(budget) || budget < 500) {
+      if (form.budget.trim() && (isNaN(budget) || budget < 500)) {
         e.budget = t("budgetMin500");
-      } else if (budget > 100000) {
+      } else if (form.budget.trim() && budget > 100000) {
         e.budget = t("budgetMax100k");
       }
     }
 
-    if (step === 5) {
+    if (step === 4) {
       const minAge = Number(form.preferred_age_min);
       const maxAge = Number(form.preferred_age_max);
       if (!Number.isInteger(minAge) || minAge < 18 || minAge > 100) {
@@ -287,8 +291,7 @@ export default function Onboarding() {
   };
 
   const canProceed = () => {
-    if (step === 0) return form.photos.length >= 1;
-    if (step === 1) return form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget;
+    if (step === 0) return !!(form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget);
     return true;
   };
 
@@ -300,8 +303,10 @@ export default function Onboarding() {
       name: sanitizeText(currentForm.name) || null,
       age: parseInt(currentForm.age) || null,
       city: sanitizeText(currentForm.city) || null,
+      neighborhood: sanitizeText(currentForm.neighborhood) || null,
       occupation: sanitizeText(currentForm.occupation) || null,
       budget: parseInt(currentForm.budget) || 0,
+      move_in_date: currentForm.move_in_date || null,
       desired_room_type: currentForm.desired_room_type,
       sleep_schedule: currentForm.sleep_schedule,
       cleanliness: currentForm.cleanliness,
@@ -373,6 +378,7 @@ export default function Onboarding() {
       name: safeName,
       age: ageNum,
       city: safeCity,
+      neighborhood: sanitizeText(form.neighborhood) || null,
       occupation: safeOccupation,
       budget: budgetNum,
       desired_room_type: form.desired_room_type,
@@ -398,6 +404,7 @@ export default function Onboarding() {
       cleanliness_expectations: form.cleanliness_expectations,
       activity_hours: form.activity_hours,
       bio: safeBio,
+      move_in_date: form.move_in_date || null,
       onboarding_complete: true,
       avatar_url: avatarUrl,
       photos: form.photos,
@@ -411,27 +418,24 @@ export default function Onboarding() {
       toast.error(t("failedToSaveProfile") + error.message);
     } else {
       toast.success(isEdit ? t("preferencesUpdated") : t("profileCreated"));
-      navigate(isEdit ? "/profile" : "/", { replace: true });
+      if (!isEdit) {
+        analytics.onboardingComplete();
+        const { count } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("city", form.city)
+          .eq("onboarding_complete", true)
+          .neq("user_id", user.id);
+        navigate(`/welcome?city=${encodeURIComponent(form.city)}&count=${count ?? 0}`, { replace: true });
+      } else {
+        navigate("/profile", { replace: true });
+      }
     }
   };
 
   const renderStep = () => {
     switch (step) {
       case 0:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-2">
-              <h2 className="text-lg font-bold text-foreground">{t("addYourPhotos")}</h2>
-              <p className="text-muted-foreground text-sm">{t("showRoommates")}</p>
-            </div>
-            <PhotoUpload
-              photos={form.photos}
-              onChange={(photos) => update("photos", photos)}
-              maxPhotos={6}
-            />
-          </div>
-        );
-      case 1:
         return (
           <div className="space-y-4">
             <div>
@@ -472,6 +476,16 @@ export default function Onboarding() {
               </div>
             </div>
             <div>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">Neighborhood <span className="text-muted-foreground font-normal">(optional)</span></label>
+              <input
+                value={form.neighborhood}
+                onChange={(e) => update("neighborhood", e.target.value)}
+                placeholder="e.g. Florentin, Neve Tzedek"
+                maxLength={80}
+                className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("workStudies")}</label>
               <input
                 value={form.occupation}
@@ -483,7 +497,16 @@ export default function Onboarding() {
               <ErrorMsg msg={errors.occupation} />
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("monthlyBudget")}</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-semibold text-foreground">{t("monthlyBudget")}</label>
+                <button
+                  type="button"
+                  onClick={() => { update("budget", ""); setErrors((e) => ({ ...e, budget: undefined })); }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Skip for now →
+                </button>
+              </div>
               <input
                 type="number"
                 value={form.budget}
@@ -494,6 +517,18 @@ export default function Onboarding() {
                 className={`w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.budget ? "ring-2 ring-destructive" : ""}`}
               />
               <ErrorMsg msg={errors.budget} />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">
+                When are you looking to move in?
+              </label>
+              <input
+                type="month"
+                value={form.move_in_date}
+                onChange={(e) => update("move_in_date", e.target.value)}
+                className="w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Optional — helps match timing</p>
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("desiredRoomType")}</label>
@@ -510,7 +545,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 2:
+      case 1:
         return (
           <div className="space-y-5">
             <div>
@@ -540,9 +575,10 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 3:
-        return (
+      case 2:
+        return substep === 0 ? (
           <div className="space-y-5">
+            <p className="text-xs text-muted-foreground -mt-1">Deal-breakers</p>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">🚬 {t("smoking")}</label>
               <div className="flex flex-wrap gap-2">
@@ -562,6 +598,10 @@ export default function Onboarding() {
             <div className="flex flex-wrap gap-2">
               <Toggle label={`🏠 ${t("workFromHome")}`} value={form.wfh} onChange={(v) => update("wfh", v)} />
             </div>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <p className="text-xs text-muted-foreground -mt-1">Lifestyle details</p>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("religiousLevel")}</label>
               <div className="flex flex-wrap gap-2">
@@ -596,7 +636,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 4:
+      case 3:
         return (
           <div className="space-y-5">
             <SliderField label={t("socialVsPrivate")} value={form.social_level} onChange={(v) => update("social_level", v)} labels={[t("sliderVeryPrivate"), "", t("sliderBalanced"), "", t("sliderVerySocial")]} />
@@ -619,7 +659,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 5:
+      case 4:
         return (
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-3">
@@ -673,6 +713,25 @@ export default function Onboarding() {
             </div>
           </div>
         );
+      case 5:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-2">
+              <h2 className="text-lg font-bold text-foreground">{t("addYourPhotos")}</h2>
+              <p className="text-muted-foreground text-sm">{t("showRoommates")}</p>
+            </div>
+            <PhotoUpload
+              photos={form.photos}
+              onChange={(photos) => update("photos", photos)}
+              maxPhotos={6}
+            />
+            {form.photos.length === 0 && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 text-center mt-2">
+                Profiles with photos get 4× more matches. You can always add them later from your profile.
+              </p>
+            )}
+          </div>
+        );
       default:
         return null;
     }
@@ -692,6 +751,27 @@ export default function Onboarding() {
               {t("step")} {step + 1} / {STEPS.length} — {STEPS[step]}
               {step === 0 && <span className="ltr:ml-2 rtl:mr-2 text-primary font-medium">· {t("threeMin")}</span>}
             </p>
+            {step < STEPS.length - 1 && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Next: {STEPS[step + 1]}
+              </p>
+            )}
+            {(() => {
+              const fields = [
+                form.name, form.age, form.city, form.occupation, form.budget,
+                form.sleep_schedule, form.cooking_habits, form.smoking_preference,
+                form.pet_preference, form.religious_level, form.lifestyle_vibe,
+                String(form.social_level), String(form.noise_level), form.partying,
+                form.bio, form.photos.length > 0 ? "yes" : "",
+              ];
+              const pct = Math.round((fields.filter(Boolean).length / fields.length) * 100);
+              if (pct <= 10) return null;
+              return (
+                <p className="text-xs text-primary font-bold mt-0.5">
+                  {pct}% match quality unlocked
+                </p>
+              );
+            })()}
           </div>
           {isEdit && (
             <button
@@ -714,7 +794,7 @@ export default function Onboarding() {
         <div className="max-w-lg mx-auto px-4 py-3">
           <AnimatePresence mode="wait">
             <motion.div
-              key={step}
+              key={`${step}-${substep}`}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
@@ -729,8 +809,14 @@ export default function Onboarding() {
       {/* Fixed footer: back / next buttons */}
       <div className="shrink-0 bg-background/95 backdrop-blur-sm border-t border-border pb-16 desk:pb-0">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
-          {step > 0 && (
-            <button onClick={() => { setStep(step - 1); setErrors({}); }} className="flex items-center gap-1 px-5 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm">
+          {(step > 0 || (step === 2 && substep > 0)) && (
+            <button
+              onClick={() => {
+                if (step === 2 && substep === 1) { setSubstep(0); setErrors({}); }
+                else { setStep(step - 1); setSubstep(0); setErrors({}); }
+              }}
+              className="flex items-center gap-1 px-5 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm"
+            >
               <ArrowLeft className="w-4 h-4" /> {t("back")}
             </button>
           )}
@@ -742,9 +828,12 @@ export default function Onboarding() {
                 return;
               }
               setErrors({});
-              if (step < STEPS.length - 1) {
+              if (step === 2 && substep === 0) {
+                setSubstep(1);
+              } else if (step < STEPS.length - 1) {
                 saveProgress(form);
                 setStep(step + 1);
+                setSubstep(0);
               } else {
                 handleSubmit();
               }

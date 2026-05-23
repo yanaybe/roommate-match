@@ -2,6 +2,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, SlidersHorizontal } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface Filters {
   budgetMin: number;
@@ -141,7 +143,9 @@ type Tab = typeof TABS[number];
 export default function FilterModal({ open, onClose, filters, onApply }: FilterModalProps) {
   const [local, setLocal] = useState<Filters>(filters);
   const [activeTab, setActiveTab] = useState<Tab>("Basics");
+  const [saveSearch, setSaveSearch] = useState(false);
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const update = <K extends keyof Filters>(key: K, val: Filters[K]) =>
     setLocal((p) => ({ ...p, [key]: val }));
@@ -154,7 +158,31 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
         : [...p.amenities, a],
     }));
 
-  const handleApply = () => { onApply(local); onClose(); };
+  const handleApply = async () => {
+    onApply(local);
+    if (saveSearch) {
+      const label = [local.budgetMax < 10000 ? `under ₪${local.budgetMax.toLocaleString()}` : ""].filter(Boolean).join(" · ") || "My search";
+      // Persist to localStorage (always)
+      const saved = JSON.parse(localStorage.getItem("saved_searches") ?? "[]");
+      saved.push({ label, filters: local, savedAt: new Date().toISOString() });
+      localStorage.setItem("saved_searches", JSON.stringify(saved));
+      // Also persist to Supabase (requires saved_searches table migration)
+      if (user) {
+        try {
+          await supabase.from("saved_searches" as any).insert({
+            user_id: user.id,
+            label,
+            filters: local as any,
+            notify_email: true,
+          });
+        } catch {
+          // Graceful fallback: saved_searches table may not exist yet
+        }
+      }
+      setSaveSearch(false);
+    }
+    onClose();
+  };
   const handleReset = () => setLocal(defaultFilters);
 
   const activeCount = (() => {
@@ -535,6 +563,21 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                 )}
 
               </div>
+            </div>
+
+            {/* ── Save search toggle ── */}
+            <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-border bg-card">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Save this search</p>
+                <p className="text-xs text-muted-foreground">Get notified when new listings match</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSaveSearch((s) => !s)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${saveSearch ? "bg-primary" : "bg-secondary"}`}
+              >
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${saveSearch ? "translate-x-6" : "translate-x-1"}`} />
+              </button>
             </div>
 
             {/* ── Footer ── */}

@@ -1,15 +1,24 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+// notify is a server-to-server function; no browser client should ever call it.
+// CORS headers are included only so Supabase CLI tooling (which uses XHR) can reach it.
+// TODO [POST-LAUNCH]: Set ALLOWED_ORIGIN Supabase secret to production domain:
+//   supabase secrets set ALLOWED_ORIGIN=https://roomatch.co
+// TODO [POST-LAUNCH]: Add alerting for repeated calls from a single IP within 5 minutes —
+// indicates the service key has leaked. Monitor via Supabase Log Explorer:
+//   Project → Logs → Edge Functions → filter by function_id = "notify"
+const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
+const corsHeaders = allowedOrigin
+  ? {
+      "Access-Control-Allow-Origin": allowedOrigin,
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    }
+  : {};
 
 const BodySchema = z.object({
   user_id: z.string().uuid(),
-  type: z.enum(["match", "squad_invite", "squad_deleted"]),
+  type: z.enum(["match", "squad_invite", "squad_deleted", "message"]),
   title: z.string().min(1).max(500),
   body: z.string().max(1000).nullable().optional(),
   actor_id: z.string().uuid().nullable().optional(),
@@ -28,25 +37,18 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Auth check: require service role key or valid JWT
   const authHeader = req.headers.get("authorization") ?? "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const isServiceRole = authHeader === `Bearer ${serviceKey}`;
+  const enc = new TextEncoder();
+  const a = enc.encode(authHeader);
+  const b = enc.encode(`Bearer ${serviceKey}`);
+  const isServiceRole = a.length === b.length && crypto.subtle.timingSafeEqual(a, b);
 
   if (!isServiceRole) {
-    // Verify JWT via Supabase
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "";
-    const client = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-    const { data: { user }, error } = await client.auth.getUser();
-    if (error || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
   }
 
   let parsed;

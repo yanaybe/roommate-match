@@ -6,14 +6,16 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import type { MatchFactor } from "@/lib/matching";
 
 interface MatchModalProps {
   user: UserProfile | null;
   matchPercent: number;
   onClose: () => void;
+  matchBreakdown?: MatchFactor[];
 }
 
-export default function MatchModal({ user, matchPercent, onClose }: MatchModalProps) {
+export default function MatchModal({ user, matchPercent, onClose, matchBreakdown }: MatchModalProps) {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const navigate = useNavigate();
@@ -115,9 +117,28 @@ export default function MatchModal({ user, matchPercent, onClose }: MatchModalPr
           </motion.div>
 
           <h2 className="text-2xl font-extrabold text-foreground mb-1">It's a Match! 🎉</h2>
-          <p className="text-muted-foreground text-sm mb-5">
+          <p className="text-muted-foreground text-sm mb-2">
             You and {user.name} liked each other — {matchPercent}% compatible!
           </p>
+
+          {matchBreakdown && matchBreakdown.filter((f) => !f.isConflict).length > 0 && (
+            <div className="bg-primary/5 rounded-2xl p-3 mb-4 text-left">
+              <p className="text-xs font-bold text-primary mb-2">Why you matched ✨</p>
+              <div className="flex flex-wrap gap-1.5">
+                {matchBreakdown
+                  .filter((f) => !f.isConflict)
+                  .slice(0, 3)
+                  .map((f) => (
+                    <span
+                      key={f.label}
+                      className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full font-medium"
+                    >
+                      {f.emoji} {f.detail}
+                    </span>
+                  ))}
+              </div>
+            </div>
+          )}
 
           <img
             src={user.avatar}

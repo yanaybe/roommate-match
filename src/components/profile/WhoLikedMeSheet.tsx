@@ -94,20 +94,12 @@ export default function WhoLikedMeSheet({ open, onOpenChange, user, t }: Props) 
           <ScrollArea className="h-[calc(85vh-80px)] px-5 py-4">
             {loading ? (
               <p className="text-muted-foreground text-sm text-center py-10">{t("loading")}</p>
-            ) : profiles.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Heart className="w-7 h-7 text-muted-foreground/40" />
-                </div>
-                <p className="text-muted-foreground text-sm font-medium">{t("noLikesReceived")}</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">{t("noLikesReceivedDesc")}</p>
-              </div>
             ) : !isGold ? (
-              /* Paywall: show blurred cards + upgrade CTA */
+              /* Paywall: always shown for free users — dummy cards if no real likes yet */
               <div className="relative">
                 <div className="space-y-3 pointer-events-none select-none">
-                  {profiles.slice(0, 5).map((p, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card blur-sm">
+                  {(profiles.length > 0 ? profiles.slice(0, 5) : [{}, {}, {}]).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-sm blur-sm">
                       <div className="w-14 h-14 rounded-full bg-primary/20 shrink-0" />
                       <div className="flex-1 min-w-0 space-y-1.5">
                         <div className="h-4 w-28 bg-secondary rounded" />
@@ -122,10 +114,12 @@ export default function WhoLikedMeSheet({ open, onOpenChange, user, t }: Props) 
                       <Lock className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <h3 className="text-base font-extrabold text-foreground mb-1">
-                      {profiles.length} {profiles.length === 1 ? "person" : "people"} liked you
+                      {profiles.length > 0
+                        ? `${profiles.length} ${profiles.length === 1 ? "person" : "people"} liked you`
+                        : "See who likes you"}
                     </h3>
                     <p className="text-muted-foreground text-xs mb-4">
-                      Upgrade to Gold to see who they are and message them first.
+                      Upgrade to Gold to see who liked you and message them first.
                     </p>
                     <button
                       onClick={() => { onOpenChange(false); setPremiumOpen(true); }}
@@ -135,6 +129,14 @@ export default function WhoLikedMeSheet({ open, onOpenChange, user, t }: Props) 
                     </button>
                   </div>
                 </div>
+              </div>
+            ) : profiles.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Heart className="w-7 h-7 text-muted-foreground/40" />
+                </div>
+                <p className="text-muted-foreground text-sm font-medium">{t("noLikesReceived")}</p>
+                <p className="text-muted-foreground/60 text-xs mt-1">{t("noLikesReceivedDesc")}</p>
               </div>
             ) : (
               /* Gold user: show real profiles */

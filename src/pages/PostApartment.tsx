@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
+import { analytics } from "@/lib/analytics";
+import { validateImageMagicBytes, sanitizeText } from "@/lib/security";
 
 const DRAFT_KEY = "post_apartment_draft";
 
@@ -112,7 +114,10 @@ export default function PostApartment() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, step }));
+      const sanitizedForm = Object.fromEntries(
+        Object.entries(form).map(([k, v]) => [k, typeof v === "string" ? sanitizeText(v) : v])
+      );
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form: sanitizedForm, step }));
     } catch {}
   }, [form, step]);
 
@@ -243,9 +248,13 @@ export default function PostApartment() {
       if (!coords) toast("Could not pinpoint address — listing will use city center coordinates");
 
       setSubmitPhase("uploading");
-      // Upload any new images
       const newImageUrls: string[] = [];
       for (const file of images) {
+        if (!(await validateImageMagicBytes(file))) {
+          toast.error("One or more files are not valid images. Please upload JPEG, PNG, WebP, or GIF.");
+          setSubmitting(false);
+          return;
+        }
         const ext = MIME_TO_EXT[file.type] ?? "jpg";
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error } = await supabase.storage.from("apartment-images").upload(path, file);
@@ -302,6 +311,7 @@ export default function PostApartment() {
         } as any);
         if (error) throw error;
         localStorage.removeItem(DRAFT_KEY);
+        analytics.apartmentPost();
         toast.success("Apartment posted successfully! 🎉");
         navigate("/");
       }

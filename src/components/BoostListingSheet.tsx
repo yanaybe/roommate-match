@@ -6,8 +6,9 @@ import { useState, useEffect, useCallback } from "react";
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Zap, Loader2 } from "lucide-react";
+import { Zap, Loader2, Gift } from "lucide-react";
 
 const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN as string;
 const PADDLE_ENV = (import.meta.env.VITE_PADDLE_ENV ?? "sandbox") as "sandbox" | "production";
@@ -50,17 +51,103 @@ interface Props {
   apartmentTitle: string;
 }
 
+function isWithinLastWeek(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  return new Date(dateStr).getTime() > oneWeekAgo;
+}
+
 export default function BoostListingSheet({ open, onOpenChange, apartmentId, apartmentTitle }: Props) {
   const { user } = useAuth();
   const [paddle, setPaddle] = useState<Paddle | null>(null);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState("week");
+  const [subscriptionTier, setSubscriptionTier] = useState("free");
+  const [boostDates, setBoostDates] = useState<{
+    gold_boost_used_at: string | null;
+    platinum_boost_used_at_1: string | null;
+    platinum_boost_used_at_2: string | null;
+    platinum_boost_used_at_3: string | null;
+  }>({
+    gold_boost_used_at: null,
+    platinum_boost_used_at_1: null,
+    platinum_boost_used_at_2: null,
+    platinum_boost_used_at_3: null,
+  });
 
   useEffect(() => {
     if (!PADDLE_CLIENT_TOKEN) return;
     initializePaddle({ environment: PADDLE_ENV, token: PADDLE_CLIENT_TOKEN })
       .then((p) => { if (p) setPaddle(p); });
   }, []);
+
+  useEffect(() => {
+    if (!user || !open) return;
+    supabase
+      .from("profiles")
+      .select("subscription_tier, gold_boost_used_at, platinum_boost_used_at_1, platinum_boost_used_at_2, platinum_boost_used_at_3")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setSubscriptionTier((data as any).subscription_tier ?? "free");
+          setBoostDates({
+            gold_boost_used_at: (data as any).gold_boost_used_at ?? null,
+            platinum_boost_used_at_1: (data as any).platinum_boost_used_at_1 ?? null,
+            platinum_boost_used_at_2: (data as any).platinum_boost_used_at_2 ?? null,
+            platinum_boost_used_at_3: (data as any).platinum_boost_used_at_3 ?? null,
+          });
+        }
+      });
+  }, [user, open]);
+
+  // Calculate free boosts available
+  const freeBoostsInfo = (() => {
+    if (subscriptionTier === "gold") {
+      const used = isWithinLastWeek(boostDates.gold_boost_used_at);
+      return { available: used ? 0 : 1, total: 1, tier: "gold" };
+    }
+    if (subscriptionTier === "platinum") {
+      const slots = [
+        boostDates.platinum_boost_used_at_1,
+        boostDates.platinum_boost_used_at_2,
+        boostDates.platinum_boost_used_at_3,
+      ];
+      const usedCount = slots.filter((d) => isWithinLastWeek(d)).length;
+      return { available: 3 - usedCount, total: 3, tier: "platinum" };
+    }
+    return { available: 0, total: 0, tier: "free" };
+  })();
+
+  const handleFreeBoost = useCallback(async () => {
+    if (!user || freeBoostsInfo.available === 0) return;
+    setLoading(true);
+    try {
+      const { data: result, error } = await supabase.rpc("use_free_boost", {
+        p_apartment_id: apartmentId,
+      });
+      if (error) throw error;
+      const res = result as { ok?: boolean; error?: string } | null;
+      if (res?.error === "no_boosts_available") {
+        toast.error("No free boost slots available this week.");
+        return;
+      }
+      if (res?.error === "not_owner") {
+        toast.error("You can only boost your own listings.");
+        return;
+      }
+      if (res?.error) {
+        toast.error("Could not apply boost. Please try again.");
+        return;
+      }
+      toast.success("Free boost applied! Your listing is now featured for 7 days.");
+      onOpenChange(false);
+    } catch {
+      toast.error("Could not apply boost. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [user, freeBoostsInfo.available, apartmentId, onOpenChange]);
 
   const handleBoost = useCallback(async () => {
     const tier = BOOST_TIERS.find((t) => t.key === selected);
@@ -109,6 +196,40 @@ export default function BoostListingSheet({ open, onOpenChange, apartmentId, apa
           <p className="text-sm text-muted-foreground">
             Featured listings appear at the top of search results with a <strong>🔥 Hot</strong> badge — get up to 5× more views.
           </p>
+
+          {/* Free boost banner for Gold/Platinum */}
+          {freeBoostsInfo.available > 0 && (
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-violet-500/30 bg-violet-500/10">
+              <Gift className="w-5 h-5 text-violet-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-violet-600 dark:text-violet-400">
+                  {freeBoostsInfo.available === 1
+                    ? "1 Free Boost Available"
+                    : `${freeBoostsInfo.available} Free Boosts Available`}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {subscriptionTier === "gold" ? "Gold benefit — resets weekly" : "Platinum benefit — up to 3/week"}
+                </p>
+              </div>
+              <button
+                onClick={handleFreeBoost}
+                disabled={loading}
+                className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold text-white disabled:opacity-60"
+                style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
+              >
+                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Use Free"}
+              </button>
+            </div>
+          )}
+
+          {freeBoostsInfo.total > 0 && freeBoostsInfo.available === 0 && (
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-secondary/50">
+              <Gift className="w-5 h-5 text-muted-foreground shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                Free boost{freeBoostsInfo.total > 1 ? "s" : ""} used this week — resets in 7 days
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2.5 mt-2">
             {BOOST_TIERS.map((tier) => (

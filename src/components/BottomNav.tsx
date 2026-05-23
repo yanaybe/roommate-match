@@ -1,4 +1,4 @@
-import { Home, Users, Plus, MessageCircle, User, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Users, MessageCircle, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
@@ -21,7 +21,7 @@ export default function BottomNav() {
   const tabs = [
     { path: "/", icon: Home, label: t("navRooms") },
     { path: "/roommates", icon: Users, label: t("navRoommates") },
-    { path: "/create", icon: Plus, label: t("navCreate") },
+    { path: "/my-squads", icon: Users, label: "Squads" },
     { path: "/chats", icon: MessageCircle, label: t("navChats") },
     { path: "/profile", icon: User, label: t("navProfile") },
   ];

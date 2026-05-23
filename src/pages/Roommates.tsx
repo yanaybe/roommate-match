@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { X, Heart, RotateCcw, ArrowRight } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { X, Heart, RotateCcw, ArrowRight, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
 import MatchModal from "@/components/MatchModal";
@@ -12,13 +12,48 @@ import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile
 import { fetchBlockedIds } from "@/hooks/useBlockReport";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useDailyLimits } from "@/hooks/useDailyLimits";
-import { calculateUserMatch, MATCH_SUPPRESSION_THRESHOLD } from "@/lib/matching";
+import { calculateUserMatch, calculateUserMatchBreakdown, type MatchFactor } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { isUUID } from "@/lib/profileUtils";
+import { analytics } from "@/lib/analytics";
 
-function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
-  const photos = p.photos;
+function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    timerRef.current = setTimeout(onDismiss, 2500);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [onDismiss]);
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onDismiss}
+      className="absolute inset-0 z-20 flex items-center justify-between px-6 rounded-3xl bg-black/40 backdrop-blur-[2px] cursor-pointer"
+    >
+      <div className="flex flex-col items-center gap-1 text-white">
+        <ChevronLeft className="w-8 h-8 opacity-90" />
+        <span className="text-sm font-bold">Pass</span>
+      </div>
+      <motion.div
+        animate={{ x: [-12, 12, -12] }}
+        transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+        className="text-3xl select-none"
+      >
+        👆
+      </motion.div>
+      <div className="flex flex-col items-center gap-1 text-white">
+        <ChevronRight className="w-8 h-8 opacity-90" />
+        <span className="text-sm font-bold">Like</span>
+      </div>
+    </motion.div>
+  );
+}
+
+// Convert DB profile to mock format for SwipeCard compatibility
+function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subscriptionTier?: string } {
+  const photos = (p as any).photos as string[] | undefined;
   return {
     id: p.user_id,
     name: p.name,
@@ -40,7 +75,9 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
     wfh: p.wfh,
     bio: p.bio,
     photos: photos?.length ? photos : undefined,
-    phoneVerified: p.phone_verified ?? false,
+    phoneVerified: (p as any).phone_verified ?? false,
+    subscriptionTier: (p as any).subscription_tier ?? "free",
+    lastSeen: (p as any).last_seen ?? null,
   };
 }
 
@@ -55,7 +92,18 @@ export default function Roommates() {
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
-  const { canLike, likesLimit, recordLike, openPremiumSheet } = useDailyLimits();
+  const [matchedBreakdown, setMatchedBreakdown] = useState<import("@/lib/matching").MatchFactor[]>([]);
+  const [hasViewedSquads, setHasViewedSquads] = useState(
+    () => localStorage.getItem("squads_tab_viewed") === "true"
+  );
+  const [showAllCities, setShowAllCities] = useState(
+    () => localStorage.getItem("show_all_cities") === "true"
+  );
+  const [showTutorial, setShowTutorial] = useState(
+    () => !localStorage.getItem("swipe_tutorial_seen")
+  );
+  const { canLike, likesUsed, likesLimit, recordLike, openPremiumSheet, subscriptionTier } = useDailyLimits();
+  const canUndo = subscriptionTier !== "free";
 
   useEffect(() => {
     if (!user?.id) return;
@@ -74,6 +122,7 @@ export default function Roommates() {
       });
   }, [user?.id]);
 
+  // Other profiles (not current user), with match percentages + breakdown
   const otherProfiles = useMemo(() => {
     if (!myProfile) return [];
     return allProfiles
@@ -82,15 +131,19 @@ export default function Roommates() {
         profile: p,
         user: profileToUser(p),
         matchPercent: calculateUserMatch(myProfile, p),
-      }))
-      // Suppress catastrophically incompatible profiles from the deck entirely
-      .filter((p) => p.matchPercent >= MATCH_SUPPRESSION_THRESHOLD);
+        matchBreakdown: calculateUserMatchBreakdown(myProfile, p),
+      }));
   }, [allProfiles, myProfile, user?.id]);
 
-  const items = useMemo(
-    () => otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent })),
-    [otherProfiles],
-  );
+  const items = useMemo(() => {
+    const cityFiltered = showAllCities
+      ? otherProfiles
+      : otherProfiles.filter((p) =>
+          !myProfile?.city || !p.profile.city ||
+          p.profile.city.toLowerCase() === myProfile.city.toLowerCase()
+        );
+    return cityFiltered.map((p) => ({ user: p.user, matchPercent: p.matchPercent, matchBreakdown: p.matchBreakdown }));
+  }, [otherProfiles, myProfile, showAllCities]);
 
   const swipedSet = useMemo(() => new Set(swiped), [swiped]);
   const blockedSet = useMemo(() => new Set(blockedIds), [blockedIds]);
@@ -143,27 +196,35 @@ export default function Roommates() {
             .maybeSingle();
 
           if (mutualLike) {
+            analytics.match(current.matchPercent);
             setMatchedUser(current.user);
             setMatchedPercent(current.matchPercent);
+            setMatchedBreakdown(current.matchBreakdown ?? []);
           }
         }
 
+        analytics.swipeLike(current.matchPercent);
         recordLike();
+
+        const likesAfter = likesUsed + 1;
+        const remaining_likes = likesLimit - likesAfter;
+        if (subscriptionTier === "free" && remaining_likes > 0 && remaining_likes <= 5) {
+          toast(`${remaining_likes} like${remaining_likes === 1 ? "" : "s"} left today ✨`, {
+            description: "Upgrade to keep swiping — your next match could be out there.",
+            action: { label: "Upgrade", onClick: openPremiumSheet },
+          });
+        }
+      } else {
+        analytics.swipeDislike();
       }
     },
-    [remaining, requireAuth, user, canLike, likesLimit, recordLike, openPremiumSheet],
+    [remaining, requireAuth, user, likesUsed, likesLimit, subscriptionTier],
   );
 
-  const handleUndo = useCallback(async () => {
-    if (swiped.length === 0 || !user) return;
-    const lastId = swiped[swiped.length - 1];
-    // Remove from DB so the profile reappears on next load
-    if (isUUID(lastId)) {
-      await supabase
-        .from("liked_profiles")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("liked_user_id", lastId);
+  const handleUndo = () => {
+    if (!canUndo) {
+      openPremiumSheet();
+      return;
     }
     setSwiped((prev) => prev.slice(0, -1));
   }, [swiped, user]);
@@ -180,19 +241,42 @@ export default function Roommates() {
     <div className="min-h-screen bg-background pb-28 desk:pb-8 flex flex-col">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-12 desk:pt-6 pb-3">
-          <h1 className="text-2xl font-extrabold text-foreground tracking-tight mb-3">{t("findRoommates")}</h1>
-          <div className="flex bg-secondary rounded-xl p-1">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">{t("findRoommates")}</h1>
+            {myProfile?.city && activeTab === "people" && (
+              <button
+                onClick={() => {
+                  const next = !showAllCities;
+                  setShowAllCities(next);
+                  localStorage.setItem("show_all_cities", String(next));
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 bg-secondary rounded-lg"
+              >
+                {showAllCities ? `📍 ${myProfile.city} only` : "🌍 All cities"}
+              </button>
+            )}
+          </div>
+        <div className="flex bg-secondary rounded-xl p-1">
             {(["people", "squads"] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab === "squads" && !hasViewedSquads) {
+                    setHasViewedSquads(true);
+                    localStorage.setItem("squads_tab_viewed", "true");
+                  }
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
                   activeTab === tab
                     ? "gradient-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {tab === "people" ? "People" : "Squads"}
+                {tab === "squads" && !hasViewedSquads && (
+                  <span className="ml-1.5 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-full">NEW</span>
+                )}
               </button>
             ))}
           </div>
@@ -244,10 +328,20 @@ export default function Roommates() {
                           key={item.user.id}
                           user={item.user}
                           matchPercent={item.matchPercent}
+                          matchBreakdown={item.matchBreakdown}
                           onSwipe={handleSwipe}
                           isTop={i === visibleCards.length - 1}
                         />
                       ))}
+                  </AnimatePresence>
+                  {/* One-time swipe tutorial overlay */}
+                  <AnimatePresence>
+                    {showTutorial && (
+                      <SwipeTutorial onDismiss={() => {
+                        setShowTutorial(false);
+                        localStorage.setItem("swipe_tutorial_seen", "true");
+                      }} />
+                    )}
                   </AnimatePresence>
                 </div>
               ) : (
@@ -269,7 +363,7 @@ export default function Roommates() {
                       disabled={swiped.length === 0}
                       className="w-full flex items-center justify-center gap-2 py-3 bg-secondary rounded-xl text-sm font-semibold text-foreground hover:bg-secondary/80 disabled:opacity-40 active:scale-[0.98] transition-all"
                     >
-                      <RotateCcw className="w-4 h-4" /> {t("undoLastSwipe") ?? "Undo last swipe"}
+                      {canUndo ? <RotateCcw className="w-4 h-4" /> : <Lock className="w-4 h-4" />} Undo last swipe
                     </button>
                   </div>
                 </div>
@@ -281,8 +375,13 @@ export default function Roommates() {
                     onClick={handleUndo}
                     disabled={swiped.length === 0}
                     className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center shadow-card disabled:opacity-30 hover:bg-secondary/80 hover:scale-105 active:scale-95 transition-all duration-150"
+                    title={canUndo ? "Undo last swipe" : "Upgrade to Plus+ to undo swipes"}
                   >
-                    <RotateCcw className="w-5 h-5 text-muted-foreground" />
+                    {canUndo ? (
+                      <RotateCcw className="w-5 h-5 text-muted-foreground" />
+                    ) : (
+                      <Lock className="w-5 h-5 text-muted-foreground" />
+                    )}
                   </button>
                   <button
                     onClick={() => handleSwipe("left")}
@@ -304,7 +403,7 @@ export default function Roommates() {
       </div>
 
       {matchedUser && (
-        <MatchModal user={matchedUser} matchPercent={matchedPercent} onClose={() => setMatchedUser(null)} />
+        <MatchModal user={matchedUser} matchPercent={matchedPercent} matchBreakdown={matchedBreakdown} onClose={() => setMatchedUser(null)} />
       )}
     </div>
   );

@@ -10,7 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM_EMAIL = Deno.env.get("FROM_EMAIL") ?? "RoomMatch <noreply@roomatch.app>";
-const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET") ?? "";
+const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -24,6 +24,15 @@ interface WebhookPayload {
   table: string;
   record: Record<string, any>;
   old_record: Record<string, any> | null;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -60,12 +69,14 @@ async function getProfileEmail(
 }
 
 function matchEmailHtml(recipientName: string, matchName: string): string {
+  const safeRecipient = escapeHtml(recipientName);
+  const safeMatch = escapeHtml(matchName);
   return `
   <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;text-align:center;">
     <div style="font-size:48px;margin-bottom:16px;">🎉</div>
     <h2 style="color:#7c3aed;">It's a Match!</h2>
-    <p>Hi ${recipientName},</p>
-    <p>You and <strong>${matchName}</strong> liked each other on RoomMatch!</p>
+    <p>Hi ${safeRecipient},</p>
+    <p>You and <strong>${safeMatch}</strong> liked each other on RoomMatch!</p>
     <p style="color:#6b7280;">Start a conversation and find out if you'd make great roommates.</p>
     <a href="https://roomatch.app/chats"
        style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#ec4899);color:white;padding:14px 32px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:16px;margin-top:16px;">
@@ -76,11 +87,13 @@ function matchEmailHtml(recipientName: string, matchName: string): string {
 }
 
 function messageEmailHtml(recipientName: string, senderName: string, preview: string): string {
+  const safeRecipient = escapeHtml(recipientName);
+  const safeSender = escapeHtml(senderName);
   return `
   <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
     <h2 style="color:#7c3aed;">New Message on RoomMatch 💬</h2>
-    <p>Hi ${recipientName},</p>
-    <p><strong>${senderName}</strong> sent you a message:</p>
+    <p>Hi ${safeRecipient},</p>
+    <p><strong>${safeSender}</strong> sent you a message:</p>
     <blockquote style="background:#f3f4f6;border-left:4px solid #7c3aed;margin:16px 0;padding:12px 16px;border-radius:4px;">
       <p style="margin:0;color:#374151;">${preview}</p>
     </blockquote>
@@ -96,9 +109,12 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
-  // Verify webhook secret
   const authHeader = req.headers.get("Authorization") ?? "";
-  if (WEBHOOK_SECRET && authHeader !== `Bearer ${WEBHOOK_SECRET}`) {
+  if (!WEBHOOK_SECRET) {
+    console.error("WEBHOOK_SECRET is not configured");
+    return new Response("Server misconfiguration", { status: 500 });
+  }
+  if (authHeader !== `Bearer ${WEBHOOK_SECRET}`) {
     console.error("Invalid webhook secret");
     return new Response("Unauthorized", { status: 401 });
   }
@@ -131,7 +147,7 @@ Deno.serve(async (req) => {
       for (const { user_id } of participants) {
         const recipient = await getProfileEmail(supabase, user_id);
         if (!recipient) continue;
-        const preview = msg.content.substring(0, 200) + (msg.content.length > 200 ? "…" : "");
+        const preview = escapeHtml(msg.content.substring(0, 200)) + (msg.content.length > 200 ? "…" : "");
         await sendEmail(
           recipient.email,
           `${senderName} sent you a message on RoomMatch`,

@@ -12,10 +12,9 @@ export function sanitizeText(value: string): string {
 // Avatar URLs must come from our own Supabase storage bucket.
 // This prevents javascript:, data:, and any third-party domain from
 // being stored as a profile image URL.
-const _supabaseHost = (() => {
-  try { return new URL(import.meta.env.VITE_SUPABASE_URL as string).hostname; } catch { return ""; }
-})();
-const ALLOWED_IMAGE_HOSTS = [_supabaseHost].filter(Boolean);
+const ALLOWED_IMAGE_HOSTS = [
+  "ggrvcvjtkoupvorcdile.supabase.co", // our Supabase storage
+];
 
 export function isSafeImageUrl(url: string): boolean {
   if (!url) return true; // empty = no avatar, fine

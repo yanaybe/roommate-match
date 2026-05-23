@@ -1,18 +1,20 @@
 import { useState } from "react";
-import { Briefcase, Moon, Sun, Sparkles, MapPin, ChevronLeft, ChevronRight, Phone } from "lucide-react";
+import { Briefcase, MapPin, ChevronLeft, ChevronRight, Phone } from "lucide-react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
 import type { UserProfile } from "@/data/mockData";
+import type { MatchFactor } from "@/lib/matching";
 
 interface SwipeCardProps {
-  user: UserProfile & { photos?: string[] };
+  user: UserProfile & { photos?: string[]; subscriptionTier?: string };
   matchPercent: number;
+  matchBreakdown?: MatchFactor[];
   onSwipe: (direction: "left" | "right") => void;
   isTop: boolean;
 }
 
-export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeCardProps) {
+export default function SwipeCard({ user, matchPercent, matchBreakdown, onSwipe, isTop }: SwipeCardProps) {
   const navigate = useNavigate();
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -109,10 +111,27 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
           </>
         )}
 
+        {/* Active today badge */}
+        {user.lastSeen && (Date.now() - new Date(user.lastSeen).getTime() < 86_400_000) && (
+          <div className="absolute top-14 right-4 z-10 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-white text-xs font-medium">Active today</span>
+          </div>
+        )}
         {/* Match badge */}
         <div className="absolute top-4 left-4 z-10">
           <MatchBadge percent={matchPercent} />
         </div>
+
+        {/* Platinum "Top Match" badge */}
+        {user.subscriptionTier === "platinum" && (
+          <div className="absolute top-4 right-4 z-10">
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-white"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}>
+              ⭐ Top Match
+            </span>
+          </div>
+        )}
 
         {/* User info — tappable */}
         <div
@@ -137,31 +156,45 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
           </div>
           <div className="flex items-center gap-1.5 text-primary-foreground/80 text-sm mt-1">
             <MapPin className="w-3.5 h-3.5" />
-            {user.city}
+            {(user as any).neighborhood
+              ? `${(user as any).neighborhood}, ${user.city}`
+              : user.city}
             <span className="mx-1">•</span>
             <Briefcase className="w-3.5 h-3.5" />
             {user.occupation}
           </div>
           <p className="text-primary-foreground/70 text-sm mt-2 line-clamp-2">{user.bio}</p>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full flex items-center gap-1">
-              {user.sleepSchedule === "Night owl" ? <Moon className="w-3 h-3" /> : <Sun className="w-3 h-3" />}
-              {user.sleepSchedule}
-            </span>
-            <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              Clean: {user.cleanliness}/5
-            </span>
-            <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">
-              ₪{user.budget.toLocaleString()}/mo
-            </span>
-            {user.wfh && (
-              <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🏠 WFH</span>
-            )}
-            {user.pets && (
-              <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🐾 Pets</span>
-            )}
-          </div>
+          {matchBreakdown && matchBreakdown.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {[
+                ...matchBreakdown.filter((f) => !f.isConflict).slice(0, matchBreakdown.some((f) => f.isConflict) ? 2 : 3),
+                ...matchBreakdown.filter((f) => f.isConflict).slice(0, 1),
+              ].slice(0, 3).map((f) => (
+                <span
+                  key={f.label}
+                  className={`text-xs px-2.5 py-1 rounded-full backdrop-blur-sm font-medium ${
+                    f.isConflict
+                      ? "bg-red-500/30 text-red-200 border border-red-400/30"
+                      : "bg-primary-foreground/20 text-primary-foreground"
+                  }`}
+                >
+                  {f.emoji} {f.detail}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">
+                ₪{user.budget.toLocaleString()}/mo
+              </span>
+              {user.wfh && (
+                <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🏠 WFH</span>
+              )}
+              {user.pets && (
+                <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🐾 Pets</span>
+              )}
+            </div>
+          )}
           <p className="text-primary-foreground/50 text-xs mt-2 text-center">Tap to see full profile</p>
         </div>
       </div>
