@@ -555,7 +555,7 @@ export default function ApartmentDetail() {
           <button
             onClick={() => requireAuth(async () => {
               if (!user || !apartment) return;
-              const ownerId = (apartment as any).ownerId;
+              const ownerId = apartment.ownerId;
               if (!ownerId || ownerId === user.id) { navigate("/chats"); return; }
               setMessaging(true);
               try {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, Building2, Heart } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, Building2, Heart, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PremiumSheet from "@/components/PremiumSheet";
 import PreferencesSheet from "@/components/profile/PreferencesSheet";
@@ -24,6 +24,7 @@ const getMenuItems = (t: (key: string) => string, hasListings: boolean) => [
   ...(hasListings ? [{ icon: Building2, label: "My Listings", desc: "View and edit your posted apartments", accent: false, action: "listings" }] : []),
   { icon: Sparkles, label: t("preferences"), desc: t("preferencesDesc"), accent: false, action: "preferences" },
   { icon: Bell, label: t("notifications"), desc: t("notificationsDesc"), action: "notifications" },
+  { icon: Download, label: "Export My Data", desc: "Download all your data (GDPR Article 20)", action: "export" },
   { icon: Settings, label: t("settings"), desc: t("settingsDesc"), action: "settings" },
 ];
 
@@ -112,6 +113,30 @@ export default function Profile() {
     );
   }
 
+  const exportMyData = async () => {
+    if (!user) return;
+    const [profileRes, likedRes, savedRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("liked_profiles").select("*").eq("user_id", user.id),
+      supabase.from("saved_apartments").select("*").eq("user_id", user.id),
+    ]);
+    const exportData = {
+      exported_at: new Date().toISOString(),
+      profile: profileRes.data,
+      liked_profiles: likedRes.data ?? [],
+      saved_apartments: savedRes.data ?? [],
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `roomatch-data-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleMenuClick = (action: string | null) => {
     if (action === "preferences") setPrefsOpen(true);
     if (action === "activity") setActivityOpen(true);
@@ -121,11 +146,12 @@ export default function Profile() {
     if (action === "verify") setPhoneVerifyOpen(true);
     if (action === "listings") setListingsOpen(true);
     if (action === "whoLikedMe") setWhoLikedMeOpen(true);
+    if (action === "export") exportMyData();
   };
 
   const verificationStatus = {
     emailVerified: true, // enforced by Supabase before onboarding
-    phoneVerified: (profile as any)?.phone_verified ?? false,
+    phoneVerified: profile?.phone_verified ?? false,
     hasPhotos: !!(profile?.avatar_url),
   };
 
@@ -205,7 +231,7 @@ export default function Profile() {
       <ActivitySheet open={activityOpen} onOpenChange={setActivityOpen} user={user} t={t} />
       <WhoLikedMeSheet open={whoLikedMeOpen} onOpenChange={setWhoLikedMeOpen} user={user} t={t} />
       <NotificationsSheet open={notificationsOpen} onOpenChange={setNotificationsOpen} user={user} profile={profile} t={t} />
-      <MyListingsSheet open={listingsOpen} onOpenChange={setListingsOpen} user={user} t={t} isPremium={(profile as any)?.is_premium ?? false} />
+      <MyListingsSheet open={listingsOpen} onOpenChange={setListingsOpen} user={user} t={t} isPremium={(profile?.subscription_tier ?? "free") !== "free"} />
       <PremiumSheet open={premiumOpen} onOpenChange={setPremiumOpen} />
       <PhoneVerifySheet open={phoneVerifyOpen} onOpenChange={setPhoneVerifyOpen} onVerified={() => window.location.reload()} />
     </div>

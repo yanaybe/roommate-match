@@ -322,7 +322,7 @@ export default function Index() {
               </div>
               <h2 className="text-xl font-extrabold text-foreground mb-2">{t("noResultsFound")}</h2>
               <p className="text-muted-foreground text-sm mb-6 max-w-xs">{t("tryAdjusting")}</p>
-              {JSON.stringify(filters) !== JSON.stringify(defaultFilters) ? (
+              {activeFilterCount > 0 ? (
                 <button
                   onClick={() => setFilters(defaultFilters)}
                   className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"

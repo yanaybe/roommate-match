@@ -12,15 +12,13 @@ import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile
 import { fetchBlockedIds } from "@/hooks/useBlockReport";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useDailyLimits } from "@/hooks/useDailyLimits";
-import { calculateUserMatch } from "@/lib/matching";
+import { calculateUserMatch, MATCH_SUPPRESSION_THRESHOLD } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
 import { isUUID } from "@/lib/profileUtils";
 
-// Convert DB profile to mock format for SwipeCard compatibility
 function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
-  const photos = (p as any).photos as string[] | undefined;
+  const photos = p.photos;
   return {
     id: p.user_id,
     name: p.name,
@@ -42,7 +40,7 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
     wfh: p.wfh,
     bio: p.bio,
     photos: photos?.length ? photos : undefined,
-    phoneVerified: (p as any).phone_verified ?? false,
+    phoneVerified: p.phone_verified ?? false,
   };
 }
 
@@ -57,14 +55,13 @@ export default function Roommates() {
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
-  const { canLike, likesUsed, likesLimit, recordLike, openPremiumSheet } = useDailyLimits();
+  const { canLike, likesLimit, recordLike, openPremiumSheet } = useDailyLimits();
 
   useEffect(() => {
     if (!user?.id) return;
     fetchBlockedIds(user.id).then(setBlockedIds);
   }, [user?.id]);
 
-  // Load all-time right-swipes from DB — liked profiles never reappear
   useEffect(() => {
     if (!user?.id) return;
     supabase
@@ -77,7 +74,6 @@ export default function Roommates() {
       });
   }, [user?.id]);
 
-  // Other profiles (not current user), with match percentages
   const otherProfiles = useMemo(() => {
     if (!myProfile) return [];
     return allProfiles
@@ -86,16 +82,22 @@ export default function Roommates() {
         profile: p,
         user: profileToUser(p),
         matchPercent: calculateUserMatch(myProfile, p),
-      }));
+      }))
+      // Suppress catastrophically incompatible profiles from the deck entirely
+      .filter((p) => p.matchPercent >= MATCH_SUPPRESSION_THRESHOLD);
   }, [allProfiles, myProfile, user?.id]);
 
-  const items = otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent }));
+  const items = useMemo(
+    () => otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent })),
+    [otherProfiles],
+  );
 
   const swipedSet = useMemo(() => new Set(swiped), [swiped]);
   const blockedSet = useMemo(() => new Set(blockedIds), [blockedIds]);
 
-  const remaining = items.filter(
-    (item) => !swipedSet.has(item.user.id) && !blockedSet.has(item.user.id)
+  const remaining = useMemo(
+    () => items.filter((item) => !swipedSet.has(item.user.id) && !blockedSet.has(item.user.id)),
+    [items, swipedSet, blockedSet],
   );
 
   const requireAuth = useCallback(() => {
@@ -118,7 +120,6 @@ export default function Roommates() {
       const current = remaining[0];
       if (!current) return;
 
-      // Check limit before consuming the card so the user doesn't lose their swipe
       if (direction === "right" && user && !canLike) {
         toast.error(`You've reached your ${likesLimit} daily likes. Upgrade to like more.`);
         openPremiumSheet();
@@ -134,7 +135,6 @@ export default function Roommates() {
             { onConflict: "user_id,liked_user_id" },
           );
 
-          // Check for mutual like — real match detection
           const { data: mutualLike } = await supabase
             .from("liked_profiles")
             .select("id")
@@ -151,14 +151,23 @@ export default function Roommates() {
         recordLike();
       }
     },
-    [remaining, requireAuth, user],
+    [remaining, requireAuth, user, canLike, likesLimit, recordLike, openPremiumSheet],
   );
 
-  const handleUndo = () => {
+  const handleUndo = useCallback(async () => {
+    if (swiped.length === 0 || !user) return;
+    const lastId = swiped[swiped.length - 1];
+    // Remove from DB so the profile reappears on next load
+    if (isUUID(lastId)) {
+      await supabase
+        .from("liked_profiles")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("liked_user_id", lastId);
+    }
     setSwiped((prev) => prev.slice(0, -1));
-  };
+  }, [swiped, user]);
 
-  // Load more profiles from DB when the local stack runs low
   useEffect(() => {
     if (remaining.length <= 2 && hasMore && !profilesLoading) {
       loadMore();
@@ -253,14 +262,14 @@ export default function Roommates() {
                       onClick={() => navigate("/onboarding?edit=true")}
                       className="w-full py-3 gradient-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-all"
                     >
-                      Adjust Preferences
+                      {t("adjustPreferences") ?? "Adjust Preferences"}
                     </button>
                     <button
                       onClick={handleUndo}
                       disabled={swiped.length === 0}
                       className="w-full flex items-center justify-center gap-2 py-3 bg-secondary rounded-xl text-sm font-semibold text-foreground hover:bg-secondary/80 disabled:opacity-40 active:scale-[0.98] transition-all"
                     >
-                      <RotateCcw className="w-4 h-4" /> Undo last swipe
+                      <RotateCcw className="w-4 h-4" /> {t("undoLastSwipe") ?? "Undo last swipe"}
                     </button>
                   </div>
                 </div>

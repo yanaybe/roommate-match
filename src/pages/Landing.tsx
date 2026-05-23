@@ -123,13 +123,13 @@ export default function Landing() {
             </div>
 
             <button
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/auth?mode=login")}
               className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
               {t("signIn")}
             </button>
             <button
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/auth?mode=register")}
               className="gradient-primary text-primary-foreground text-sm font-bold px-4 py-2 rounded-xl shadow-md"
             >
               {t("getStarted")}
@@ -185,7 +185,6 @@ export default function Landing() {
             </button>
           </motion.div>
 
-          {/* Stats */}
           <motion.div
             variants={fadeUp} initial="hidden" animate="show" custom={4}
             className="flex items-center justify-center gap-8 mt-10"

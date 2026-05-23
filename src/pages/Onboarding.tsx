@@ -193,11 +193,11 @@ export default function Onboarding() {
         cooking_habits: profile.cooking_habits || "Sometimes",
         shared_space_org: profile.shared_space_org || "Moderate",
         smoking: profile.smoking ?? false,
-        smoking_preference: (profile as any).smoking_preference || "Non-smoker, okay with smokers",
+        smoking_preference: profile.smoking_preference || "Non-smoker, okay with smokers",
         religious_level: profile.religious_level || "Not religious",
         alcohol: profile.alcohol || "Socially",
         pets: profile.pets ?? false,
-        pet_preference: (profile as any).pet_preference || "No pets, but okay with them",
+        pet_preference: profile.pet_preference || "No pets, but okay with them",
         fitness: profile.fitness || "Sometimes",
         wfh: profile.wfh ?? false,
         guests: profile.guests || "Occasionally",
@@ -212,7 +212,7 @@ export default function Onboarding() {
         cleanliness_expectations: profile.cleanliness_expectations ?? 3,
         activity_hours: profile.activity_hours || "Flexible",
         bio: profile.bio || "",
-        photos: (profile as any).photos || [],
+        photos: profile.photos || [],
       });
     }
   }, [profile]);
@@ -239,7 +239,7 @@ export default function Onboarding() {
       const age = Number(form.age);
       if (!form.age.trim()) {
         e.age = t("ageRequired");
-      } else if (!Number.isInteger(age) || age < 16 || age > 100) {
+      } else if (!Number.isInteger(age) || age < 18 || age > 100) {
         e.age = t("ageBetween16and100");
       }
 
@@ -272,10 +272,10 @@ export default function Onboarding() {
     if (step === 5) {
       const minAge = Number(form.preferred_age_min);
       const maxAge = Number(form.preferred_age_max);
-      if (!Number.isInteger(minAge) || minAge < 16 || minAge > 100) {
+      if (!Number.isInteger(minAge) || minAge < 18 || minAge > 100) {
         e.preferred_age_min = t("ageBetween16and100");
       }
-      if (!Number.isInteger(maxAge) || maxAge < 16 || maxAge > 100) {
+      if (!Number.isInteger(maxAge) || maxAge < 18 || maxAge > 100) {
         e.preferred_age_max = t("ageBetween16and100");
       }
       if (!e.preferred_age_min && !e.preferred_age_max && minAge >= maxAge) {
@@ -344,14 +344,14 @@ export default function Onboarding() {
     const ageNum    = parseInt(form.age);
     const budgetNum = parseInt(form.budget);
     // Clamp preferred ages to valid range regardless of what was typed
-    const minAge = Math.max(16, Math.min(100, parseInt(form.preferred_age_min) || 18));
+    const minAge = Math.max(18, Math.min(100, parseInt(form.preferred_age_min) || 18));
     const maxAge = Math.max(minAge + 1, Math.min(100, parseInt(form.preferred_age_max) || 40));
 
     if (safeName.length < 2) {
       toast.error(t("nameMin2"));
       return;
     }
-    if (isNaN(ageNum) || ageNum < 16 || ageNum > 100) {
+    if (isNaN(ageNum) || ageNum < 18 || ageNum > 100) {
       toast.error(t("validAge"));
       return;
     }
@@ -453,7 +453,7 @@ export default function Onboarding() {
                   value={form.age}
                   onChange={(e) => update("age", e.target.value)}
                   placeholder="25"
-                  min="16"
+                  min="18"
                   max="100"
                   className={`w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.age ? "ring-2 ring-destructive" : ""}`}
                 />
@@ -629,7 +629,7 @@ export default function Onboarding() {
                   type="number"
                   value={form.preferred_age_min}
                   onChange={(e) => update("preferred_age_min", e.target.value)}
-                  min="16" max="100"
+                  min="18" max="100"
                   className={`w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.preferred_age_min ? "ring-2 ring-destructive" : ""}`}
                 />
                 <ErrorMsg msg={errors.preferred_age_min} />
@@ -640,7 +640,7 @@ export default function Onboarding() {
                   type="number"
                   value={form.preferred_age_max}
                   onChange={(e) => update("preferred_age_max", e.target.value)}
-                  min="16" max="100"
+                  min="18" max="100"
                   className={`w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.preferred_age_max ? "ring-2 ring-destructive" : ""}`}
                 />
                 <ErrorMsg msg={errors.preferred_age_max} />

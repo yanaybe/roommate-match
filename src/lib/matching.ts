@@ -1,5 +1,10 @@
 // Matching algorithm based on user profiles
 
+// Profiles scoring below this threshold are suppressed from the swipe deck —
+// catastrophically incompatible pairs (smoking + religious + sleep conflicts)
+// should not consume swipes.
+export const MATCH_SUPPRESSION_THRESHOLD = 15;
+
 export interface ProfileData {
   name: string;
   age: number | null;
@@ -183,7 +188,7 @@ export function calculateUserMatch(a: ProfileData, b: ProfileData): number {
   const weightedSum = scores.reduce((sum, s) => sum + s.weight * s.score, 0);
   const baseScore = (weightedSum / totalWeight) * 100;
 
-  return Math.max(5, Math.round(baseScore - penalties));
+  return Math.max(MATCH_SUPPRESSION_THRESHOLD, Math.round(baseScore - penalties));
 }
 
 export interface MatchFactor {

@@ -32,16 +32,18 @@ const typeColors: Record<string, string> = {
   extra: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
 };
 
-function formatDate(dateStr: string) {
+const LOCALE_MAP: Record<string, string> = { en: "en-US", he: "he-IL", fr: "fr-FR" };
+
+function formatDate(dateStr: string, locale: string) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" });
 }
 
-function groupByMonth(transactions: Transaction[]) {
+function groupByMonth(transactions: Transaction[], locale: string) {
   const groups: Record<string, Transaction[]> = {};
   for (const t of transactions) {
     const d = new Date(t.date);
-    const key = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    const key = d.toLocaleDateString(locale, { month: "long", year: "numeric" });
     if (!groups[key]) groups[key] = [];
     groups[key].push(t);
   }
@@ -52,11 +54,12 @@ type FilterType = "all" | "subscription" | "boost" | "extra";
 
 export default function BillingHistory() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = LOCALE_MAP[language] ?? "en-US";
   const [filter, setFilter] = useState<FilterType>("all");
 
   const filtered = filter === "all" ? mockTransactions : mockTransactions.filter((tx) => tx.type === filter);
-  const grouped = groupByMonth(filtered);
+  const grouped = groupByMonth(filtered, locale);
 
   const totalSpent = mockTransactions
     .filter((tx) => tx.status === "completed")
@@ -165,7 +168,7 @@ export default function BillingHistory() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground truncate">{tx.description}</p>
-                        <p className="text-[11px] text-muted-foreground">{formatDate(tx.date)}</p>
+                        <p className="text-[11px] text-muted-foreground">{formatDate(tx.date, locale)}</p>
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         <span className={`text-sm font-bold ${tx.status === "refunded" ? "line-through text-muted-foreground" : "text-foreground"}`}>

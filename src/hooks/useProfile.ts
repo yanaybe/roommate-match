@@ -13,6 +13,15 @@ export interface FullProfile extends ProfileData {
   created_at: string;
   phone_verified?: boolean;
   phone_number?: string | null;
+  // Fields added in later migrations — explicitly typed here to eliminate (as any) casts
+  photos?: string[];
+  subscription_tier?: string;
+  paddle_customer_id?: string | null;
+  paddle_subscription_id?: string | null;
+  gender?: string | null;
+  notification_matches?: boolean;
+  notification_messages?: boolean;
+  notification_squad_invites?: boolean;
 }
 
 export function useProfile() {
@@ -46,7 +55,7 @@ export function useProfile() {
     load();
   }, [user]);
 
-  return { profile, loading, error, refetch: async () => {
+  const refetch = useCallback(async () => {
     if (!user) return;
     const { data, error: fetchError } = await supabase
       .from("profiles")
@@ -54,7 +63,9 @@ export function useProfile() {
       .eq("user_id", user.id)
       .maybeSingle();
     if (!fetchError) setProfile(data as FullProfile | null);
-  }};
+  }, [user]);
+
+  return { profile, loading, error, refetch };
 }
 
 export function useAllProfiles() {

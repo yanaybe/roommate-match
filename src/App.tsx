@@ -112,22 +112,22 @@ const App = () => (
               {/* Protected — must be signed in, gets sidebar */}
               <Route element={<AuthedLayout />}>
                 {/* Accessible without completing onboarding */}
-                <Route path="/apartment/:id" element={<ApartmentDetail />} />
-                <Route path="/roommate/:id" element={<RoommateProfile />} />
-                <Route path="/create" element={<CreateApartment />} />
-                <Route path="/post-apartment" element={<PostApartment />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/billing-history" element={<BillingHistory />} />
-                <Route path="/help-center" element={<HelpCenter />} />
+                <Route path="/apartment/:id" element={<ErrorBoundary><ApartmentDetail /></ErrorBoundary>} />
+                <Route path="/roommate/:id" element={<ErrorBoundary><RoommateProfile /></ErrorBoundary>} />
+                <Route path="/create" element={<ErrorBoundary><CreateApartment /></ErrorBoundary>} />
+                <Route path="/post-apartment" element={<ErrorBoundary><PostApartment /></ErrorBoundary>} />
+                <Route path="/profile" element={<ErrorBoundary><Profile /></ErrorBoundary>} />
+                <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
+                <Route path="/billing-history" element={<ErrorBoundary><BillingHistory /></ErrorBoundary>} />
+                <Route path="/help-center" element={<ErrorBoundary><HelpCenter /></ErrorBoundary>} />
 
                 {/* Require completed onboarding profile */}
                 <Route element={<OnboardedLayout />}>
-                  <Route path="/roommates" element={<Roommates />} />
-                  <Route path="/create-squad" element={<CreateSquad />} />
-                  <Route path="/squad/:id" element={<SquadHub />} />
-                  <Route path="/my-squads" element={<MySquads />} />
-                  <Route path="/chats" element={<Chats />} />
+                  <Route path="/roommates" element={<ErrorBoundary><Roommates /></ErrorBoundary>} />
+                  <Route path="/create-squad" element={<ErrorBoundary><CreateSquad /></ErrorBoundary>} />
+                  <Route path="/squad/:id" element={<ErrorBoundary><SquadHub /></ErrorBoundary>} />
+                  <Route path="/my-squads" element={<ErrorBoundary><MySquads /></ErrorBoundary>} />
+                  <Route path="/chats" element={<ErrorBoundary><Chats /></ErrorBoundary>} />
                 </Route>
               </Route>
             </Routes>

@@ -43,10 +43,11 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
   return (
     <motion.div
       className="absolute inset-0 cursor-grab active:cursor-grabbing"
-      style={{ x, rotate, zIndex: isTop ? 10 : 0 }}
+      style={{ x, rotate, zIndex: isTop ? 10 : 0, touchAction: isTop ? "none" : "auto" }}
       drag={isTop ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.9}
+      dragMomentum={false}
       onDragEnd={handleDragEnd}
       exit={{ x: 300, opacity: 0, transition: { duration: 0.3 } }}
     >
@@ -118,7 +119,7 @@ export default function SwipeCard({ user, matchPercent, onSwipe, isTop }: SwipeC
           className="absolute bottom-0 left-0 right-0 p-6 z-10 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            if (Math.abs(x.get()) < 5) {
+            if (Math.abs(x.get()) < 12) {
               navigate(`/roommate/${user.id}`);
             }
           }}

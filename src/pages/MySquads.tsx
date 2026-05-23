@@ -82,8 +82,11 @@ export default function MySquads() {
 
   const handleAcceptInvite = async (invite: any) => {
     if (!user) return;
-    // Verify the invite is actually addressed to the current user
-    if (invite.invitee_id !== user.id) return;
+    // Distinguish join requests (creator accepting) from regular invites (invitee accepting)
+    const isJoinRequest = invite.squad?.creator_id === user.id && invite.inviter_id !== user.id;
+    const userIdToAdd = isJoinRequest ? invite.inviter_id : user.id;
+    // For regular invites, verify the invite is addressed to the current user
+    if (!isJoinRequest && invite.invitee_id !== user.id) return;
     // Check current member count from DB to prevent race condition overfill
     const { count: currentMemberCount } = await supabase
       .from("squad_members")
@@ -97,12 +100,11 @@ export default function MySquads() {
     }
     await supabase.from("squad_members").insert({
       squad_id: invite.squad_id,
-      user_id: user.id,
+      user_id: userIdToAdd,
       status: "joined",
       role: "member",
     });
-    // Filter by invitee_id so the DB rejects acceptance if the invite isn't addressed to this user
-    await supabase.from("squad_invites").update({ status: "accepted" }).eq("id", invite.id).eq("invitee_id", user.id);
+    await supabase.from("squad_invites").update({ status: "accepted" }).eq("id", invite.id);
 
     const { data: members } = await supabase
       .from("squad_members")

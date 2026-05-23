@@ -182,7 +182,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                 ))}
               </div>
               <p className="text-white/80 text-xs font-medium">
-                <span className="text-white font-bold">2,400+</span> people found roommates this month
+                Join our growing community
               </p>
             </div>
           </motion.div>
@@ -210,7 +210,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-extrabold text-foreground">
-                    12 people liked you 👀
+                    People liked you 👀
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">Upgrade Gold to see who they are</p>
                 </div>
@@ -355,7 +355,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
                 <div className="w-px h-3 bg-border" />
                 <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <Users className="w-3 h-3" />
-                  2,400+ users
+                  Growing community
                 </div>
               </div>
             </div>

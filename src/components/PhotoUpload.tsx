@@ -118,10 +118,10 @@ export default function PhotoUpload({ photos, onChange, maxPhotos = 6 }: PhotoUp
                 Main
               </span>
             )}
-            {/* Delete */}
+            {/* Delete — always visible so touch users can remove photos */}
             <button
               onClick={() => handleRemove(i)}
-              className="absolute top-1.5 right-1.5 w-6 h-6 bg-foreground/70 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-1.5 right-1.5 w-6 h-6 bg-foreground/70 rounded-full flex items-center justify-center transition-opacity"
             >
               <X className="w-3.5 h-3.5 text-background" />
             </button>

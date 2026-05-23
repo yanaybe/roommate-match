@@ -33,7 +33,11 @@ export default function BottomNav() {
   return (
     <>
       {/* ── Mobile: bottom bar ── */}
-      <nav className="desk:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom">
+      {/* safe-area-inset-bottom via inline style for iOS home indicator */}
+      <nav
+        className="desk:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         <div className="flex items-center justify-around h-16 w-full px-2">
           {tabs.map((tab) => {
             const isActive = location.pathname === tab.path;
@@ -47,6 +51,8 @@ export default function BottomNav() {
               <button
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
+                aria-label={tab.label}
+                aria-current={isActive ? "page" : undefined}
                 className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full cursor-pointer"
               >
                 {isCreate ? (

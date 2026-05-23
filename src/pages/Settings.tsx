@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Crown, CreditCard, Receipt, ChevronRight, TrendingUp,
+  ArrowLeft, Crown, Receipt, ChevronRight,
   Eye, Heart, BarChart3, Lock, HelpCircle, MessageCircle, FileText,
-  ShieldCheck, Globe, Moon, Sun, Sparkles, Zap, Star, Check
+  ShieldCheck, Globe, Moon, Sun, Sparkles, Zap, Star, Check, Loader2,
+  Trash2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +12,17 @@ import { Switch } from "@/components/ui/switch";
 import PremiumSheet from "@/components/PremiumSheet";
 import { useLanguage, languages } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function SectionHeader({ title }: { title: string }) {
   return (
@@ -69,12 +81,14 @@ function InsightCard({
   icon: Icon,
   label,
   value,
+  loading,
   locked,
   onUpgrade,
 }: {
   icon: React.ElementType;
   label: string;
-  value: string | number;
+  value: string | number | null;
+  loading?: boolean;
   locked?: boolean;
   onUpgrade?: () => void;
 }) {
@@ -92,18 +106,15 @@ function InsightCard({
       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mb-2">
         <Icon size={16} className="text-primary" />
       </div>
-      <p className="text-xl font-bold text-foreground">{value}</p>
+      {loading ? (
+        <Loader2 size={18} className="text-muted-foreground animate-spin" />
+      ) : (
+        <p className="text-xl font-bold text-foreground">{value ?? "—"}</p>
+      )}
       <p className="text-[11px] text-muted-foreground mt-0.5">{label}</p>
     </div>
   );
 }
-
-const planBadgeColors: Record<string, string> = {
-  Free: "bg-secondary text-muted-foreground",
-  Plus: "bg-accent/15 text-accent",
-  Gold: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  Platinum: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-};
 
 const planIcons: Record<string, React.ElementType> = {
   Free: Zap,
@@ -114,14 +125,23 @@ const planIcons: Record<string, React.ElementType> = {
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { language, setLanguage, t, languageInfo } = useLanguage();
   const [premiumOpen, setPremiumOpen] = useState(false);
   const [langPickerOpen, setLangPickerOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() =>
-    document.documentElement.classList.contains("dark")
-  );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Persist dark mode to localStorage so it survives page reloads
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored) return stored === "dark";
+    return document.documentElement.classList.contains("dark");
+  });
+
   const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
+  const [likesReceived, setLikesReceived] = useState<number | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -131,19 +151,60 @@ export default function Settings() {
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setSubscriptionTier((data as any).subscription_tier ?? "free");
+        if (data) setSubscriptionTier((data as { subscription_tier: string }).subscription_tier ?? "free");
       });
   }, [user]);
+
+  const fetchInsights = useCallback(async () => {
+    if (!user) return;
+    setInsightsLoading(true);
+    const { count } = await supabase
+      .from("liked_profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("liked_user_id", user.id);
+    setLikesReceived(count ?? 0);
+    setInsightsLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    if (subscriptionTier !== "free") fetchInsights();
+  }, [subscriptionTier, fetchInsights]);
 
   const currentPlan = subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1);
   const PlanIcon = planIcons[currentPlan] || Zap;
 
   const toggleDarkMode = (enabled: boolean) => {
     setDarkMode(enabled);
+    localStorage.setItem("theme", enabled ? "dark" : "light");
     if (enabled) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    setDeleting(true);
+    try {
+      await Promise.all([
+        supabase.from("liked_profiles").delete().eq("user_id", user.id),
+        supabase.from("liked_profiles").delete().eq("liked_user_id", user.id),
+        supabase.from("saved_apartments").delete().eq("user_id", user.id),
+        supabase.from("notifications").delete().eq("user_id", user.id),
+      ]);
+      const { data: files } = await supabase.storage.from("profile-photos").list(user.id);
+      if (files?.length) {
+        await supabase.storage.from("profile-photos").remove(files.map((f) => `${user.id}/${f.name}`));
+      }
+      await supabase.from("profiles").delete().eq("user_id", user.id);
+      await signOut();
+      navigate("/");
+      toast.success("Account deleted.");
+    } catch {
+      toast.error("Failed to delete account. Please contact support.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -167,7 +228,6 @@ export default function Settings() {
         <section>
           <SectionHeader title={t("subscriptionAndPayments")} />
 
-          {/* Current plan card */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -212,12 +272,6 @@ export default function Settings() {
               onClick={() => setPremiumOpen(true)}
             />
             <SettingsItem
-              icon={CreditCard}
-              label={t("paymentMethods")}
-              desc={t("paymentMethodsDesc")}
-              onClick={() => {}}
-            />
-            <SettingsItem
               icon={Receipt}
               label={t("billingHistory")}
               desc={t("billingHistoryDesc")}
@@ -234,21 +288,23 @@ export default function Settings() {
             <InsightCard
               icon={Eye}
               label={t("profileViews")}
-              value={42}
+              value={null}
+              loading={false}
               locked={currentPlan === "Free"}
               onUpgrade={() => setPremiumOpen(true)}
             />
             <InsightCard
               icon={Heart}
               label={t("likesReceived")}
-              value={18}
+              value={likesReceived}
+              loading={insightsLoading}
               locked={currentPlan === "Free"}
               onUpgrade={() => setPremiumOpen(true)}
             />
             <InsightCard
               icon={BarChart3}
               label={t("matchRate")}
-              value="76%"
+              value="—"
             />
           </div>
 
@@ -310,7 +366,6 @@ export default function Settings() {
               onClick={() => setLangPickerOpen(!langPickerOpen)}
             />
 
-            {/* Language picker */}
             <AnimatePresence>
               {langPickerOpen && (
                 <motion.div
@@ -359,9 +414,44 @@ export default function Settings() {
             />
           </div>
         </section>
+
+        {/* 🗑 Danger Zone */}
+        <section>
+          <SectionHeader title="Danger Zone" />
+          <div className="bg-card rounded-2xl shadow-card">
+            <SettingsItem
+              icon={Trash2}
+              label="Delete Account"
+              desc="Permanently delete your account and all data"
+              onClick={() => setDeleteDialogOpen(true)}
+            />
+          </div>
+        </section>
       </div>
 
       <PremiumSheet open={premiumOpen} onOpenChange={setPremiumOpen} />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes your profile, photos, matches, and messages. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Delete Account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

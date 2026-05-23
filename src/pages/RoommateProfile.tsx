@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +13,7 @@ import MatchBadge from "@/components/MatchBadge";
 import MatchModal from "@/components/MatchModal";
 import { type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
+import { useProfile, type FullProfile } from "@/hooks/useProfile";
 import { calculateUserMatch, calculateUserMatchBreakdown, type MatchFactor } from "@/lib/matching";
 import VerificationBadges from "@/components/VerificationBadges";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +25,7 @@ import { useDailyLimits } from "@/hooks/useDailyLimits";
 import { isUUID } from "@/lib/profileUtils";
 
 function profileToUser(p: FullProfile): UserProfile & { photos?: string[] } {
-  const photos = (p as any).photos as string[] | undefined;
+  const photos = p.photos;
   return {
     id: p.user_id,
     name: p.name,
@@ -69,7 +69,8 @@ export default function RoommateProfile() {
   const { user: authUser } = useAuth();
   const { profile: myProfile } = useProfile();
   const { t } = useLanguage();
-  const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles();
+  const [profilesLoading, setProfilesLoading] = useState(true);
+  const [fullProfile, setFullProfile] = useState<FullProfile | null>(null);
   const [imgIndex, setImgIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -80,16 +81,30 @@ export default function RoommateProfile() {
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  const { userData, fullProfile, matchPercent, breakdown } = useMemo(() => {
-    const dbProfile = allProfiles.find((p) => p.user_id === id);
-    if (dbProfile) {
-      const u = profileToUser(dbProfile);
-      const match = myProfile?.onboarding_complete ? calculateUserMatch(myProfile, dbProfile) : 0;
-      const bd = myProfile?.onboarding_complete ? calculateUserMatchBreakdown(myProfile, dbProfile) : [];
-      return { userData: u, fullProfile: dbProfile, matchPercent: match, breakdown: bd };
-    }
-    return { userData: null, fullProfile: null, matchPercent: 0, breakdown: [] };
-  }, [id, allProfiles, myProfile]);
+  // Direct single-profile fetch — no need to load 50 profiles just to find one
+  useEffect(() => {
+    if (!id) return;
+    setProfilesLoading(true);
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setFullProfile(data as FullProfile | null);
+        setProfilesLoading(false);
+      });
+  }, [id]);
+
+  const userData = useMemo(() => (fullProfile ? profileToUser(fullProfile) : null), [fullProfile]);
+  const matchPercent = useMemo(
+    () => (myProfile?.onboarding_complete && fullProfile ? calculateUserMatch(myProfile, fullProfile) : 0),
+    [myProfile, fullProfile],
+  );
+  const breakdown = useMemo(
+    () => (myProfile?.onboarding_complete && fullProfile ? calculateUserMatchBreakdown(myProfile, fullProfile) : []),
+    [myProfile, fullProfile],
+  );
 
   if (profilesLoading && !userData) {
     return (
@@ -116,7 +131,7 @@ export default function RoommateProfile() {
     );
   }
 
-  const photos = (userData as any).photos?.length ? (userData as any).photos : [userData.avatar];
+  const photos = userData.photos?.length ? userData.photos : [userData.avatar];
   const isOwnProfile = authUser?.id === userData.id;
 
 

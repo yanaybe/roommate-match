@@ -22,7 +22,6 @@ interface NotificationsContextValue {
   refresh: () => void;
 }
 
-import { createContext as _createContext } from "react";
 
 export const NotificationsContext = createContext<NotificationsContextValue>({
   notifications: [],

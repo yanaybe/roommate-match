@@ -7,7 +7,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Send, CheckCheck, Trash2, MoreVertical, Ban, Flag, ChevronDown, Sparkles } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useBlockReport } from "@/hooks/useBlockReport";
+import { useBlockReport, fetchBlockedIds } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
 import { calculateUserMatch } from "@/lib/matching";
 import MatchBadge from "@/components/MatchBadge";
@@ -190,10 +190,13 @@ export default function Chats() {
       msgsByConv.set(m.conversation_id, list);
     });
 
-    // Assemble conversations, deduplicating by other_user_id
+    const blockedIds = new Set(await fetchBlockedIds(user.id));
+
+    // Assemble conversations, deduplicating by other_user_id (skip blocked)
     const convMap = new Map<string, Conversation>();
     for (const convId of convIds) {
       const otherUserId = otherByConv.get(convId) ?? "";
+      if (blockedIds.has(otherUserId)) continue;
       const profile = profileMap.get(otherUserId) as { name?: string; avatar_url?: string } | undefined;
       const otherName = profile?.name ?? otherUserId.slice(0, 8) + "...";
       const otherAvatar = profile?.avatar_url ?? null;
@@ -519,7 +522,6 @@ export default function Chats() {
           )}
           <div className="flex-1">
             <h2 className="font-bold text-foreground text-sm">{conv?.other_name}</h2>
-            <p className="text-muted-foreground text-xs">{t("online")}</p>
           </div>
           <div className="relative">
             <button
