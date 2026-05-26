@@ -76,6 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Mark as settled so the getSession() fallback below doesn't overwrite
+        // with a stale snapshot after the real auth event has already fired.
+        settled.current = true;
         setSession(session);
         setLoading(false);
         if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
@@ -88,6 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    // getSession() seeds initial state before the first onAuthStateChange event
+    // fires (avoids a flash of loading=true on page refresh when the user is
+    // already signed in). If onAuthStateChange fired first, settled.current is
+    // true and we skip this to avoid overwriting with a stale snapshot.
     supabase.auth.getSession().then(({ data: { session: initial } }) => {
       if (!settled.current) {
         setSession(initial);

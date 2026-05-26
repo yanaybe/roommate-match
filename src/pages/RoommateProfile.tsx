@@ -13,7 +13,7 @@ import MatchBadge from "@/components/MatchBadge";
 import MatchModal from "@/components/MatchModal";
 import { type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile";
+import { useProfile, useProfileById, type FullProfile } from "@/hooks/useProfile";
 import { calculateUserMatch, calculateUserMatchBreakdown, type MatchFactor } from "@/lib/matching";
 import VerificationBadges from "@/components/VerificationBadges";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,8 +68,8 @@ export default function RoommateProfile() {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const { profile: myProfile } = useProfile();
+  const { profile: targetProfile, loading: profilesLoading } = useProfileById(id);
   const { t } = useLanguage();
-  const { profiles: allProfiles, loading: profilesLoading } = useAllProfiles();
   const [imgIndex, setImgIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -89,15 +89,14 @@ export default function RoommateProfile() {
   }, [id, authUser]);
 
   const { userData, fullProfile, matchPercent, breakdown } = useMemo(() => {
-    const dbProfile = allProfiles.find((p) => p.user_id === id);
-    if (dbProfile) {
-      const u = profileToUser(dbProfile);
-      const match = myProfile?.onboarding_complete ? calculateUserMatch(myProfile, dbProfile) : 0;
-      const bd = myProfile?.onboarding_complete ? calculateUserMatchBreakdown(myProfile, dbProfile) : [];
-      return { userData: u, fullProfile: dbProfile, matchPercent: match, breakdown: bd };
+    if (targetProfile) {
+      const u = profileToUser(targetProfile);
+      const match = myProfile?.onboarding_complete ? calculateUserMatch(myProfile, targetProfile) : 0;
+      const bd = myProfile?.onboarding_complete ? calculateUserMatchBreakdown(myProfile, targetProfile) : [];
+      return { userData: u, fullProfile: targetProfile, matchPercent: match, breakdown: bd };
     }
     return { userData: null, fullProfile: null, matchPercent: 0, breakdown: [] };
-  }, [id, allProfiles, myProfile]);
+  }, [targetProfile, myProfile]);
 
   if (profilesLoading && !userData) {
     return (
@@ -193,35 +192,27 @@ export default function RoommateProfile() {
     }
     setMessageLoading(true);
     try {
-      // Find or create a conversation between the two users
-      const { data: existingParticipations } = await supabase
-        .from("conversation_participants")
-        .select("conversation_id")
-        .eq("user_id", authUser.id);
+      // find_or_create_conversation handles deduplication (returns existing
+      // conversation if one already exists) and enforces the mutual-like guard
+      // at the DB level. No client-side participant search needed.
+      const { data: convId, error: rpcErr } = await supabase.rpc(
+        "find_or_create_conversation",
+        { other_user_id: userData.id },
+      );
 
-      let conversationId: string | null = null;
-
-      if (existingParticipations?.length) {
-        const myConvIds = existingParticipations.map((p) => p.conversation_id);
-        const { data: otherParticipations } = await supabase
-          .from("conversation_participants")
-          .select("conversation_id")
-          .eq("user_id", userData.id)
-          .in("conversation_id", myConvIds);
-        if (otherParticipations?.length) {
-          conversationId = otherParticipations[0].conversation_id;
+      if (rpcErr) {
+        if (rpcErr.message?.includes("mutual_like_required")) {
+          toast.error(
+            `Match with ${userData.name} first to start a conversation, or use an Instant Message credit.`,
+          );
+          return;
         }
+        throw rpcErr;
       }
 
-      if (!conversationId) {
-        const { data: newConvId, error: rpcErr } = await supabase.rpc("find_or_create_conversation", {
-          other_user_id: userData.id,
-        });
-        if (rpcErr || !newConvId) throw new Error("Failed to create conversation");
-        conversationId = newConvId as string;
-      }
+      if (!convId) throw new Error("No conversation ID returned");
 
-      navigate(`/chats?conv=${conversationId}`);
+      navigate(`/chats?conv=${convId as string}`);
     } catch {
       toast.error("Could not open conversation. Please try again.");
     } finally {

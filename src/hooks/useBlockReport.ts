@@ -70,17 +70,6 @@ export function useBlockReport(targetUserId?: string) {
     async (reason: ReportReason, details?: string) => {
       if (!user || !targetUserId) return false;
       setLoading(true);
-      const oneDayAgo = new Date(Date.now() - 86_400_000).toISOString();
-      const { count: recentReports } = await supabase
-        .from("reports")
-        .select("id", { count: "exact", head: true })
-        .eq("reporter_id", user.id)
-        .gte("created_at", oneDayAgo);
-      if ((recentReports ?? 0) >= 10) {
-        setLoading(false);
-        toast.error("You've submitted too many reports today. Try again tomorrow.");
-        return false;
-      }
       const { error } = await supabase.from("reports").insert({
         reporter_id: user.id,
         target_type: "user",
@@ -89,14 +78,24 @@ export function useBlockReport(targetUserId?: string) {
         details: details || null,
       });
       setLoading(false);
-      if (error && error.code !== "23505") {
-        toast.error("Failed to submit report.");
+      if (error) {
+        // DB trigger fires when reporter exceeds 10 reports in 24 hours.
+        if (error.message?.includes("report_rate_limit_exceeded")) {
+          toast.error("You've submitted too many reports today. Try again tomorrow.");
+          return false;
+        }
+        // Duplicate (already reported this profile) — treat as success.
+        if (error.code === "23505") {
+          toast.success("You already reported this user.");
+          return true;
+        }
+        toast.error("Failed to submit report. Please try again.");
         return false;
       }
       toast.success("Report submitted. We'll review it shortly.");
       return true;
     },
-    [user, targetUserId]
+    [user, targetUserId],
   );
 
   const reportListing = useCallback(
@@ -111,14 +110,22 @@ export function useBlockReport(targetUserId?: string) {
         details: details || null,
       });
       setLoading(false);
-      if (error && error.code !== "23505") {
-        toast.error("Failed to submit report.");
+      if (error) {
+        if (error.message?.includes("report_rate_limit_exceeded")) {
+          toast.error("You've submitted too many reports today. Try again tomorrow.");
+          return false;
+        }
+        if (error.code === "23505") {
+          toast.success("You already reported this listing.");
+          return true;
+        }
+        toast.error("Failed to submit report. Please try again.");
         return false;
       }
       toast.success("Listing reported. We'll review it shortly.");
       return true;
     },
-    [user]
+    [user],
   );
 
   return { isBlocked, loading, blockUser, unblockUser, reportUser, reportListing };

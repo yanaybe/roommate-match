@@ -12,9 +12,29 @@ export function sanitizeText(value: string): string {
 // Avatar URLs must come from our own Supabase storage bucket.
 // This prevents javascript:, data:, and any third-party domain from
 // being stored as a profile image URL.
-const ALLOWED_IMAGE_HOSTS = [
-  "ggrvcvjtkoupvorcdile.supabase.co", // our Supabase storage
-];
+//
+// The allowed hostname is derived at runtime from VITE_SUPABASE_URL so this
+// module stays correct across environments (local / staging / production)
+// without hardcoding a project-specific subdomain.
+function buildAllowedImageHosts(): string[] {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  if (supabaseUrl) {
+    try {
+      const host = new URL(supabaseUrl).hostname;
+      if (host) return [host];
+    } catch {
+      // Malformed VITE_SUPABASE_URL — fall through to empty list so that
+      // validation fails-closed (all URLs rejected) rather than fails-open.
+    }
+  }
+  // No env var available (e.g. during unit tests that don't set env).
+  // Return an empty list; isSafeImageUrl returns false for any URL, which is
+  // the safe default.
+  return [];
+}
+
+// Evaluated once at module load time — VITE_SUPABASE_URL is baked in at build.
+const ALLOWED_IMAGE_HOSTS: string[] = buildAllowedImageHosts();
 
 export function isSafeImageUrl(url: string): boolean {
   if (!url) return true; // empty = no avatar, fine

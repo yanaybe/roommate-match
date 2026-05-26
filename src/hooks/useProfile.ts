@@ -68,6 +68,52 @@ export function useProfile() {
   return { profile, loading, error, refetch };
 }
 
+/**
+ * Fetch a single profile by user_id.
+ * Preferred over useAllProfiles() when only one profile is needed (e.g.
+ * RoommateProfile page), since loading the full paginated list just to find
+ * one row is wasteful and breaks for profiles outside the first page.
+ */
+export function useProfileById(profileUserId: string | undefined) {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<FullProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profileUserId) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", profileUserId)
+      // Hidden profiles are invisible to other users (treat as not found).
+      // The user's own profile is always visible regardless of visibility setting.
+      .or(`user_id.eq.${user?.id ?? "00000000-0000-0000-0000-000000000000"},profile_visibility.neq.hidden`)
+      .maybeSingle()
+      .then(({ data, error: fetchError }) => {
+        if (cancelled) return;
+        if (fetchError) {
+          setError(fetchError.message);
+        } else {
+          setProfile(data as FullProfile | null);
+        }
+        setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [profileUserId, user?.id]);
+
+  return { profile, loading, error };
+}
+
 const TIER_ORDER: Record<string, number> = {
   platinum: 0,
   gold: 1,
@@ -75,8 +121,14 @@ const TIER_ORDER: Record<string, number> = {
   free: 3,
 };
 
-export function useAllProfiles() {
+interface UseAllProfilesOptions {
+  /** When provided, only profiles in this city are fetched (case-insensitive). */
+  city?: string;
+}
+
+export function useAllProfiles(options?: UseAllProfilesOptions) {
   const { user } = useAuth();
+  const city = options?.city ?? null;
   const [profiles, setProfiles] = useState<FullProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,6 +144,12 @@ export function useAllProfiles() {
       .neq("profile_visibility", "hidden")
       .order("created_at", { ascending: false })
       .limit(PAGE_SIZE);
+
+    // Server-side city filter — avoids downloading all profiles when the user
+    // has a city preference. Uses ilike for case-insensitive matching.
+    if (city) {
+      query = query.ilike("city", city);
+    }
 
     if (afterCursor) {
       query = query.lt("created_at", afterCursor);
@@ -121,9 +179,13 @@ export function useAllProfiles() {
       }
     }
     setLoading(false);
-  }, [user?.id]);
+  }, [user?.id, city]);
 
   useEffect(() => {
+    // Reset pagination whenever the city filter changes.
+    setProfiles([]);
+    setCursor(null);
+    setHasMore(true);
     setLoading(true);
     loadPage(null);
   }, [loadPage]);

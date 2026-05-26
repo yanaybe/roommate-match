@@ -36,41 +36,29 @@ export default function MatchModal({ user, matchPercent, onClose, matchBreakdown
     setSending(true);
 
     try {
-      // Check if a conversation already exists with this user
-      const { data: myConvs } = await supabase
-        .from("conversation_participants")
-        .select("conversation_id")
-        .eq("user_id", authUser.id);
+      // find_or_create_conversation deduplicates automatically — no manual
+      // participant search needed. It also enforces the mutual-like guard at
+      // the DB level (SECURITY DEFINER). In the match modal context a mutual
+      // like always exists, but we handle the error defensively in case the
+      // like was withdrawn between detection and conversation creation.
+      const { data: convId, error: rpcErr } = await supabase
+        .rpc("find_or_create_conversation", { other_user_id: user.id });
 
-      let existingConvId: string | null = null;
-
-      if (myConvs?.length) {
-        for (const p of myConvs) {
-          const { data: otherParticipant } = await supabase
-            .from("conversation_participants")
-            .select("user_id")
-            .eq("conversation_id", p.conversation_id)
-            .eq("user_id", user.id)
-            .maybeSingle();
-
-          if (otherParticipant) {
-            existingConvId = p.conversation_id;
-            break;
-          }
+      if (rpcErr) {
+        if (rpcErr.message?.includes("mutual_like_required")) {
+          toast.error("Looks like the match was undone. Like each other first to start a chat.");
+          onClose();
+          return;
         }
+        throw rpcErr;
       }
 
-      const convId = existingConvId ?? await (async () => {
-        const { data, error } = await supabase
-          .rpc("create_conversation_with_participant", { other_user_id: user.id });
-        if (error || !data) throw error;
-        return data as string;
-      })();
+      if (!convId) throw new Error("No conversation ID returned");
 
       const { error: msgErr } = await supabase
         .from("messages")
         .insert({
-          conversation_id: convId,
+          conversation_id: convId as string,
           sender_id: authUser.id,
           content: message.trim(),
         });
@@ -80,7 +68,7 @@ export default function MatchModal({ user, matchPercent, onClose, matchBreakdown
       onClose();
       navigate("/chats");
     } catch (err: any) {
-      toast.error("Failed to start chat: " + (err?.message ?? "Unknown error"));
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setSending(false);
     }

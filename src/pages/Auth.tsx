@@ -10,6 +10,47 @@ import { Home, MessageCircle, ShieldCheck, ArrowRight, Eye, EyeOff } from "lucid
 import { analyzePassword } from "@/lib/security";
 import { analytics } from "@/lib/analytics";
 
+// ── Auth error mapper ─────────────────────────────────────────────────────────
+// Maps Supabase Auth error codes/messages to user-friendly generic strings.
+// Raw Supabase messages must NEVER be shown — they can enumerate registered
+// emails, leak internal DB errors, or expose server configuration.
+function mapAuthError(err: { message?: string; code?: string; status?: number } | null): string {
+  if (!err) return "Something went wrong. Please try again.";
+  const msg = (err.message ?? "").toLowerCase();
+  const code = (err.code ?? "").toLowerCase();
+
+  // Wrong credentials — deliberately vague (prevents email enumeration)
+  if (code === "invalid_credentials" || msg.includes("invalid login credentials")) {
+    return "Incorrect email or password.";
+  }
+  // Email already taken
+  if (code === "user_already_exists" || msg.includes("user already registered") || msg.includes("already been registered")) {
+    return "An account with this email already exists.";
+  }
+  // Email not confirmed
+  if (code === "email_not_confirmed" || msg.includes("email not confirmed")) {
+    return "Please verify your email before signing in.";
+  }
+  // Rate limit
+  if (msg.includes("rate limit") || msg.includes("too many") || err.status === 429) {
+    return "Too many attempts. Please wait a few minutes and try again.";
+  }
+  // Signups disabled
+  if (msg.includes("signup") && msg.includes("disabled")) {
+    return "Sign-ups are temporarily unavailable. Please try again later.";
+  }
+  // Weak password (shouldn't reach UI with our schema, but defensive)
+  if (code === "weak_password" || msg.includes("weak_password")) {
+    return "Your password doesn't meet the strength requirements.";
+  }
+  // OAuth / provider errors
+  if (msg.includes("provider") || msg.includes("oauth")) {
+    return "Could not connect with the provider. Please try again.";
+  }
+  // Any internal / unexpected error — never expose raw message
+  return "Something went wrong. Please try again.";
+}
+
 const emailSchema = z.string().email("Invalid email address");
 
 const passwordSchema = z
@@ -41,7 +82,7 @@ export default function Auth() {
       provider: "google",
       options: { redirectTo: `${window.location.origin}/` },
     });
-    if (error) toast.error(error.message);
+    if (error) toast.error(mapAuthError(error));
   };
 
   useEffect(() => {
@@ -77,7 +118,7 @@ export default function Auth() {
     if (isLogin) {
       if (!password) { toast.error(t("passwordRequired")); setLoading(false); return; }
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) toast.error(error.message);
+      if (error) toast.error(mapAuthError(error));
       else { analytics.login(); navigate("/"); }
     } else {
       const pwResult = passwordSchema.safeParse(password);
@@ -96,7 +137,7 @@ export default function Auth() {
         password,
         options: { emailRedirectTo: `${window.location.origin}/verify-email` },
       });
-      if (error) toast.error(error.message);
+      if (error) toast.error(mapAuthError(error));
       else { analytics.signup(); navigate("/onboarding"); }
     }
     setLoading(false);
@@ -164,7 +205,7 @@ export default function Auth() {
                     const { error } = await supabase.auth.resetPasswordForEmail(email, {
                       redirectTo: `${window.location.origin}/auth`,
                     });
-                    if (error) toast.error(error.message);
+                    if (error) toast.error(mapAuthError(error));
                     else toast.success(t("passwordResetSent"));
                   }}
                   className="text-xs text-primary font-semibold hover:underline"

@@ -431,28 +431,25 @@ export default function Chats() {
 
   const deleteConversation = async (convId: string) => {
     if (!user) return;
-    // Verify ownership server-side — client state can be spoofed
-    const { data: participation } = await supabase
+    // Soft-delete: remove only THIS user's participation record.
+    // Messages and the conversation itself are preserved for the other participant.
+    // A DB trigger (trg_gc_empty_conversation) automatically deletes the
+    // conversation row (and cascades to messages) once ALL participants have
+    // removed themselves — so nothing is ever truly lost until both sides opt out.
+    const { error } = await supabase
       .from("conversation_participants")
-      .select("user_id")
+      .delete()
       .eq("conversation_id", convId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!participation) return;
-    // Delete read receipts, messages, participation, then conversation
-    const { data: msgs } = await supabase
-      .from("messages")
-      .select("id")
-      .eq("conversation_id", convId);
-    const msgIds = (msgs ?? []).map((m) => m.id);
-    if (msgIds.length > 0) {
-      await supabase.from("message_read_receipts").delete().in("message_id", msgIds);
-      await supabase.from("messages").delete().eq("conversation_id", convId);
+      .eq("user_id", user.id);
+
+    if (error) {
+      toast.error("Could not delete conversation. Please try again.");
+      return;
     }
-    await supabase.from("conversation_participants").delete().eq("conversation_id", convId).eq("user_id", user.id);
-    await supabase.from("conversations").delete().eq("id", convId);
+
     setConversations((prev) => prev.filter((c) => c.id !== convId));
     setDeleteTarget(null);
+    if (activeConv === convId) setActiveConv(null);
     refreshUnread();
   };
 
@@ -766,12 +763,12 @@ export default function Chats() {
   return (
     <>
       {/* Mobile: show list OR chat based on activeConv */}
-      <div className="desk:hidden min-h-screen bg-background pb-20">
+      <div className="desk:hidden min-h-[100dvh] bg-background pb-20">
         {activeConv ? ChatPanel : ConversationList}
       </div>
 
       {/* Desktop: side-by-side split panel */}
-      <div className="hidden desk:flex h-screen bg-background">
+      <div className="hidden desk:flex h-[100dvh] bg-background">
         <div className="w-80 shrink-0 border-r border-border overflow-hidden">
           {ConversationList}
         </div>

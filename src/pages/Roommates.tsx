@@ -84,9 +84,6 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subsc
 export default function Roommates() {
   const { user } = useAuth();
   const { profile: myProfile } = useProfile();
-  const { profiles: allProfiles, loading: profilesLoading, hasMore, loadMore } = useAllProfiles();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"people" | "squads">("people");
   const [swiped, setSwiped] = useState<string[]>([]);
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
@@ -99,11 +96,21 @@ export default function Roommates() {
   const [showAllCities, setShowAllCities] = useState(
     () => localStorage.getItem("show_all_cities") === "true"
   );
+  // City filter is applied at the DB level — only fetch profiles from the
+  // user's own city unless "All cities" mode is on.
+  const cityFilter = !showAllCities && myProfile?.city ? myProfile.city : undefined;
+  const { profiles: allProfiles, loading: profilesLoading, hasMore, loadMore } = useAllProfiles(
+    cityFilter ? { city: cityFilter } : undefined,
+  );
+  const navigate = useNavigate();
+  const { t } = useLanguage();
   const [showTutorial, setShowTutorial] = useState(
     () => !localStorage.getItem("swipe_tutorial_seen")
   );
   const { canLike, likesUsed, likesLimit, recordLike, openPremiumSheet, subscriptionTier } = useDailyLimits();
   const canUndo = subscriptionTier !== "free";
+  // Track the most-recently liked profile so handleUndo can delete the DB row.
+  const lastLikedIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -135,15 +142,12 @@ export default function Roommates() {
       }));
   }, [allProfiles, myProfile, user?.id]);
 
-  const items = useMemo(() => {
-    const cityFiltered = showAllCities
-      ? otherProfiles
-      : otherProfiles.filter((p) =>
-          !myProfile?.city || !p.profile.city ||
-          p.profile.city.toLowerCase() === myProfile.city.toLowerCase()
-        );
-    return cityFiltered.map((p) => ({ user: p.user, matchPercent: p.matchPercent, matchBreakdown: p.matchBreakdown }));
-  }, [otherProfiles, myProfile, showAllCities]);
+  // City filtering is now done at the DB level inside useAllProfiles.
+  // No client-side city filter needed here.
+  const items = useMemo(
+    () => otherProfiles.map((p) => ({ user: p.user, matchPercent: p.matchPercent, matchBreakdown: p.matchBreakdown })),
+    [otherProfiles],
+  );
 
   const swipedSet = useMemo(() => new Set(swiped), [swiped]);
   const blockedSet = useMemo(() => new Set(blockedIds), [blockedIds]);
@@ -182,6 +186,9 @@ export default function Roommates() {
       setSwiped((prev) => [...prev, current.user.id]);
 
       if (direction === "right" && user) {
+        // Record the last liked ID so handleUndo can delete the DB row.
+        lastLikedIdRef.current = current.user.id;
+
         if (isUUID(current.user.id)) {
           await supabase.from("liked_profiles").upsert(
             { user_id: user.id, liked_user_id: current.user.id },
@@ -221,13 +228,38 @@ export default function Roommates() {
     [remaining, requireAuth, user, likesUsed, likesLimit, subscriptionTier],
   );
 
-  const handleUndo = () => {
+  const handleUndo = useCallback(async () => {
     if (!canUndo) {
       openPremiumSheet();
       return;
     }
+
+    const undoneId = swiped[swiped.length - 1];
+    if (!undoneId) return;
+
+    // Optimistically update local state
     setSwiped((prev) => prev.slice(0, -1));
-  };
+
+    // If the undone swipe was a right-swipe (like), delete the DB row so the
+    // undone profile appears again in future sessions and the other user's
+    // match indicator is reset.
+    if (undoneId === lastLikedIdRef.current && user && isUUID(undoneId)) {
+      lastLikedIdRef.current = null;
+      const { error } = await supabase
+        .from("liked_profiles")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("liked_user_id", undoneId);
+
+      if (error) {
+        // DB delete failed — roll back local state so the profile stays hidden
+        // and the UI stays consistent with the server.
+        setSwiped((prev) => [...prev, undoneId]);
+        lastLikedIdRef.current = undoneId;
+        toast.error("Could not undo like. Please try again.");
+      }
+    }
+  }, [canUndo, swiped, user, openPremiumSheet]);
 
   useEffect(() => {
     if (remaining.length <= 2 && hasMore && !profilesLoading) {
