@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Users,
   Plus,
-  ArrowLeft,
   Crown,
   Bell,
   Check,
@@ -175,9 +174,6 @@ export default function MySquads() {
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-2xl mx-auto px-4 pt-12 desk:pt-6 pb-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1 -ml-1">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
           <div className="flex-1">
             <h1 className="text-xl font-extrabold text-foreground">{t("squads")}</h1>
           </div>
