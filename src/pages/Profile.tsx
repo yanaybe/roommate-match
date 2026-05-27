@@ -163,24 +163,25 @@ export default function Profile() {
     hasPhotos: !!(profile?.avatar_url),
   };
 
-  // Profile completion score — each checked field is worth one point
-  const completionFields = [
-    !!profile?.name,
-    !!profile?.age,
-    !!profile?.city,
-    !!profile?.occupation,
-    !!profile?.bio,
-    !!profile?.avatar_url,
-    !!(profile?.photos?.length >= 1),
-    !!(profile?.budget),
-    !!(profile?.sleep_schedule),
-    !!(profile?.lifestyle_vibe),
-    !!(profile?.social_level),
-    !!(profile?.noise_level),
+  // Profile completion score — each item has a label shown when missing
+  const completionItems: { label: string; done: boolean }[] = [
+    { label: "Name",           done: !!profile?.name },
+    { label: "Age",            done: !!profile?.age },
+    { label: "City",           done: !!profile?.city },
+    { label: "Occupation",     done: !!profile?.occupation },
+    { label: "Bio",            done: !!profile?.bio },
+    { label: "Profile photo",  done: !!profile?.avatar_url },
+    { label: "At least 1 photo", done: !!(profile?.photos?.length && profile.photos.length >= 1) },
+    { label: "Monthly budget", done: !!profile?.budget },
+    { label: "Sleep schedule", done: !!profile?.sleep_schedule },
+    { label: "Lifestyle vibe", done: !!profile?.lifestyle_vibe },
+    { label: "Social level",   done: !!profile?.social_level },
+    { label: "Noise level",    done: !!profile?.noise_level },
   ];
   const completionScore = Math.round(
-    (completionFields.filter(Boolean).length / completionFields.length) * 100
+    (completionItems.filter((f) => f.done).length / completionItems.length) * 100
   );
+  const missingFields = completionItems.filter((f) => !f.done);
 
   return (
     <div className="min-h-screen bg-background pb-28 desk:pb-8">
@@ -249,12 +250,12 @@ export default function Profile() {
                     ? "Complete your profile to get 3× more matches"
                     : completionScore < 85
                     ? "Almost there — a complete profile ranks higher"
-                    : "Add a few more details to reach 100%"}
+                    : "Almost there — just a few more details"}
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
             </div>
-            <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-secondary rounded-full h-2 overflow-hidden mb-3">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${completionScore}%` }}
@@ -264,6 +265,20 @@ export default function Profile() {
                 }`}
               />
             </div>
+            {/* Missing fields list */}
+            {missingFields.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {missingFields.map((f) => (
+                  <span
+                    key={f.label}
+                    className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-amber-500 shrink-0" />
+                    {f.label}
+                  </span>
+                ))}
+              </div>
+            )}
           </motion.button>
         )}
 
