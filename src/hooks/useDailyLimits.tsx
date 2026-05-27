@@ -4,8 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import PremiumSheet from "@/components/PremiumSheet";
 import { analytics } from "@/lib/analytics";
 
-const FREE_LIKES_LIMIT = 8;
-const FREE_SAVES_LIMIT = 3;
+const FREE_LIKES_LIMIT = 30;
+const FREE_SAVES_LIMIT = 10;
 
 interface DailyLimitsContextValue {
   canLike: boolean;
