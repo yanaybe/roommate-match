@@ -101,7 +101,7 @@ export default function BottomNav() {
           ) : (
             <div>
               <span className="text-2xl font-extrabold text-foreground tracking-tight">
-                Roo<span className="text-primary">match</span>
+                Roo<span className="text-primary">Match</span>
               </span>
               <p className="text-xs text-muted-foreground mt-0.5">Find your perfect roommate</p>
             </div>
