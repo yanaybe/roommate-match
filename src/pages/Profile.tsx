@@ -171,13 +171,12 @@ export default function Profile() {
     !!profile?.occupation,
     !!profile?.bio,
     !!profile?.avatar_url,
-    !!(profile?.photos?.length > 1),
+    !!(profile?.photos?.length >= 1),
     !!(profile?.budget),
     !!(profile?.sleep_schedule),
     !!(profile?.lifestyle_vibe),
     !!(profile?.social_level),
     !!(profile?.noise_level),
-    !!(profile?.phone_verified),
   ];
   const completionScore = Math.round(
     (completionFields.filter(Boolean).length / completionFields.length) * 100
