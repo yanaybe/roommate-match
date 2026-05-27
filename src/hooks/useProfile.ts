@@ -16,6 +16,10 @@ export interface FullProfile extends ProfileData {
   // Fields added in later migrations — explicitly typed here to eliminate (as any) casts
   photos?: string[];
   gender?: string | null;
+  neighborhood?: string;
+  move_in_date?: string | null;
+  is_admin?: boolean;
+  is_banned?: boolean;
   subscription_tier?: string;
   subscription_expires_at?: string | null;
   paddle_customer_id?: string | null;

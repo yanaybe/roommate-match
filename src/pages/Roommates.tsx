@@ -52,7 +52,7 @@ function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
 }
 
 // Convert DB profile to mock format for SwipeCard compatibility
-function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subscriptionTier?: string } {
+function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subscriptionTier?: string; neighborhood?: string } {
   return {
     id: p.user_id,
     name: p.name,
@@ -76,6 +76,7 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subsc
     photos: p.photos?.length ? p.photos : undefined,
     phoneVerified: p.phone_verified ?? false,
     subscriptionTier: p.subscription_tier ?? "free",
+    neighborhood: p.neighborhood || undefined,
     lastSeen: null,
   };
 }

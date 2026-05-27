@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AlertTriangle, Check, X, Ban, Mail, ChevronLeft, Shield, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,10 +9,11 @@ interface Report {
   id: string;
   created_at: string;
   reporter_id: string;
-  reported_user_id: string;
+  // target_id is the reported user's id (when target_type = 'user')
+  target_id: string;
   reason: string;
   details: string | null;
-  status: "pending" | "dismissed" | "warned" | "banned";
+  status: string;
   reported_name?: string;
   reported_city?: string;
   reporter_name?: string;
@@ -40,47 +41,49 @@ export default function Admin() {
     if (!user) { navigate("/auth"); return; }
     supabase.from("profiles").select("is_admin").eq("user_id", user.id).maybeSingle()
       .then(({ data }) => {
-        const admin = (data as any)?.is_admin === true;
+        const admin = data?.is_admin === true;
         setIsAdmin(admin);
         if (!admin) navigate("/");
       });
   }, [user, navigate]);
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     setLoading(true);
-    const q = supabase
-      .from("reported_users" as any)
+    let q = supabase
+      .from("reports")
       .select("*")
+      .eq("target_type", "user")
       .order("created_at", { ascending: false });
-    if (filter === "pending") q.eq("status", "pending");
+    if (filter === "pending") q = q.eq("status", "pending");
     const { data, error } = await q;
     if (error) { toast.error("Failed to load reports"); setLoading(false); return; }
 
-    const enriched = await Promise.all((data ?? []).map(async (r: any) => {
+    const enriched = await Promise.all((data ?? []).map(async (r) => {
       const [rep, repd] = await Promise.all([
         supabase.from("profiles").select("name").eq("user_id", r.reporter_id).maybeSingle(),
-        supabase.from("profiles").select("name, city").eq("user_id", r.reported_user_id).maybeSingle(),
+        supabase.from("profiles").select("name, city").eq("user_id", r.target_id).maybeSingle(),
       ]);
       return {
         ...r,
-        reporter_name: (rep.data as any)?.name ?? "Unknown",
-        reported_name: (repd.data as any)?.name ?? "Unknown",
-        reported_city: (repd.data as any)?.city ?? "",
+        reporter_name: rep.data?.name ?? "Unknown",
+        reported_name: repd.data?.name ?? "Unknown",
+        reported_city: repd.data?.city ?? "",
       };
     }));
-    setReports(enriched);
+    setReports(enriched as Report[]);
     setLoading(false);
-  };
+  }, [filter]);
 
-  useEffect(() => { if (isAdmin) loadReports(); }, [isAdmin, filter]);
+  useEffect(() => { if (isAdmin) loadReports(); }, [isAdmin, loadReports]);
 
   const action = async (reportId: string, reportedUserId: string, act: "dismiss" | "warn" | "ban") => {
     setActioning(reportId);
     try {
       if (act === "ban") {
-        await supabase.from("profiles").update({ is_banned: true } as any).eq("user_id", reportedUserId);
+        await supabase.from("profiles").update({ is_banned: true }).eq("user_id", reportedUserId);
       }
-      await supabase.from("reported_users" as any).update({ status: act === "dismiss" ? "dismissed" : act === "warn" ? "warned" : "banned" }).eq("id", reportId);
+      const newStatus = act === "dismiss" ? "dismissed" : act === "warn" ? "warned" : "banned";
+      await supabase.from("reports").update({ status: newStatus }).eq("id", reportId);
       toast.success(act === "dismiss" ? "Report dismissed" : act === "warn" ? "User warned" : "User banned");
       setReports((prev) => prev.filter((r) => r.id !== reportId));
     } catch {
@@ -185,21 +188,21 @@ export default function Admin() {
               {r.status === "pending" && (
                 <div className="flex gap-2">
                   <button
-                    onClick={() => action(r.id, r.reported_user_id, "dismiss")}
+                    onClick={() => action(r.id, r.target_id, "dismiss")}
                     disabled={actioning === r.id}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-secondary text-secondary-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-50"
                   >
                     <X className="w-3.5 h-3.5" /> Dismiss
                   </button>
                   <button
-                    onClick={() => action(r.id, r.reported_user_id, "warn")}
+                    onClick={() => action(r.id, r.target_id, "warn")}
                     disabled={actioning === r.id}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/20 text-xs font-semibold hover:bg-blue-500/20 transition-colors disabled:opacity-50"
                   >
                     <Mail className="w-3.5 h-3.5" /> Warn user
                   </button>
                   <button
-                    onClick={() => action(r.id, r.reported_user_id, "ban")}
+                    onClick={() => action(r.id, r.target_id, "ban")}
                     disabled={actioning === r.id}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 text-xs font-semibold hover:bg-destructive/20 transition-colors disabled:opacity-50"
                   >

@@ -39,13 +39,13 @@ function ActivityStrip() {
     if (views >= 5) return;
     localStorage.setItem("activity_strip_views", String(views + 1));
     supabase
-      .from("public_activity" as any)
+      .from("public_activity")
       .select("display_text")
       .order("created_at", { ascending: false })
       .limit(5)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          setItems(data.map((d: any) => d.display_text));
+          setItems(data.map((d) => d.display_text));
           setVisible(true);
         }
       });

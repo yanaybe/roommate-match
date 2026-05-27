@@ -162,21 +162,21 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
     onApply(local);
     if (saveSearch) {
       const label = [local.budgetMax < 10000 ? `under ₪${local.budgetMax.toLocaleString()}` : ""].filter(Boolean).join(" · ") || "My search";
-      // Persist to localStorage (always)
-      const saved = JSON.parse(localStorage.getItem("saved_searches") ?? "[]");
-      saved.push({ label, filters: local, savedAt: new Date().toISOString() });
-      localStorage.setItem("saved_searches", JSON.stringify(saved));
-      // Also persist to Supabase (requires saved_searches table migration)
+      // Persist to localStorage (cross-session, single device)
+      const localSaved = JSON.parse(localStorage.getItem("saved_searches") ?? "[]");
+      localSaved.push({ label, filters: local, savedAt: new Date().toISOString() });
+      localStorage.setItem("saved_searches", JSON.stringify(localSaved));
+      // Also persist to Supabase for cross-device sync
       if (user) {
         try {
-          await supabase.from("saved_searches" as any).insert({
+          await supabase.from("saved_searches").insert({
             user_id: user.id,
             label,
-            filters: local as any,
+            filters: local,
             notify_email: true,
           });
         } catch {
-          // Graceful fallback: saved_searches table may not exist yet
+          // Graceful fallback: keep localStorage copy
         }
       }
       setSaveSearch(false);

@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Props {
   open: boolean;
@@ -11,37 +12,19 @@ interface Props {
   subscriptionTier: string;
 }
 
-const TIER_DETAILS: Record<string, { label: string; price: string; color: string; features: string[] }> = {
-  gold: {
-    label: "Gold",
-    price: "₪29/mo",
-    color: "text-amber-500",
-    features: [
-      "Unlimited profile likes",
-      "See who liked you",
-      "1 weekly profile boost",
-      "Advanced lifestyle filters",
-      "Priority in search results",
-      "Save & get alerts for searches",
-    ],
-  },
-  platinum: {
-    label: "Platinum",
-    price: "₪39/mo",
-    color: "text-violet-500",
-    features: [
-      "Everything in Gold",
-      "Message before matching",
-      "3 monthly profile boosts",
-      "Top placement in city search",
-      "Squad creation & management",
-      "Priority support",
-    ],
-  },
+const TIER_COLORS: Record<string, string> = {
+  gold: "text-amber-500",
+  platinum: "text-violet-500",
+};
+
+const TIER_PRICES: Record<string, string> = {
+  gold: "₪29/mo",
+  platinum: "₪39/mo",
 };
 
 export default function SubscriptionManagementSheet({ open, onOpenChange, subscriptionTier }: Props) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
@@ -62,11 +45,18 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
       });
   }, [open, user]);
 
-  const tier = TIER_DETAILS[subscriptionTier];
+  const tierLabel = subscriptionTier === "gold" ? "Gold" : "Platinum";
+  const tierColor = TIER_COLORS[subscriptionTier] ?? "text-primary";
+  const tierPrice = TIER_PRICES[subscriptionTier] ?? "";
 
-  // Format renewal date — use DB value if available, fall back to "N/A"
+  // Build features list from translation keys
+  const features = subscriptionTier === "gold"
+    ? [t("subFeatGold1"), t("subFeatGold2"), t("subFeatGold3"), t("subFeatGold4"), t("subFeatGold5"), t("subFeatGold6")]
+    : [t("subFeatPlatinum1"), t("subFeatPlatinum2"), t("subFeatPlatinum3"), t("subFeatPlatinum4"), t("subFeatPlatinum5"), t("subFeatPlatinum6")];
+
+  // Format renewal date — use DB value if available, fall back to dash
   const renewalLabel = (() => {
-    if (loadingDates) return "Loading…";
+    if (loadingDates) return t("loading");
     if (!subscriptionExpiresAt) return "—";
     return new Date(subscriptionExpiresAt).toLocaleDateString("en-IL", {
       day: "numeric", month: "long", year: "numeric",
@@ -87,22 +77,21 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
       setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error("Cancel subscription error:", err);
-      // Graceful fallback: let user know to contact support
       toast.error("Could not cancel automatically. Please contact support@roomatch.app");
     } finally {
       setCancelling(false);
     }
   };
 
-  if (!tier) return null;
+  if (!TIER_COLORS[subscriptionTier]) return null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto pb-10">
         <SheetHeader className="pb-4">
           <SheetTitle className="flex items-center gap-2">
-            <Crown className={`w-5 h-5 ${tier.color}`} />
-            {tier.label} Plan
+            <Crown className={`w-5 h-5 ${tierColor}`} />
+            {tierLabel} Plan
           </SheetTitle>
         </SheetHeader>
 
@@ -110,17 +99,17 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
         <div className="bg-secondary rounded-2xl p-4 mb-5">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className={`text-lg font-extrabold ${tier.color}`}>{tier.label}</p>
-              <p className="text-2xl font-extrabold text-foreground">{tier.price}</p>
+              <p className={`text-lg font-extrabold ${tierColor}`}>{tierLabel}</p>
+              <p className="text-2xl font-extrabold text-foreground">{tierPrice}</p>
             </div>
             <div className="bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full">
-              <p className="text-xs font-bold text-green-600">Active</p>
+              <p className="text-xs font-bold text-green-600">{t("subActive")}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="w-4 h-4 shrink-0" />
             <span>
-              {subscriptionExpiresAt ? "Renews" : "Next billing"}:{" "}
+              {subscriptionExpiresAt ? t("subRenews") : t("subNextBilling")}:{" "}
               <span className="font-semibold text-foreground">{renewalLabel}</span>
             </span>
           </div>
@@ -128,9 +117,9 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
 
         {/* Features */}
         <div className="mb-5">
-          <p className="text-sm font-semibold text-foreground mb-3">What's included</p>
+          <p className="text-sm font-semibold text-foreground mb-3">{t("subWhatsIncluded")}</p>
           <div className="space-y-2">
-            {tier.features.map((f) => (
+            {features.map((f) => (
               <div key={f} className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary shrink-0" />
                 <span className="text-sm text-foreground">{f}</span>
@@ -146,7 +135,7 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
         >
           <div className="flex items-center gap-3">
             <CreditCard className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-semibold text-foreground">Billing history</span>
+            <span className="text-sm font-semibold text-foreground">{t("billingHistory")}</span>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -157,18 +146,20 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
             onClick={() => setCancelConfirm(true)}
             className="w-full py-3 rounded-2xl text-sm font-semibold text-destructive border border-destructive/30 hover:bg-destructive/5 transition-colors"
           >
-            Cancel subscription
+            {t("subCancelSub")}
           </button>
         ) : (
           <div className="border border-destructive/30 rounded-2xl p-4 bg-destructive/5">
             <div className="flex items-start gap-3 mb-4">
               <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-bold text-foreground">Cancel {tier.label}?</p>
+                <p className="text-sm font-bold text-foreground">
+                  {t("subCancelTitle").replace("{tier}", tierLabel)}
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {subscriptionExpiresAt
-                    ? `You'll keep your benefits until ${renewalLabel}, then revert to the free plan.`
-                    : "You'll keep your benefits until the end of your billing period, then revert to the free plan."}
+                    ? t("subCancelDesc").replace("{date}", renewalLabel)
+                    : t("subCancelDescNoDate")}
                 </p>
               </div>
             </div>
@@ -177,7 +168,7 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
                 onClick={() => setCancelConfirm(false)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-secondary text-secondary-foreground"
               >
-                <X className="w-4 h-4 inline mr-1" />Keep plan
+                <X className="w-4 h-4 inline mr-1" />{t("subKeepPlan")}
               </button>
               <button
                 onClick={handleCancel}
@@ -185,9 +176,9 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-destructive text-destructive-foreground disabled:opacity-60 flex items-center justify-center gap-1.5"
               >
                 {cancelling ? (
-                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Cancelling…</>
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> {t("subCancelling")}</>
                 ) : (
-                  "Yes, cancel"
+                  t("subYesCancel")
                 )}
               </button>
             </div>

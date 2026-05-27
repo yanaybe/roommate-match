@@ -166,7 +166,7 @@ export default function PostApartment() {
           hasGarden: data.has_garden ?? false,
           petFriendly: data.pet_friendly ?? false,
         });
-        setListingType(((data as any).listing_type === "entire_place" ? "entire_place" : "room") as "room" | "entire_place");
+        setListingType((data.listing_type === "entire_place" ? "entire_place" : "room") as "room" | "entire_place");
         setKeptImages(data.images ?? []);
         setEditLoading(false);
       });
@@ -298,7 +298,7 @@ export default function PostApartment() {
       if (isEditMode && editId) {
         const { error } = await supabase
           .from("apartments")
-          .update(payload as any)
+          .update(payload)
           .eq("id", editId)
           .eq("user_id", user.id);
         if (error) throw error;
@@ -308,7 +308,7 @@ export default function PostApartment() {
         const { error } = await supabase.from("apartments").insert({
           user_id: user.id,
           ...payload,
-        } as any);
+        });
         if (error) throw error;
         localStorage.removeItem(DRAFT_KEY);
         analytics.apartmentPost();

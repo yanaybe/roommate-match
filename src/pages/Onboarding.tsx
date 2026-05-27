@@ -189,10 +189,10 @@ export default function Onboarding() {
         name: profile.name || "",
         age: profile.age?.toString() || "",
         city: profile.city || "",
-        neighborhood: (profile as any).neighborhood || "",
+        neighborhood: profile.neighborhood || "",
         occupation: profile.occupation || "",
         budget: profile.budget?.toString() || "",
-        move_in_date: (profile as any).move_in_date || "",
+        move_in_date: profile.move_in_date || "",
         desired_room_type: profile.desired_room_type || "Private",
         sleep_schedule: profile.sleep_schedule || "Flexible",
         cleanliness: profile.cleanliness ?? 3,
@@ -334,7 +334,7 @@ export default function Onboarding() {
       photos: currentForm.photos,
       onboarding_complete: false,
     };
-    await supabase.from("profiles").upsert(payload as any, { onConflict: "user_id" });
+    await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
   };
 
   const handleSubmit = async () => {

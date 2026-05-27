@@ -156,8 +156,8 @@ export default function SwipeCard({ user, matchPercent, matchBreakdown, onSwipe,
           </div>
           <div className="flex items-center gap-1.5 text-primary-foreground/80 text-sm mt-1">
             <MapPin className="w-3.5 h-3.5" />
-            {(user as any).neighborhood
-              ? `${(user as any).neighborhood}, ${user.city}`
+            {(user as { neighborhood?: string }).neighborhood
+              ? `${(user as { neighborhood?: string }).neighborhood}, ${user.city}`
               : user.city}
             <span className="mx-1">•</span>
             <Briefcase className="w-3.5 h-3.5" />

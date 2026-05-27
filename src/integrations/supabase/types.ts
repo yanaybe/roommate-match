@@ -72,6 +72,7 @@ export type Database = {
           pet_friendly: boolean
           price: number
           room_description: string
+          listing_type: string
           room_type: string
           rooms: number
           size: number
@@ -104,6 +105,7 @@ export type Database = {
           is_featured?: boolean
           is_furnished?: boolean
           neighborhood?: string
+          listing_type?: string
           pet_friendly?: boolean
           price?: number
           room_description?: string
@@ -380,9 +382,13 @@ export type Database = {
           highlighted_until: string | null
           id: string
           instant_message_credits: number
+          is_admin: boolean
+          is_banned: boolean
           lifestyle_similarity: string
           lifestyle_vibe: string
+          move_in_date: string | null
           name: string
+          neighborhood: string
           noise_level: number
           notify_on_match: boolean
           notify_on_message: boolean
@@ -437,9 +443,13 @@ export type Database = {
           highlighted_until?: string | null
           id?: string
           instant_message_credits?: number
+          is_admin?: boolean
+          is_banned?: boolean
           lifestyle_similarity?: string
           lifestyle_vibe?: string
+          move_in_date?: string | null
           name?: string
+          neighborhood?: string
           noise_level?: number
           notify_on_match?: boolean
           notify_on_message?: boolean
@@ -494,9 +504,13 @@ export type Database = {
           highlighted_until?: string | null
           id?: string
           instant_message_credits?: number
+          is_admin?: boolean
+          is_banned?: boolean
           lifestyle_similarity?: string
           lifestyle_vibe?: string
+          move_in_date?: string | null
           name?: string
+          neighborhood?: string
           noise_level?: number
           notify_on_match?: boolean
           notify_on_message?: boolean
@@ -539,6 +553,7 @@ export type Database = {
           id: string
           reason: string
           reporter_id: string
+          status: string
           target_id: string
           target_type: string
         }
@@ -548,6 +563,7 @@ export type Database = {
           id?: string
           reason: string
           reporter_id: string
+          status?: string
           target_id: string
           target_type?: string
         }
@@ -557,6 +573,7 @@ export type Database = {
           id?: string
           reason?: string
           reporter_id?: string
+          status?: string
           target_id?: string
           target_type?: string
         }
