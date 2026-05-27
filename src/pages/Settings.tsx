@@ -7,12 +7,17 @@ import {
   Trash2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Switch } from "@/components/ui/switch";
 import PremiumSheet from "@/components/PremiumSheet";
 import { useLanguage, languages } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfileStats } from "@/hooks/useProfileStats";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function SectionHeader({ title }: { title: string }) {
   return (

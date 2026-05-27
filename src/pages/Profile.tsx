@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, Building2, Heart, TrendingUp, CreditCard } from "lucide-react";
+import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, Building2, Heart, TrendingUp, CreditCard, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PremiumSheet from "@/components/PremiumSheet";
 import PreferencesSheet from "@/components/profile/PreferencesSheet";

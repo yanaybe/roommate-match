@@ -67,7 +67,7 @@ function groupByMonth(transactions: Transaction[], locale: string) {
   const groups: Record<string, Transaction[]> = {};
   for (const tx of transactions) {
     const d = new Date(tx.date);
-    const key = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    const key = d.toLocaleDateString(locale, { month: "long", year: "numeric" });
     if (!groups[key]) groups[key] = [];
     groups[key].push(tx);
   }
@@ -78,7 +78,7 @@ type FilterType = "all" | "subscription" | "boost" | "extra";
 
 export default function BillingHistory() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const [info, setInfo] = useState<SubscriptionInfo | null>(null);
   const [subLoading, setSubLoading] = useState(true);
@@ -136,7 +136,7 @@ export default function BillingHistory() {
   const isPaid = info?.tier !== "free" && info?.tier != null;
 
   const filtered = filter === "all" ? transactions : transactions.filter((tx) => tx.type === filter);
-  const grouped = groupByMonth(filtered);
+  const grouped = groupByMonth(filtered, language);
   const totalSpent = transactions
     .filter((tx) => tx.status === "completed")
     .reduce((sum, tx) => sum + parseFloat(tx.amount.replace("₪", "")), 0);
@@ -324,7 +324,7 @@ export default function BillingHistory() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-foreground truncate">{tx.description}</p>
-                          <p className="text-[11px] text-muted-foreground">{formatDate(tx.date)}</p>
+                          <p className="text-[11px] text-muted-foreground">{formatDate(tx.date, language)}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
                           <span className={`text-sm font-bold ${tx.status === "refunded" ? "line-through text-muted-foreground" : "text-foreground"}`}>
