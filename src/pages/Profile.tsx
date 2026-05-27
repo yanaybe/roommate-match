@@ -171,13 +171,13 @@ export default function Profile() {
     !!profile?.occupation,
     !!profile?.bio,
     !!profile?.avatar_url,
-    !!((profile as any)?.photos?.length > 1),
+    !!(profile?.photos?.length > 1),
     !!(profile?.budget),
     !!(profile?.sleep_schedule),
     !!(profile?.lifestyle_vibe),
     !!(profile?.social_level),
     !!(profile?.noise_level),
-    !!((profile as any)?.phone_verified),
+    !!(profile?.phone_verified),
   ];
   const completionScore = Math.round(
     (completionFields.filter(Boolean).length / completionFields.length) * 100
@@ -269,7 +269,7 @@ export default function Profile() {
         )}
 
         <div className="bg-card rounded-2xl shadow-card overflow-hidden mb-4">
-          {getMenuItems(t, hasListings, (profile as any)?.subscription_tier !== "free" && (profile as any)?.subscription_tier != null).map((item, i) => {
+          {getMenuItems(t, hasListings, (profile?.subscription_tier ?? "free") !== "free").map((item, i) => {
             const Icon = item.icon;
             return (
               <motion.button

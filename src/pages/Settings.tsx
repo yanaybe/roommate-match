@@ -143,8 +143,8 @@ export default function Settings() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setSubscriptionTier((data as any).subscription_tier ?? "free");
-          setProfileVisibility(((data as any).profile_visibility ?? "everyone") as "everyone" | "hidden");
+          setSubscriptionTier(data.subscription_tier ?? "free");
+          setProfileVisibility((data.profile_visibility ?? "everyone") as "everyone" | "hidden");
         }
       });
   }, [user]);
@@ -160,7 +160,7 @@ export default function Settings() {
     const newValue = hidden ? "hidden" : "everyone";
     const { error } = await supabase
       .from("profiles")
-      .update({ profile_visibility: newValue } as any)
+      .update({ profile_visibility: newValue })
       .eq("user_id", user.id);
     if (!error) {
       setProfileVisibility(newValue);

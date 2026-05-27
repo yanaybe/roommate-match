@@ -117,7 +117,7 @@ export default function Chats() {
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setSubscriptionTier((data as any).subscription_tier ?? "free");
+        if (data) setSubscriptionTier(data.subscription_tier ?? "free");
       });
   }, [user]);
 

@@ -28,4 +28,44 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React runtime — never changes, cache forever
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          // Animation & UI utilities
+          "vendor-motion": ["framer-motion"],
+          // Supabase client
+          "vendor-supabase": ["@supabase/supabase-js"],
+          // Paddle payment SDK
+          "vendor-paddle": ["@paddle/paddle-js"],
+          // Map (Leaflet is very large)
+          "vendor-leaflet": ["leaflet", "react-leaflet"],
+          // i18n & form utilities
+          "vendor-utils": ["react-hook-form", "zod", "sonner", "date-fns"],
+          // Radix UI components (large but shared)
+          "vendor-radix": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-alert-dialog",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-accordion",
+            "@radix-ui/react-avatar",
+            "@radix-ui/react-checkbox",
+            "@radix-ui/react-label",
+            "@radix-ui/react-progress",
+            "@radix-ui/react-radio-group",
+            "@radix-ui/react-separator",
+            "@radix-ui/react-slider",
+            "@radix-ui/react-switch",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-scroll-area",
+          ],
+        },
+      },
+    },
+    // Raise chunk warning threshold slightly since Leaflet is inherently large
+    chunkSizeWarningLimit: 600,
+  },
 }));

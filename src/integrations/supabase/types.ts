@@ -10,10 +10,39 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      apartment_views: {
+        Row: {
+          apartment_id: string
+          id: string
+          viewed_at: string
+          viewer_id: string | null
+        }
+        Insert: {
+          apartment_id: string
+          id?: string
+          viewed_at?: string
+          viewer_id?: string | null
+        }
+        Update: {
+          apartment_id?: string
+          id?: string
+          viewed_at?: string
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apartment_views_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apartments: {
         Row: {
           address: string
@@ -23,6 +52,7 @@ export type Database = {
           coordinates: number[] | null
           created_at: string
           description: string
+          featured_until: string | null
           floor: number | null
           has_ac: boolean
           has_balcony: boolean
@@ -36,6 +66,7 @@ export type Database = {
           has_wifi: boolean
           id: string
           images: string[]
+          is_featured: boolean
           is_furnished: boolean
           neighborhood: string
           pet_friendly: boolean
@@ -56,6 +87,7 @@ export type Database = {
           coordinates?: number[] | null
           created_at?: string
           description?: string
+          featured_until?: string | null
           floor?: number | null
           has_ac?: boolean
           has_balcony?: boolean
@@ -69,6 +101,7 @@ export type Database = {
           has_wifi?: boolean
           id?: string
           images?: string[]
+          is_featured?: boolean
           is_furnished?: boolean
           neighborhood?: string
           pet_friendly?: boolean
@@ -89,6 +122,7 @@ export type Database = {
           coordinates?: number[] | null
           created_at?: string
           description?: string
+          featured_until?: string | null
           floor?: number | null
           has_ac?: boolean
           has_balcony?: boolean
@@ -102,6 +136,7 @@ export type Database = {
           has_wifi?: boolean
           id?: string
           images?: string[]
+          is_featured?: boolean
           is_furnished?: boolean
           neighborhood?: string
           pet_friendly?: boolean
@@ -302,6 +337,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_views: {
+        Row: {
+          id: string
+          profile_id: string
+          viewed_at: string
+          viewer_id: string | null
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          viewed_at?: string
+          viewer_id?: string | null
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          viewed_at?: string
+          viewer_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           activity_hours: string
@@ -319,8 +375,11 @@ export type Database = {
           fitness: string
           gender: string | null
           gender_preference: string
+          gold_boost_used_at: string | null
           guests: string
+          highlighted_until: string | null
           id: string
+          instant_message_credits: number
           lifestyle_similarity: string
           lifestyle_vibe: string
           name: string
@@ -330,18 +389,31 @@ export type Database = {
           notify_on_squad_invite: boolean
           occupation: string
           onboarding_complete: boolean
+          paddle_customer_id: string | null
+          paddle_subscription_id: string | null
           partying: string
+          pet_preference: string
           pets: boolean
+          phone_number: string | null
+          phone_verified: boolean
           photos: string[]
+          platinum_boost_used_at_1: string | null
+          platinum_boost_used_at_2: string | null
+          platinum_boost_used_at_3: string | null
           preferred_age_max: number
           preferred_age_min: number
+          profile_visibility: string | null
           religious_level: string
           shared_space_org: string
           sleep_schedule: string
           smoking: boolean
+          smoking_preference: string
           social_level: number
+          subscription_expires_at: string | null
+          subscription_tier: string
           updated_at: string
           user_id: string
+          weekly_boosts_remaining: number
           wfh: boolean
         }
         Insert: {
@@ -360,8 +432,11 @@ export type Database = {
           fitness?: string
           gender?: string | null
           gender_preference?: string
+          gold_boost_used_at?: string | null
           guests?: string
+          highlighted_until?: string | null
           id?: string
+          instant_message_credits?: number
           lifestyle_similarity?: string
           lifestyle_vibe?: string
           name?: string
@@ -371,18 +446,31 @@ export type Database = {
           notify_on_squad_invite?: boolean
           occupation?: string
           onboarding_complete?: boolean
+          paddle_customer_id?: string | null
+          paddle_subscription_id?: string | null
           partying?: string
+          pet_preference?: string
           pets?: boolean
+          phone_number?: string | null
+          phone_verified?: boolean
           photos?: string[]
+          platinum_boost_used_at_1?: string | null
+          platinum_boost_used_at_2?: string | null
+          platinum_boost_used_at_3?: string | null
           preferred_age_max?: number
           preferred_age_min?: number
+          profile_visibility?: string | null
           religious_level?: string
           shared_space_org?: string
           sleep_schedule?: string
           smoking?: boolean
+          smoking_preference?: string
           social_level?: number
+          subscription_expires_at?: string | null
+          subscription_tier?: string
           updated_at?: string
           user_id: string
+          weekly_boosts_remaining?: number
           wfh?: boolean
         }
         Update: {
@@ -401,8 +489,11 @@ export type Database = {
           fitness?: string
           gender?: string | null
           gender_preference?: string
+          gold_boost_used_at?: string | null
           guests?: string
+          highlighted_until?: string | null
           id?: string
+          instant_message_credits?: number
           lifestyle_similarity?: string
           lifestyle_vibe?: string
           name?: string
@@ -412,18 +503,31 @@ export type Database = {
           notify_on_squad_invite?: boolean
           occupation?: string
           onboarding_complete?: boolean
+          paddle_customer_id?: string | null
+          paddle_subscription_id?: string | null
           partying?: string
+          pet_preference?: string
           pets?: boolean
+          phone_number?: string | null
+          phone_verified?: boolean
           photos?: string[]
+          platinum_boost_used_at_1?: string | null
+          platinum_boost_used_at_2?: string | null
+          platinum_boost_used_at_3?: string | null
           preferred_age_max?: number
           preferred_age_min?: number
+          profile_visibility?: string | null
           religious_level?: string
           shared_space_org?: string
           sleep_schedule?: string
           smoking?: boolean
+          smoking_preference?: string
           social_level?: number
+          subscription_expires_at?: string | null
+          subscription_tier?: string
           updated_at?: string
           user_id?: string
+          weekly_boosts_remaining?: number
           wfh?: boolean
         }
         Relationships: []
@@ -703,14 +807,158 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_events: {
+        Row: {
+          event_type: string
+          id: string
+          processed_at: string
+        }
+        Insert: {
+          event_type: string
+          id: string
+          processed_at?: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          processed_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          activity_hours: string | null
+          age: number | null
+          alcohol: string | null
+          avatar_url: string | null
+          bio: string | null
+          budget: number | null
+          city: string | null
+          cleanliness: number | null
+          cleanliness_expectations: number | null
+          cooking_habits: string | null
+          created_at: string | null
+          desired_room_type: string | null
+          fitness: string | null
+          gender_preference: string | null
+          guests: string | null
+          lifestyle_similarity: string | null
+          lifestyle_vibe: string | null
+          name: string | null
+          noise_level: number | null
+          occupation: string | null
+          onboarding_complete: boolean | null
+          partying: string | null
+          pets: boolean | null
+          phone_verified: boolean | null
+          photos: string[] | null
+          preferred_age_max: number | null
+          preferred_age_min: number | null
+          religious_level: string | null
+          shared_space_org: string | null
+          sleep_schedule: string | null
+          smoking: boolean | null
+          social_level: number | null
+          subscription_tier: string | null
+          updated_at: string | null
+          user_id: string | null
+          wfh: boolean | null
+        }
+        Insert: {
+          activity_hours?: string | null
+          age?: number | null
+          alcohol?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          budget?: number | null
+          city?: string | null
+          cleanliness?: number | null
+          cleanliness_expectations?: number | null
+          cooking_habits?: string | null
+          created_at?: string | null
+          desired_room_type?: string | null
+          fitness?: string | null
+          gender_preference?: string | null
+          guests?: string | null
+          lifestyle_similarity?: string | null
+          lifestyle_vibe?: string | null
+          name?: string | null
+          noise_level?: number | null
+          occupation?: string | null
+          onboarding_complete?: boolean | null
+          partying?: string | null
+          pets?: boolean | null
+          phone_verified?: boolean | null
+          photos?: string[] | null
+          preferred_age_max?: number | null
+          preferred_age_min?: number | null
+          religious_level?: string | null
+          shared_space_org?: string | null
+          sleep_schedule?: string | null
+          smoking?: boolean | null
+          social_level?: number | null
+          subscription_tier?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wfh?: boolean | null
+        }
+        Update: {
+          activity_hours?: string | null
+          age?: number | null
+          alcohol?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          budget?: number | null
+          city?: string | null
+          cleanliness?: number | null
+          cleanliness_expectations?: number | null
+          cooking_habits?: string | null
+          created_at?: string | null
+          desired_room_type?: string | null
+          fitness?: string | null
+          gender_preference?: string | null
+          guests?: string | null
+          lifestyle_similarity?: string | null
+          lifestyle_vibe?: string | null
+          name?: string | null
+          noise_level?: number | null
+          occupation?: string | null
+          onboarding_complete?: boolean | null
+          partying?: string | null
+          pets?: boolean | null
+          phone_verified?: boolean | null
+          photos?: string[] | null
+          preferred_age_max?: number | null
+          preferred_age_min?: number | null
+          religious_level?: string | null
+          shared_space_org?: string | null
+          sleep_schedule?: string | null
+          smoking?: boolean | null
+          social_level?: number | null
+          subscription_tier?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wfh?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      call_email_function: { Args: { payload: Json }; Returns: undefined }
+      call_notify_function: { Args: { payload: Json }; Returns: undefined }
       create_conversation_with_participant: {
         Args: { other_user_id: string }
         Returns: string
+      }
+      find_or_create_conversation: {
+        Args: { other_user_id: string }
+        Returns: string
+      }
+      increment_instant_message_credits: {
+        Args: { p_amount?: number; p_user_id: string }
+        Returns: undefined
       }
       is_conversation_member: {
         Args: { _conversation_id: string; _user_id: string }
@@ -724,6 +972,11 @@ export type Database = {
         Args: { _squad_id: string; _user_id: string }
         Returns: boolean
       }
+      mark_phone_verified: {
+        Args: { p_phone: string; p_user_id: string }
+        Returns: undefined
+      }
+      use_free_boost: { Args: { p_apartment_id: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

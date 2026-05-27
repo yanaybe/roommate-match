@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Crown, CreditCard, Calendar, AlertTriangle, Check, ChevronRight, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Crown, CreditCard, Calendar, AlertTriangle, Check, ChevronRight, X, Loader2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,28 +44,51 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
   const { user } = useAuth();
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
+  const [loadingDates, setLoadingDates] = useState(false);
+
+  // Load real subscription expiry from DB when sheet opens
+  useEffect(() => {
+    if (!open || !user) return;
+    setLoadingDates(true);
+    supabase
+      .from("profiles")
+      .select("subscription_expires_at")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setSubscriptionExpiresAt(data?.subscription_expires_at ?? null);
+        setLoadingDates(false);
+      });
+  }, [open, user]);
 
   const tier = TIER_DETAILS[subscriptionTier];
 
-  // Derive a mock next billing date (30 days from now) — replace with real Stripe data once integrated
-  const nextBilling = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-IL", {
-    day: "numeric", month: "long", year: "numeric",
-  });
+  // Format renewal date — use DB value if available, fall back to "N/A"
+  const renewalLabel = (() => {
+    if (loadingDates) return "Loading…";
+    if (!subscriptionExpiresAt) return "—";
+    return new Date(subscriptionExpiresAt).toLocaleDateString("en-IL", {
+      day: "numeric", month: "long", year: "numeric",
+    });
+  })();
 
   const handleCancel = async () => {
     if (!user) return;
     setCancelling(true);
     try {
-      // Call the cancel-subscription Edge Function once Stripe is integrated.
-      // For now, downgrade locally so the UX is wired correctly.
-      // Replace with: await supabase.functions.invoke("cancel-subscription", { body: { userId: user.id } });
-      await supabase.from("profiles").update({ subscription_tier: "free" } as any).eq("user_id", user.id);
+      const { error } = await supabase.functions.invoke("cancel-subscription", {
+        body: { user_id: user.id },
+      });
+      if (error) throw error;
       toast.success("Subscription cancelled. Your benefits remain active until the end of the billing period.");
       setCancelConfirm(false);
       onOpenChange(false);
       setTimeout(() => window.location.reload(), 1000);
-    } catch {
-      toast.error("Failed to cancel. Please contact support.");
+    } catch (err) {
+      console.error("Cancel subscription error:", err);
+      // Graceful fallback: let user know to contact support
+      toast.error("Could not cancel automatically. Please contact support@roomatch.app");
     } finally {
       setCancelling(false);
     }
@@ -96,7 +119,10 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="w-4 h-4 shrink-0" />
-            <span>Next billing: <span className="font-semibold text-foreground">{nextBilling}</span></span>
+            <span>
+              {subscriptionExpiresAt ? "Renews" : "Next billing"}:{" "}
+              <span className="font-semibold text-foreground">{renewalLabel}</span>
+            </span>
           </div>
         </div>
 
@@ -140,7 +166,9 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
               <div>
                 <p className="text-sm font-bold text-foreground">Cancel {tier.label}?</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  You'll keep your benefits until {nextBilling}, then revert to the free plan.
+                  {subscriptionExpiresAt
+                    ? `You'll keep your benefits until ${renewalLabel}, then revert to the free plan.`
+                    : "You'll keep your benefits until the end of your billing period, then revert to the free plan."}
                 </p>
               </div>
             </div>
@@ -154,9 +182,13 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-destructive text-destructive-foreground disabled:opacity-60"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-destructive text-destructive-foreground disabled:opacity-60 flex items-center justify-center gap-1.5"
               >
-                {cancelling ? "Cancelling…" : "Yes, cancel"}
+                {cancelling ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Cancelling…</>
+                ) : (
+                  "Yes, cancel"
+                )}
               </button>
             </div>
           </div>

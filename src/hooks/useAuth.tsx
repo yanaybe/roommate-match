@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setLoading(false);
         if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
-          supabase.from("profiles").update({ last_seen: new Date().toISOString() } as any).eq("user_id", session.user.id);
+          supabase.from("profiles").update({ updated_at: new Date().toISOString() }).eq("user_id", session.user.id);
           if (event === "SIGNED_IN") {
             // Request push permission on first login of each session
             registerPushSubscription(session.user.id);

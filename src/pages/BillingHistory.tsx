@@ -97,9 +97,9 @@ export default function BillingHistory() {
       .then(({ data }) => {
         if (data) {
           setInfo({
-            tier: (data as any).subscription_tier ?? "free",
-            paddle_subscription_id: (data as any).paddle_subscription_id ?? null,
-            subscription_expires_at: (data as any).subscription_expires_at ?? null,
+            tier: data.subscription_tier ?? "free",
+            paddle_subscription_id: data.paddle_subscription_id ?? null,
+            subscription_expires_at: data.subscription_expires_at ?? null,
           });
         }
         setSubLoading(false);

@@ -4,8 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import PremiumSheet from "@/components/PremiumSheet";
 import { analytics } from "@/lib/analytics";
 
-const FREE_LIKES_LIMIT = 30;
-const FREE_SAVES_LIMIT = 10;
+const FREE_LIKES_LIMIT = 8;
+const FREE_SAVES_LIMIT = 3;
 
 interface DailyLimitsContextValue {
   canLike: boolean;
@@ -58,7 +58,7 @@ export function DailyLimitsProvider({ children }: { children: ReactNode }) {
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setSubscriptionTier((data as any).subscription_tier ?? "free");
+        if (data) setSubscriptionTier(data.subscription_tier ?? "free");
       });
 
     Promise.all([

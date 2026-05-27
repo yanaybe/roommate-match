@@ -15,10 +15,19 @@ export interface FullProfile extends ProfileData {
   phone_number?: string | null;
   // Fields added in later migrations — explicitly typed here to eliminate (as any) casts
   photos?: string[];
+  gender?: string | null;
   subscription_tier?: string;
+  subscription_expires_at?: string | null;
   paddle_customer_id?: string | null;
   paddle_subscription_id?: string | null;
-  gender?: string | null;
+  instant_message_credits?: number;
+  highlighted_until?: string | null;
+  weekly_boosts_remaining?: number;
+  gold_boost_used_at?: string | null;
+  platinum_boost_used_at_1?: string | null;
+  platinum_boost_used_at_2?: string | null;
+  platinum_boost_used_at_3?: string | null;
+  profile_visibility?: string | null;
   notification_matches?: boolean;
   notification_messages?: boolean;
   notification_squad_invites?: boolean;
@@ -164,12 +173,12 @@ export function useAllProfiles(options?: UseAllProfilesOptions) {
       // Client-side filter kept as UI safety net; server-side .neq() above is the real guard.
       const batch = raw.filter((p) => {
         if (p.user_id === user?.id) return true;
-        return (p as any).profile_visibility !== "hidden";
+        return p.profile_visibility !== "hidden";
       });
       // Sort: platinum first, then gold, then plus, then free
       batch.sort((a, b) => {
-        const aOrder = TIER_ORDER[(a as any).subscription_tier ?? "free"] ?? 3;
-        const bOrder = TIER_ORDER[(b as any).subscription_tier ?? "free"] ?? 3;
+        const aOrder = TIER_ORDER[a.subscription_tier ?? "free"] ?? 3;
+        const bOrder = TIER_ORDER[b.subscription_tier ?? "free"] ?? 3;
         return aOrder - bOrder;
       });
       setProfiles((prev) => (afterCursor === null ? batch : [...prev, ...batch]));

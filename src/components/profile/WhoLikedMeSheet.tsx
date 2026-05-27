@@ -44,7 +44,7 @@ export default function WhoLikedMeSheet({ open, onOpenChange, user, t }: Props) 
         supabase.from("liked_profiles").select("user_id").eq("liked_user_id", user.id).order("created_at", { ascending: false }),
       ]);
 
-      const currentTier = (profileData as any)?.subscription_tier ?? "free";
+      const currentTier = profileData?.subscription_tier ?? "free";
       setTier(currentTier);
 
       const likerIds = (likes ?? []).map((l) => l.user_id);

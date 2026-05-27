@@ -90,12 +90,12 @@ export default function BoostListingSheet({ open, onOpenChange, apartmentId, apa
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setSubscriptionTier((data as any).subscription_tier ?? "free");
+          setSubscriptionTier(data.subscription_tier ?? "free");
           setBoostDates({
-            gold_boost_used_at: (data as any).gold_boost_used_at ?? null,
-            platinum_boost_used_at_1: (data as any).platinum_boost_used_at_1 ?? null,
-            platinum_boost_used_at_2: (data as any).platinum_boost_used_at_2 ?? null,
-            platinum_boost_used_at_3: (data as any).platinum_boost_used_at_3 ?? null,
+            gold_boost_used_at: data.gold_boost_used_at ?? null,
+            platinum_boost_used_at_1: data.platinum_boost_used_at_1 ?? null,
+            platinum_boost_used_at_2: data.platinum_boost_used_at_2 ?? null,
+            platinum_boost_used_at_3: data.platinum_boost_used_at_3 ?? null,
           });
         }
       });

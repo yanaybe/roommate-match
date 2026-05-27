@@ -53,7 +53,6 @@ function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
 
 // Convert DB profile to mock format for SwipeCard compatibility
 function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subscriptionTier?: string } {
-  const photos = (p as any).photos as string[] | undefined;
   return {
     id: p.user_id,
     name: p.name,
@@ -62,7 +61,7 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subsc
     occupation: p.occupation,
     avatar:
       p.avatar_url ||
-      photos?.[0] ||
+      p.photos?.[0] ||
       `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&size=200`,
     budget: p.budget,
     roomType: p.desired_room_type,
@@ -74,10 +73,10 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subsc
     noise: p.noise_level,
     wfh: p.wfh,
     bio: p.bio,
-    photos: photos?.length ? photos : undefined,
-    phoneVerified: (p as any).phone_verified ?? false,
-    subscriptionTier: (p as any).subscription_tier ?? "free",
-    lastSeen: (p as any).last_seen ?? null,
+    photos: p.photos?.length ? p.photos : undefined,
+    phoneVerified: p.phone_verified ?? false,
+    subscriptionTier: p.subscription_tier ?? "free",
+    lastSeen: null,
   };
 }
 

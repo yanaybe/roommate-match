@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "sonner";
 import type { MatchFactor } from "@/lib/matching";
 
@@ -20,6 +21,7 @@ export default function MatchModal({ user, matchPercent, onClose, matchBreakdown
   const [sending, setSending] = useState(false);
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
+  const { t } = useLanguage();
 
   if (!user) return null;
 
@@ -139,7 +141,7 @@ export default function MatchModal({ user, matchPercent, onClose, matchBreakdown
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={`Say hi to ${user.name}...`}
+              placeholder={t("sayHiTo").replace("{name}", user.name)}
               className="flex-1 bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               disabled={sending}
