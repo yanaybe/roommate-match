@@ -128,6 +128,7 @@ CREATE POLICY "Participants added via RPC only"
 -- We add this so the existing deleteConversation client code can still remove
 -- the current user's participation record. The new soft-delete migration
 -- (20260526000004) replaces this fully.
+DROP POLICY IF EXISTS "Users can delete own participation" ON public.conversation_participants;
 CREATE POLICY "Users can delete own participation"
   ON public.conversation_participants FOR DELETE
   TO authenticated
