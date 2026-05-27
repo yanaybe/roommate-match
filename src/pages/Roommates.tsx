@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
 import MatchModal from "@/components/MatchModal";
-import SquadsTabContent from "@/components/SquadsTabContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
@@ -84,15 +83,11 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subsc
 export default function Roommates() {
   const { user } = useAuth();
   const { profile: myProfile } = useProfile();
-  const [activeTab, setActiveTab] = useState<"people" | "squads">("people");
   const [swiped, setSwiped] = useState<string[]>([]);
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
   const [matchedBreakdown, setMatchedBreakdown] = useState<import("@/lib/matching").MatchFactor[]>([]);
-  const [hasViewedSquads, setHasViewedSquads] = useState(
-    () => localStorage.getItem("squads_tab_viewed") === "true"
-  );
   const [showAllCities, setShowAllCities] = useState(
     () => localStorage.getItem("show_all_cities") === "true"
   );
@@ -275,7 +270,7 @@ export default function Roommates() {
         <div className="max-w-lg mx-auto px-4 pt-12 desk:pt-6 pb-3">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">{t("findRoommates")}</h1>
-            {myProfile?.city && activeTab === "people" && (
+            {myProfile?.city && (
               <button
                 onClick={() => {
                   const next = !showAllCities;
@@ -288,34 +283,10 @@ export default function Roommates() {
               </button>
             )}
           </div>
-        <div className="flex bg-secondary rounded-xl p-1">
-            {(["people", "squads"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  if (tab === "squads" && !hasViewedSquads) {
-                    setHasViewedSquads(true);
-                    localStorage.setItem("squads_tab_viewed", "true");
-                  }
-                }}
-                className={`flex-1 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
-                  activeTab === tab
-                    ? "gradient-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab === "people" ? "People" : "Squads"}
-                {tab === "squads" && !hasViewedSquads && (
-                  <span className="ml-1.5 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-full">NEW</span>
-                )}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
-      {activeTab === "people" && user && myProfile && !myProfile.onboarding_complete && (
+      {user && myProfile && !myProfile.onboarding_complete && (
         <div className="max-w-lg mx-auto w-full px-4 pt-3">
           <button
             onClick={() => navigate("/onboarding")}
@@ -332,11 +303,8 @@ export default function Roommates() {
       )}
 
       <div className="flex-1 max-w-lg mx-auto w-full px-4">
-        {activeTab === "squads" ? (
-          <SquadsTabContent />
-        ) : (
-          <>
-            <div className="pt-4">
+        <>
+          <div className="pt-4">
               {profilesLoading ? (
                 <div className="relative w-full aspect-[3/4] max-h-[520px]">
                   <Skeleton className="absolute inset-0 rounded-3xl" />
@@ -429,9 +397,8 @@ export default function Roommates() {
                   </button>
                 </div>
               )}
-            </div>
-          </>
-        )}
+          </div>
+        </>
       </div>
 
       {matchedUser && (
