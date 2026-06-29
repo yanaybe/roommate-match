@@ -12,10 +12,6 @@ const fadeUp = {
   show: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.5 } }),
 };
 
-// TODO (High | Product)
-// Preview listings use stock Unsplash photos and dummy data.
-// Once real listings exist, pull the 3 most recently posted from DB instead.
-// This makes the landing feel alive rather than like a prototype.
 const PREVIEW_LISTINGS = [
   { title: "Modern Flat · Florentin", price: "₪3,200", match: 92, city: "Tel Aviv", img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=260&fit=crop" },
   { title: "Penthouse · Neve Tzedek", price: "₪3,800", match: 87, city: "Tel Aviv", img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=260&fit=crop" },
@@ -27,15 +23,6 @@ export default function Landing() {
   const { t, language, setLanguage, languageInfo } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
 
-  // TODO (Critical | Trust)
-  // "85% Avg match quality" is a made-up number — there is no data behind it.
-  // "50+" is a forced floor (Math.max(count, 50)) that inflates the real count.
-  // Investors and power users will immediately distrust the product when they see
-  // fabricated metrics. Options:
-  //   1. Remove the stats entirely until real data exists.
-  //   2. Replace with honest claims: "14 lifestyle factors" + "Free to start" + "Israel-first".
-  //   3. Once real users exist, replace with live counts from DB (already fetched above).
-  // See UX Audit: Top Priority #3 — "Fake stats destroy trust immediately".
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
     { value: "3", label: t("statsLanguagesLabel") },
@@ -157,14 +144,6 @@ export default function Landing() {
         <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full opacity-10 blur-3xl bg-accent" />
 
         <div className="relative max-w-2xl mx-auto text-center">
-          {/* TODO (High | Copywriting)
-            "Israel's smartest roommate app" is a bold unsubstantiated claim.
-            A skeptical user (or investor) will immediately ask "says who?"
-            Options:
-              - Change to "Israel's first lifestyle-based roommate app" (factual differentiator)
-              - Or "Matching roommates by personality, not just location"
-              - Or remove the badge entirely and put the value prop in the headline.
-            See UX Audit: Priority #8. */}
           <motion.div
             variants={fadeUp} initial="hidden" animate="show" custom={0}
             className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 rounded-full mb-5"
@@ -173,14 +152,6 @@ export default function Landing() {
             {t("landingBadge")}
           </motion.div>
 
-          {/* TODO (High | Copywriting)
-            Hero headline "Find your perfect roommate and apartment — together" is okay
-            but doesn't communicate the core differentiator (lifestyle matching vs location).
-            Consider: "Match with roommates who actually suit your lifestyle"
-            or "Find a roommate who fits — not just the apartment."
-            The word "together" at the end is confusing — it implies co-search (squad),
-            but most users will think it just means "find both things." Clarify.
-            See UX Audit: Priority #4. */}
           <motion.h1
             variants={fadeUp} initial="hidden" animate="show" custom={1}
             className="text-4xl sm:text-5xl font-extrabold text-foreground leading-tight mb-4"
@@ -199,16 +170,6 @@ export default function Landing() {
             variants={fadeUp} initial="hidden" animate="show" custom={3}
             className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
-            {/* TODO (High | Copywriting + Conversion)
-              Primary CTA "Find my roommate" is passive and generic.
-              Higher-converting alternatives:
-                - "Get Matched Free →"
-                - "Start Matching →"
-                - "Find My Match →"
-              "Browse listings" as secondary CTA takes users to auth (login wall).
-              Consider showing a public listing preview before asking them to sign up —
-              or rename to "See examples" and scroll to the preview cards instead.
-              See UX Audit: Priority #9, #10. */}
             <button
               onClick={() => navigate("/auth")}
               className="w-full sm:w-auto gradient-primary text-primary-foreground font-bold px-8 py-3.5 rounded-2xl text-base shadow-elevated flex items-center justify-center gap-2"
@@ -238,15 +199,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* TODO (High | Product + Conversion)
-        The landing page has NO screenshot of the actual app UI.
-        Users have no idea what they're signing up for — they can't see the swipe UI,
-        the match score breakdown, the chat, or the squad feature in action.
-        Add at least one app screenshot or animated mockup between the hero and listings.
-        Airbnb, Tinder, Bumble all show the app UI above the fold.
-        This is one of the highest-impact missing elements on the page.
-        See UX Audit: Priority #11. */}
-
       {/* ── Preview listings ── */}
       <section id="preview-listings" className="px-5 pb-16 max-w-5xl mx-auto">
         <motion.div
@@ -266,10 +218,6 @@ export default function Landing() {
                 <div className="absolute top-3 left-3 gradient-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
                   {l.match}% match
                 </div>
-                {/* TODO (Medium | UX)
-                  "Example" badge is confusing — users don't know why it says "Example".
-                  Replace with a lock icon + "Sign in to view" or remove the badge entirely.
-                  The current label makes the data feel fake/unreliable. */}
                 <div className="absolute top-3 right-3 bg-black/50 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm flex items-center gap-1">
                   <Lock className="w-2.5 h-2.5" />Sign in to view
                 </div>
@@ -299,17 +247,6 @@ export default function Landing() {
           </motion.div>
         </motion.div>
       </section>
-
-      {/* TODO (Critical | Animation + Mobile)
-        All sections below the hero use `whileInView` Framer Motion animations.
-        In headless browsers and screenshot tools, these sections render invisible
-        (opacity: 0, y: 24) because the viewport-scroll trigger never fires.
-        More critically, users who quickly land and scroll may miss content that
-        hasn't animated in yet on slow devices.
-        Fix: Add `viewport={{ once: true, amount: 0.01 }}` to all whileInView sections,
-        and consider adding a `prefers-reduced-motion` media query fallback that
-        shows sections immediately without animation.
-        See UX Audit: Desktop landing looks empty — Priority #6. */}
 
       {/* ── How it works ── */}
       <section className="px-5 py-16 bg-secondary/40">
