@@ -97,13 +97,16 @@ export default function BottomNav() {
         {/* Logo */}
         <div className={`border-b border-border/50 flex items-center shrink-0 ${collapsed ? "px-0 py-6 justify-center" : "px-6 py-6 justify-between"}`}>
           {collapsed ? (
-            <span className="text-2xl font-extrabold text-primary">R</span>
+            <img src="/logo.png" alt="RooMatch" className="w-8 h-8 object-contain" />
           ) : (
-            <div>
-              <span className="text-2xl font-extrabold text-foreground tracking-tight">
-                Roo<span className="text-primary">Match</span>
-              </span>
-              <p className="text-xs text-muted-foreground mt-0.5">Find your perfect roommate</p>
+            <div className="flex items-center gap-2">
+              <img src="/logo.png" alt="RooMatch" className="w-9 h-9 object-contain" />
+              <div>
+                <span className="text-2xl font-extrabold text-foreground tracking-tight">
+                  Roo<span className="text-primary">Match</span>
+                </span>
+                <p className="text-xs text-muted-foreground mt-0.5">Find your perfect roommate</p>
+              </div>
             </div>
           )}
         </div>
