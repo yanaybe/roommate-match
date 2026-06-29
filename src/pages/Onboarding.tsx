@@ -143,21 +143,6 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
 
-  // TODO (High | UX + Product)
-  // Onboarding has 6 steps with multiple sub-steps each — this is likely too long
-  // and will cause high drop-off before users complete their profile.
-  // Benchmark: Duolingo gets users to their first "win" in <60 seconds.
-  //
-  // Recommendations:
-  //   1. Identify the MINIMUM fields needed for matching (name, age, city, budget,
-  //      sleep schedule, smoking) and make those the first 1-2 screens.
-  //   2. Move optional lifestyle details to "complete your profile" inside the app.
-  //   3. Add a progress bar showing % complete (not just step number).
-  //   4. Add a "Skip for now" option on non-critical steps.
-  //   5. Consider moving photos earlier (step 2) — profiles with photos get more matches
-  //      and it creates commitment/investment in the profile early.
-  //
-  // See UX Audit: "Onboarding" — Priority #15, #16, #17.
   const STEPS = [t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences"), t("stepPhotos")];
 
   // Map English option values → translated display text
@@ -801,6 +786,9 @@ export default function Onboarding() {
             <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= step ? "gradient-primary" : "bg-secondary"}`} />
           ))}
         </div>
+        <p className="text-xs text-muted-foreground/60 text-center mt-1">
+          {step === 0 ? "Required" : "Optional — you can skip anytime"}
+        </p>
       </div>
 
       {/* Scrollable step content */}
@@ -862,6 +850,15 @@ export default function Onboarding() {
             )}
           </button>
         </div>
+        {step >= 1 && step < STEPS.length - 1 && (
+          <button
+            onClick={handleSubmit}
+            disabled={saving}
+            className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
+          >
+            Skip remaining steps and finish →
+          </button>
+        )}
       </div>
     </div>
   );
