@@ -109,6 +109,10 @@ function EmailVerificationBanner() {
   );
 }
 
+// TODO (Medium | UI + Branding)
+// OAuthWelcome screen uses 🏠 emoji instead of the actual logo (public/logo.png).
+// Replace with <img src="/logo.png" /> for brand consistency.
+// Also "Welcome to Roomatch!" — brand name should be consistent: pick RooMatch or Roomatch.
 function OAuthWelcome({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">

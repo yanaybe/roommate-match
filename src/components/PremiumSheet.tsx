@@ -16,6 +16,14 @@ interface PremiumSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// TODO (High | Product + Trust)
+// Paddle is in "sandbox" mode by default (VITE_PADDLE_ENV ?? "sandbox").
+// Before going live, ensure VITE_PADDLE_ENV=production is set in Vercel env vars
+// and all PRICE_IDS are production Paddle IDs (not sandbox).
+// Sandbox payments don't charge real money — if this goes live in sandbox mode,
+// users will think they paid but no revenue is collected.
+// See UX Audit: Roomatch audit — payment flow integrity.
+
 const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN as string;
 const PADDLE_ENV = (import.meta.env.VITE_PADDLE_ENV ?? "sandbox") as "sandbox" | "production";
 

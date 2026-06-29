@@ -24,7 +24,9 @@
       "Bash(code --install-extension catppuccin.catppuccin-vsc --force)",
       "Bash(code --install-extension catppuccin.catppuccin-vsc-icons --force)",
       "Bash(defaults write:*)",
-      "Bash(killall Dock)"
+      "Bash(killall Dock)",
+      "Bash(grep -n \"text:\\\\|icon:\\\\|tagline\\\\|price\\\\|monthly\\\\|annual\\\\|₪\\\\|\\\\$\" /Users/yanayberdah/roommate-match/src/components/PremiumSheet.tsx)",
+      "WebSearch"
     ]
   }
 }

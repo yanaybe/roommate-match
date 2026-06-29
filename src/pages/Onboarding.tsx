@@ -143,6 +143,21 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
 
+  // TODO (High | UX + Product)
+  // Onboarding has 6 steps with multiple sub-steps each — this is likely too long
+  // and will cause high drop-off before users complete their profile.
+  // Benchmark: Duolingo gets users to their first "win" in <60 seconds.
+  //
+  // Recommendations:
+  //   1. Identify the MINIMUM fields needed for matching (name, age, city, budget,
+  //      sleep schedule, smoking) and make those the first 1-2 screens.
+  //   2. Move optional lifestyle details to "complete your profile" inside the app.
+  //   3. Add a progress bar showing % complete (not just step number).
+  //   4. Add a "Skip for now" option on non-critical steps.
+  //   5. Consider moving photos earlier (step 2) — profiles with photos get more matches
+  //      and it creates commitment/investment in the profile early.
+  //
+  // See UX Audit: "Onboarding" — Priority #15, #16, #17.
   const STEPS = [t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences"), t("stepPhotos")];
 
   // Map English option values → translated display text

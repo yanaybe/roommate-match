@@ -8,6 +8,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useSidebar } from "@/hooks/useSidebar";
 
+// TODO (Low | Accessibility)
+// Bottom nav tab icons have no aria-label attributes — screen readers can't identify
+// what each tab does. Add aria-label={tab.label} to each nav button.
+// Also: active tab has no visible focus ring for keyboard users.
+// See UX Audit: Accessibility section.
+
+// TODO (Low | UX + Mobile)
+// Bottom nav disappears on scroll in some scenarios due to fixed positioning
+// conflicting with certain inner scroll containers. Test on real iOS devices
+// with the home indicator — ensure `safe-area-inset-bottom` padding always applies.
+
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
