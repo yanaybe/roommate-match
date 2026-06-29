@@ -2,6 +2,7 @@
 // Paddle one-time purchase: pass apartment_id + boost_days in customData.
 // The paddle-webhook handles transaction.completed and sets is_featured = true.
 
+import * as Sentry from "@sentry/react";
 import { useState, useEffect, useCallback } from "react";
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -174,7 +175,7 @@ export default function BoostListingSheet({ open, onOpenChange, apartmentId, apa
       });
       onOpenChange(false);
     } catch (err) {
-      console.error("Paddle checkout error:", err instanceof Error ? err.message : String(err));
+      Sentry.captureException(err instanceof Error ? err : new Error(String(err)));
       toast.error("Could not open checkout. Please try again.");
     } finally {
       setLoading(false);

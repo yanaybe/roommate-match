@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import React, { useState, useMemo, lazy, Suspense, useEffect } from "react";
@@ -164,16 +165,19 @@ export default function Index() {
   };
 
   useEffect(() => {
+    let cancelled = false;
     supabase
       .from("apartments")
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
-        if (error) { console.error("Failed to load apartments:", error.message); toast.error(t("failedToLoadApartments")); }
+        if (cancelled) return;
+        if (error) { Sentry.captureMessage(error.message, "error"); toast.error(t("failedToLoadApartments")); }
         setApartments((data ?? []).map(dbRowToApartment));
         setApartmentsLoading(false);
         setGridKey(1);
       });
+    return () => { cancelled = true; };
   }, []);
 
   // Real-time subscription — collect new inserts into a pending banner

@@ -137,5 +137,5 @@ export async function fetchBlockedIds(userId: string): Promise<string[]> {
     .from("blocked_users")
     .select("blocked_id")
     .eq("blocker_id", userId);
-  return (data ?? []).map((r: any) => r.blocked_id);
+  return (data ?? []).map((r: { blocked_id: string }) => r.blocked_id);
 }

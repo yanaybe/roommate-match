@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { Component, ErrorInfo, ReactNode } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -18,7 +19,7 @@ class ErrorBoundaryClass extends Component<Props & { t: (key: string) => string 
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("Uncaught error:", error.message, info.componentStack?.split("\n")[1]?.trim());
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
   }
 
   render() {

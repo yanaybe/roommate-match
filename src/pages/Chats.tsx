@@ -109,9 +109,11 @@ export default function Chats() {
   // Fetch other user's profile for context card
   useEffect(() => {
     if (!activeConvData?.other_user_id) { setOtherProfile(null); return; }
+    let cancelled = false;
     supabase.from("profiles").select("*").eq("user_id", activeConvData.other_user_id).maybeSingle()
-      .then(({ data }) => setOtherProfile(data));
+      .then(({ data }) => { if (!cancelled) setOtherProfile(data); });
     setContextDismissed(false);
+    return () => { cancelled = true; };
   }, [activeConvData?.other_user_id]);
 
   const matchPercent = useMemo(() => {
