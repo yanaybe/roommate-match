@@ -35,8 +35,15 @@ const RoommateProfile = lazy(() => import("./pages/RoommateProfile"));
 const BillingHistory = lazy(() => import("./pages/BillingHistory"));
 const Landing = lazy(() => import("./pages/Landing"));
 const Welcome = lazy(() => import("./pages/Welcome"));
-const Admin = lazy(() => import("./pages/Admin"));
 const Pricing = lazy(() => import("./pages/Pricing"));
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminOverview = lazy(() => import("./pages/admin/AdminOverview"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminRooms = lazy(() => import("./pages/admin/AdminRooms"));
+const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
+const AdminSystem = lazy(() => import("./pages/admin/AdminSystem"));
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
@@ -205,6 +212,17 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="*" element={<NotFound />} />
 
+              {/* Admin — own layout + own auth guard, no app sidebar */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminOverview />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="rooms" element={<AdminRooms />} />
+                <Route path="reports" element={<AdminReports />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="logs" element={<AdminLogs />} />
+                <Route path="system" element={<AdminSystem />} />
+              </Route>
+
               {/* Protected — must be signed in, gets sidebar */}
               <Route element={<AuthedLayout />}>
                 {/* Accessible without completing onboarding */}
@@ -215,7 +233,6 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/billing-history" element={<BillingHistory />} />
-                <Route path="/admin/reports" element={<Admin />} />
 
                 {/* Require completed onboarding profile */}
                 <Route element={<OnboardedLayout />}>
