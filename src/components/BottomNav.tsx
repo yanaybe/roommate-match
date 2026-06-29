@@ -1,4 +1,4 @@
-import { Home, Users, Handshake, MessageCircle, User, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Users, Handshake, MessageCircle, User, ChevronLeft, ChevronRight, Shield } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
@@ -35,6 +35,7 @@ export default function BottomNav() {
     { path: "/my-squads", icon: Handshake, label: "Squads" },
     { path: "/chats", icon: MessageCircle, label: t("navChats") },
     { path: "/profile", icon: User, label: t("navProfile") },
+    ...(profile?.is_admin ? [{ path: "/admin", icon: Shield, label: "Admin" }] : []),
   ];
 
   const publicOnlyPaths = ["/auth", "/terms-of-service", "/privacy-policy", "/contact-support", "/onboarding", "/help-center", "/verify-email", "/welcome"];
