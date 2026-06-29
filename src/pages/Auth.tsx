@@ -138,7 +138,7 @@ export default function Auth() {
         options: { emailRedirectTo: `${window.location.origin}/verify-email` },
       });
       if (error) toast.error(mapAuthError(error));
-      else { analytics.signup(); navigate("/onboarding"); }
+      else { analytics.signup(); navigate("/verify-email"); }
     }
     setLoading(false);
   };
