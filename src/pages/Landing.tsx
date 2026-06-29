@@ -575,6 +575,7 @@ export default function Landing() {
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/50">
             <div className="flex items-center gap-5 text-xs text-muted-foreground">
+              <button onClick={() => navigate("/pricing")} className="hover:text-foreground transition-colors">Pricing</button>
               <button onClick={() => navigate("/privacy-policy")} className="hover:text-foreground transition-colors">{t("footerPrivacy")}</button>
               <button onClick={() => navigate("/terms-of-service")} className="hover:text-foreground transition-colors">{t("footerTerms")}</button>
               <button onClick={() => navigate("/contact-support")} className="hover:text-foreground transition-colors">{t("footerContact")}</button>

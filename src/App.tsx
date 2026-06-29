@@ -36,6 +36,7 @@ const BillingHistory = lazy(() => import("./pages/BillingHistory"));
 const Landing = lazy(() => import("./pages/Landing"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Admin = lazy(() => import("./pages/Admin"));
+const Pricing = lazy(() => import("./pages/Pricing"));
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
@@ -201,6 +202,7 @@ const App = () => (
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/contact-support" element={<ContactSupport />} />
               <Route path="/help-center" element={<HelpCenter />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="*" element={<NotFound />} />
 
               {/* Protected — must be signed in, gets sidebar */}
