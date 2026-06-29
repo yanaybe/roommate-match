@@ -77,7 +77,7 @@ export default function RoommateProfile() {
   const [likeLoading, setLikeLoading] = useState(false);
   const [messageLoading, setMessageLoading] = useState(false);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(id);
-  const { canLike, likesLimit, recordLike, openPremiumSheet, subscriptionTier } = useDailyLimits();
+  const { recordLike, subscriptionTier } = useDailyLimits();
   const isPlatinum = subscriptionTier === "platinum";
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
@@ -148,11 +148,6 @@ export default function RoommateProfile() {
 
   const handleLike = async () => {
     if (!authUser || isOwnProfile) return;
-    if (!canLike) {
-      toast.error(`You've reached your ${likesLimit} daily likes. Upgrade to like more.`);
-      openPremiumSheet();
-      return;
-    }
     if (!isUUID(userData!.id)) {
       toast.info("Demo profile — likes available with real users!");
       navigate(-1);

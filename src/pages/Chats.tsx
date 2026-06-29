@@ -94,8 +94,6 @@ export default function Chats() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [subscriptionTier, setSubscriptionTier] = useState("free");
-  const FREE_MESSAGES_PER_DAY = 100;
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -107,19 +105,6 @@ export default function Chats() {
 
   const activeConvData = conversations.find((c) => c.id === activeConv);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(activeConvData?.other_user_id);
-
-  // Fetch current user's subscription tier for rate-limit bypass
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("subscription_tier")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setSubscriptionTier(data.subscription_tier ?? "free");
-      });
-  }, [user]);
 
   // Fetch other user's profile for context card
   useEffect(() => {
@@ -374,26 +359,6 @@ export default function Chats() {
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !activeConv || !user) return;
-
-    const isGoldPlus = ["gold", "platinum"].includes(subscriptionTier);
-
-    // ── Rate limiting: daily volume limit ────────────────────────────────────
-    if (!isGoldPlus) {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const { count: todayCount } = await supabase
-        .from("messages")
-        .select("id", { count: "exact", head: true })
-        .eq("sender_id", user.id)
-        .gte("created_at", todayStart.toISOString());
-      if ((todayCount ?? 0) >= FREE_MESSAGES_PER_DAY) {
-        toast("Daily message limit reached", {
-          description: "Upgrade to Gold for unlimited messaging.",
-          action: { label: "Upgrade", onClick: () => navigate("/settings") },
-        });
-        return;
-      }
-    }
 
     // ── Sanitize content (strip control chars + bidi overrides) ──────────────
     const content = sanitizeText(newMessage);
