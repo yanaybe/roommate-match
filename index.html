@@ -13,24 +13,11 @@
     <meta property="og:title" content="Roomatch – Find Your Perfect Roommate" />
     <meta property="og:description" content="Smart roommate matching with 14 lifestyle compatibility factors. Browse apartments, swipe on roommates, and find your perfect match." />
     <meta property="og:type" content="website" />
-    <!-- TODO (High | Bug + SEO)
-      og:image and twitter:image use a relative path "/logo.png".
-      Open Graph requires an ABSOLUTE URL to render in social previews.
-      Replace with the full production URL:
-        content="https://roommate-match-nine.vercel.app/logo.png"
-      Or better: use a dedicated 1200x630 OG image (current logo is square).
-      A proper OG image dramatically increases click-through rates when links are shared.
-      See UX Audit: Priority #11 (missing app screenshots/previews). -->
-    <meta property="og:image" content="/logo.png" />
-
-    <!-- TODO (Low | Performance + PWA)
-      No manifest.json is defined — users who "Add to Home Screen" on iOS/Android
-      get a generic browser shortcut instead of a proper installed-app experience.
-      Add a manifest.json with name, icons (192px, 512px), theme_color, and display: standalone.
-      This also enables the "Install App" banner on Android Chrome. -->
+    <meta property="og:image" content="https://roommate-match-nine.vercel.app/logo.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Roomatch" />
-    <meta name="twitter:image" content="/logo.png" />
+    <meta name="twitter:site" content="@_roomatch" />
+    <meta name="twitter:image" content="https://roommate-match-nine.vercel.app/logo.png" />
   </head>
 
   <body>

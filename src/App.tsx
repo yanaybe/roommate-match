@@ -109,18 +109,12 @@ function EmailVerificationBanner() {
   );
 }
 
-// TODO (Medium | UI + Branding)
-// OAuthWelcome screen uses 🏠 emoji instead of the actual logo (public/logo.png).
-// Replace with <img src="/logo.png" /> for brand consistency.
-// Also "Welcome to Roomatch!" — brand name should be consistent: pick RooMatch or Roomatch.
 function OAuthWelcome({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="w-full max-w-sm text-center">
-        <div className="w-20 h-20 gradient-primary rounded-3xl flex items-center justify-center mb-6 mx-auto shadow-lg">
-          <span className="text-4xl">🏠</span>
-        </div>
-        <h1 className="text-2xl font-extrabold text-foreground mb-2">Welcome to Roomatch!</h1>
+        <img src="/logo.png" alt="RooMatch" className="w-20 h-20 object-contain mx-auto mb-6" />
+        <h1 className="text-2xl font-extrabold text-foreground mb-2">Welcome to Roo<span className="text-primary">Match</span>!</h1>
         <p className="text-muted-foreground text-sm mb-8 max-w-xs mx-auto">
           You're 3 minutes away from your first match. Let's set up your profile so we can find you the perfect roommate.
         </p>

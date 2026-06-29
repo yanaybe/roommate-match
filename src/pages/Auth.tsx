@@ -161,7 +161,7 @@ export default function Auth() {
         >
           <div className="text-center mb-8">
             <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
-              Roo<span className="text-primary">match</span>
+              Roo<span className="text-primary">Match</span>
             </h1>
             <p className="text-muted-foreground text-sm mt-1">{t("welcomeBack")}</p>
           </div>
@@ -267,16 +267,9 @@ export default function Auth() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center pt-10 pb-5 px-6 text-center"
       >
-        {/* TODO (Medium | UI + Branding)
-          The signup header uses a 🏠 emoji in a gradient box instead of the actual
-          company logo (public/logo.png). Replace the emoji with the real logo image
-          for brand consistency. Also "Roomatch" here vs "RooMatch" elsewhere — pick one.
-          "Create your account — it takes 2 minutes." is a good promise; keep it. */}
-        <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center mb-3 shadow-lg">
-          <span className="text-2xl">🏠</span>
-        </div>
+        <img src="/logo.png" alt="RooMatch" className="w-12 h-12 object-contain mb-3" />
         <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
-          Roo<span className="text-primary">match</span>
+          Roo<span className="text-primary">Match</span>
         </h1>
         <p className="text-muted-foreground text-sm mt-1">Create your account — it takes 2 minutes.</p>
       </motion.div>
@@ -288,15 +281,8 @@ export default function Auth() {
         transition={{ delay: 0.1, duration: 0.35 }}
         className="flex-1 bg-card rounded-t-3xl px-6 pt-6 pb-10 shadow-[0_-8px_32px_rgba(0,0,0,0.10)]"
       >
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center mb-5">
           <h2 className="text-xl font-extrabold text-foreground">{t("createYourAccount")}</h2>
-          {/* TODO (Medium | UX + Conversion)
-            "Step 1 of 2" badge signals friction before the user has even started typing.
-            Research shows step indicators on signup screens reduce completion rates.
-            The onboarding IS the second step — but framing it as "step 2 of 2" mid-flow
-            is better than pre-announcing it here.
-            Consider removing this badge entirely from the signup screen. */}
-          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">{t("stepOneOfTwo")}</span>
         </div>
 
         <button
@@ -351,17 +337,8 @@ export default function Auth() {
               </button>
             </div>
 
-            {/* TODO (Medium | UX)
-              Password strength meter only appears after the user starts typing — good.
-              But the `missing` list shows all failing rules as bullet points which feels
-              punishing ("Your password needs uppercase, number, special character...").
-              Consider showing the requirements as a compact checklist with green ✓ / grey ○
-              icons that tick off as the user types. This feels encouraging instead of
-              critical. See how Dropbox/GitHub handle this.
-              See UX Audit: Priority #14. */}
             {password.length > 0 && (
               <div className="space-y-1.5">
-                {/* Strength bars */}
                 <div className="flex gap-1">
                   {[1, 2, 3].map((level) => (
                     <div
@@ -376,23 +353,26 @@ export default function Auth() {
                     />
                   ))}
                 </div>
-                <p className={`text-xs font-semibold ${
-                  pwAnalysis.strength === "weak" ? "text-destructive"
-                  : pwAnalysis.strength === "fair" ? "text-yellow-500"
-                  : "text-green-500"
-                }`}>
-                  {pwAnalysis.strength === "weak" ? t("weakPasswordLabel") : pwAnalysis.strength === "fair" ? t("fairPasswordLabel") : t("strongPasswordLabel")}
-                </p>
-                {pwAnalysis.missing.length > 0 && (
-                  <ul className="space-y-0.5">
-                    {pwAnalysis.missing.map((m) => (
-                      <li key={m} className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                        <span className="w-1 h-1 rounded-full bg-muted-foreground inline-block" />
-                        {m}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                  {[
+                    { label: "8+ characters", met: password.length >= 8 },
+                    { label: "Uppercase (A-Z)", met: /[A-Z]/.test(password) },
+                    { label: "Lowercase (a-z)", met: /[a-z]/.test(password) },
+                    { label: "Number (0-9)", met: /[0-9]/.test(password) },
+                    { label: "Special char (!@#…)", met: /[^A-Za-z0-9]/.test(password) },
+                  ].map(({ label, met }) => (
+                    <div key={label} className="flex items-center gap-1.5">
+                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 transition-colors ${met ? "bg-green-500" : "bg-muted"}`}>
+                        {met && (
+                          <svg className="w-2 h-2 text-white" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`text-[11px] transition-colors ${met ? "text-green-600 dark:text-green-400 font-medium" : "text-muted-foreground"}`}>{label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

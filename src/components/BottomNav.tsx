@@ -136,6 +136,8 @@ export default function BottomNav() {
               <button
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
+                aria-label={tab.label}
+                aria-current={isActive ? "page" : undefined}
                 title={collapsed ? tab.label : undefined}
                 className={`w-full flex items-center rounded-xl transition-all text-left ${
                   collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3"

@@ -7,18 +7,6 @@ import { Mail, RefreshCw, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
 
-// TODO (Medium | UX)
-// If a non-logged-in user navigates directly to /verify-email (e.g. from a bookmark
-// or after session expires), they get silently redirected to /auth with no explanation.
-// Add a brief message or toast: "Your session expired. Please sign in again to verify your email."
-// This prevents confusion and a "where did I go?" moment.
-
-// TODO (Low | Delight)
-// The polling interval is 3 seconds which is reasonable, but there's no visual indicator
-// that the page is actively "listening" for the verification click.
-// Consider adding a subtle animated pulse or status text like "Waiting for verification..."
-// with a spinning icon, so users know the page is live and checking.
-
 export default function VerifyEmail() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -31,6 +19,7 @@ export default function VerifyEmail() {
   // If already verified, check onboarding and redirect
   useEffect(() => {
     if (!loading && !user) {
+      toast.error("Your session expired. Please sign in again to verify your email.");
       navigate("/auth", { replace: true });
       return;
     }
@@ -206,6 +195,15 @@ export default function VerifyEmail() {
               {t("checkSpamFolder")}
             </p>
           </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-2 mb-5 text-xs text-muted-foreground">
+          <motion.div
+            animate={{ opacity: [1, 0.3, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="w-2 h-2 rounded-full bg-primary"
+          />
+          <span>Waiting for verification…</span>
         </div>
 
         {/* Resend button */}

@@ -42,12 +42,6 @@ export default function ContactSupport() {
     window.scrollTo(0, 0);
   }, []);
 
-  // TODO (Medium | UX)
-  // The contact form requires the user to be logged in (!user → toast.error).
-  // But a user who CAN'T log in (forgot password, broken account) is exactly the
-  // person most likely to need support. Add a public fallback:
-  // If not logged in, show the direct contact methods (email, phone) more prominently
-  // instead of gating the form behind authentication.
   const handleSubmit = async () => {
     if (!message.trim()) { toast.error(t("pleaseWriteMessage")); return; }
     if (!user) { toast.error(t("pleaseLogIn")); return; }
@@ -124,54 +118,62 @@ export default function ContactSupport() {
           ))}
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="space-y-4">
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">{t("writeToUs")}</h3>
+        {user ? (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="space-y-4">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">{t("writeToUs")}</h3>
 
-          <div className="rounded-2xl bg-card border border-border p-4 space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat.value}
-                  onClick={() => setCategory(cat.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    category === cat.value ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <cat.icon className="w-3.5 h-3.5" />
-                  {cat.label}
-                </button>
-              ))}
+            <div className="rounded-2xl bg-card border border-border p-4 space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.value}
+                    onClick={() => setCategory(cat.value)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      category === cat.value ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    <cat.icon className="w-3.5 h-3.5" />
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder={getPlaceholder()}
+                rows={4}
+                maxLength={1000}
+                className="w-full rounded-xl bg-background border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+              />
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">{message.length}/1000</span>
+                <AnimatePresence mode="wait">
+                  {sent ? (
+                    <motion.div key="sent" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
+                      className="flex items-center gap-1.5 text-emerald-500 text-sm font-medium">
+                      <CheckCircle className="w-4 h-4" /> {t("sent")}
+                    </motion.div>
+                  ) : (
+                    <motion.button key="send" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={handleSubmit}
+                      disabled={sending || !message.trim()}
+                      className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:opacity-90 transition-opacity">
+                      {sending ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
+                      {sending ? t("sending") : t("send")}
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
-
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={getPlaceholder()}
-              rows={4}
-              maxLength={1000}
-              className="w-full rounded-xl bg-background border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
-            />
-
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{message.length}/1000</span>
-              <AnimatePresence mode="wait">
-                {sent ? (
-                  <motion.div key="sent" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
-                    className="flex items-center gap-1.5 text-emerald-500 text-sm font-medium">
-                    <CheckCircle className="w-4 h-4" /> {t("sent")}
-                  </motion.div>
-                ) : (
-                  <motion.button key="send" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={handleSubmit}
-                    disabled={sending || !message.trim()}
-                    className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:opacity-90 transition-opacity">
-                    {sending ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
-                    {sending ? t("sending") : t("send")}
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+            className="rounded-2xl bg-primary/5 border border-primary/20 p-5 text-center space-y-2">
+            <p className="text-sm font-semibold text-foreground">Need to send us a message?</p>
+            <p className="text-xs text-muted-foreground">Reach us directly via email or Instagram above — we respond within 24 hours.</p>
+          </motion.div>
+        )}
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-center">
           <p className="text-xs text-muted-foreground">{t("responseTime")}</p>

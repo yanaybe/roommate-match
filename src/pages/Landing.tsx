@@ -1,12 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home, Users, MessageCircle, Zap, Star, Shield,
-  ChevronRight, Heart, MapPin, Check, Sparkles, Globe
+  ChevronRight, Heart, MapPin, Check, Sparkles, Globe, Lock
 } from "lucide-react";
 import { useLanguage, languages } from "@/hooks/useLanguage";
-import { supabase } from "@/integrations/supabase/client";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -60,17 +59,6 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t, language, setLanguage, languageInfo } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
-  const [activeSearcherCount, setActiveSearcherCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("onboarding_complete", true)
-      .then(({ count }) => {
-        if (count !== null) setActiveSearcherCount(Math.max(count, 50));
-      });
-  }, []);
 
   // TODO (Critical | Trust)
   // "85% Avg match quality" is a made-up number — there is no data behind it.
@@ -83,8 +71,8 @@ export default function Landing() {
   // See UX Audit: Top Priority #3 — "Fake stats destroy trust immediately".
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
-    { value: "85%", label: "Avg match quality" },
-    { value: activeSearcherCount ? `${activeSearcherCount}+` : "50+", label: "Active searchers" },
+    { value: "3", label: t("statsLanguagesLabel") },
+    { value: "₪0", label: t("statsFreeToStart") },
   ];
 
   const HOW_IT_WORKS = [
@@ -140,9 +128,12 @@ export default function Landing() {
       {/* ── Nav ── */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="w-full px-5 h-14 flex items-center justify-between">
-          <span className="text-lg font-extrabold text-foreground">
-            Room<span className="text-primary">Match</span>
-          </span>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="RooMatch" className="w-8 h-8 object-contain" />
+            <span className="text-lg font-extrabold text-foreground">
+              Roo<span className="text-primary">Match</span>
+            </span>
+          </div>
           <div className="flex items-center gap-3">
             {/* Language switcher */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -296,13 +287,13 @@ export default function Landing() {
       {/* ── Preview listings ── */}
       <section id="preview-listings" className="px-5 pb-16 max-w-5xl mx-auto">
         <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
           className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide"
         >
           {PREVIEW_LISTINGS.map((l, i) => (
             <motion.div
               key={l.title}
-              variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
+              variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }} custom={i}
               onClick={() => navigate("/auth")}
               className="relative bg-card rounded-2xl shadow-card overflow-hidden shrink-0 w-64 snap-start cursor-pointer hover:shadow-elevated transition-shadow"
             >
@@ -316,8 +307,8 @@ export default function Landing() {
                   "Example" badge is confusing — users don't know why it says "Example".
                   Replace with a lock icon + "Sign in to view" or remove the badge entirely.
                   The current label makes the data feel fake/unreliable. */}
-                <div className="absolute top-3 right-3 bg-black/50 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm">
-                  Example
+                <div className="absolute top-3 right-3 bg-black/50 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm flex items-center gap-1">
+                  <Lock className="w-2.5 h-2.5" />Sign in to view
                 </div>
               </div>
               <div className="p-3">
@@ -333,7 +324,7 @@ export default function Landing() {
           ))}
           {/* Blur CTA card */}
           <motion.div
-            variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={3}
+            variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }} custom={3}
             onClick={() => navigate("/auth")}
             className="relative bg-card rounded-2xl shadow-card overflow-hidden shrink-0 w-64 snap-start cursor-pointer flex flex-col items-center justify-center p-6 border-2 border-dashed border-primary/30 hover:border-primary/60 transition-colors"
           >
@@ -361,7 +352,7 @@ export default function Landing() {
       <section className="px-5 py-16 bg-secondary/40">
         <div className="max-w-5xl mx-auto">
           <motion.div
-            variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+            variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
             className="text-center mb-10"
           >
             <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("howItWorksTitle")}</h2>
@@ -373,7 +364,7 @@ export default function Landing() {
               return (
                 <motion.div
                   key={step.step}
-                  variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
+                  variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }} custom={i}
                   className="bg-card rounded-2xl p-6 shadow-card relative"
                 >
                   <span className="absolute top-4 right-4 text-xs font-extrabold text-muted-foreground/30">{step.step}</span>
@@ -401,7 +392,7 @@ export default function Landing() {
       {/* ── Testimonials ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
         <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
           className="text-center mb-10"
         >
           <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">What our users say</h2>
@@ -411,7 +402,7 @@ export default function Landing() {
           {TESTIMONIALS.map((item, i) => (
             <motion.div
               key={item.name}
-              variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
+              variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }} custom={i}
               className="bg-card rounded-2xl p-5 shadow-card flex flex-col gap-3"
             >
               <div className="flex gap-0.5">
@@ -437,7 +428,7 @@ export default function Landing() {
       {/* ── Features ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
         <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
           className="text-center mb-10"
         >
           <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("featuresTitle")}</h2>
@@ -449,7 +440,7 @@ export default function Landing() {
             return (
               <motion.div
                 key={f.title}
-                variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
+                variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }} custom={i}
                 className="bg-card rounded-2xl p-5 shadow-card flex gap-4"
               >
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${f.color}`}>
@@ -476,7 +467,7 @@ export default function Landing() {
       <section className="px-5 py-16 bg-secondary/40">
         <div className="max-w-5xl mx-auto">
           <motion.div
-            variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+            variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
             className="bg-card rounded-2xl shadow-elevated overflow-hidden"
           >
             <div className="p-8 sm:p-10">
@@ -523,7 +514,7 @@ export default function Landing() {
       {/* ── Pricing ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
         <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
           className="text-center mb-10"
         >
           <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("pricingTitle")}</h2>
@@ -533,7 +524,7 @@ export default function Landing() {
           {PLANS.map((plan, i) => (
             <motion.div
               key={plan.name}
-              variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
+              variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }} custom={i}
               className={`rounded-2xl p-6 relative ${
                 plan.highlight
                   ? "gradient-primary text-primary-foreground shadow-elevated scale-[1.02]"
@@ -577,7 +568,7 @@ export default function Landing() {
       {/* ── Final CTA ── */}
       <section className="px-5 py-16">
         <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
           className="max-w-2xl mx-auto text-center"
         >
           <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3">
@@ -609,17 +600,40 @@ export default function Landing() {
         Pick ONE spelling and use it everywhere.
         See UX Audit: Priority #12 (footer), #20 (brand name consistency). */}
       {/* ── Footer ── */}
-      <footer className="border-t border-border/50 px-5 py-8">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-sm font-extrabold text-foreground">
-            Room<span className="text-primary">Match</span>
-          </span>
-          <div className="flex items-center gap-5 text-xs text-muted-foreground">
-            <button onClick={() => navigate("/privacy-policy")} className="hover:text-foreground transition-colors">{t("footerPrivacy")}</button>
-            <button onClick={() => navigate("/terms-of-service")} className="hover:text-foreground transition-colors">{t("footerTerms")}</button>
-            <button onClick={() => navigate("/contact-support")} className="hover:text-foreground transition-colors">{t("footerContact")}</button>
+      <footer className="border-t border-border/50 px-5 py-10">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="flex items-center gap-2.5">
+              <img src="/logo.png" alt="RooMatch" className="w-8 h-8 object-contain" />
+              <div>
+                <span className="text-base font-extrabold text-foreground">Roo<span className="text-primary">Match</span></span>
+                <p className="text-xs text-muted-foreground leading-none mt-0.5">Find your perfect roommate</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <a href="https://instagram.com/_roomatch" target="_blank" rel="noopener noreferrer" aria-label="RooMatch on Instagram"
+                className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center hover:scale-105 transition-transform">
+                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+              </a>
+              <a href="mailto:roomatchltd@gmail.com" aria-label="Email RooMatch"
+                className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center hover:scale-105 transition-transform">
+                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </a>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">© 2026 RoomMatch</p>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/50">
+            <div className="flex items-center gap-5 text-xs text-muted-foreground">
+              <button onClick={() => navigate("/privacy-policy")} className="hover:text-foreground transition-colors">{t("footerPrivacy")}</button>
+              <button onClick={() => navigate("/terms-of-service")} className="hover:text-foreground transition-colors">{t("footerTerms")}</button>
+              <button onClick={() => navigate("/contact-support")} className="hover:text-foreground transition-colors">{t("footerContact")}</button>
+            </div>
+            <p className="text-xs text-muted-foreground">© 2026 RooMatch · Made in Israel 🇮🇱</p>
+          </div>
         </div>
       </footer>
     </div>

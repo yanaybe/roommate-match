@@ -698,10 +698,10 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Landing
     getStarted: "Get started",
-    landingBadge: "Israel's smartest roommate app",
-    landingHeroTitle: "Find your perfect roommate and apartment — together",
+    landingBadge: "Lifestyle-first roommate matching",
+    landingHeroTitle: "Find a roommate who actually fits your life",
     landingSubtitle: "Match on lifestyle, not just location. Browse apartments, swipe on roommates, and even search as a squad — all in one place.",
-    findMyRoommate: "Find my roommate",
+    findMyRoommate: "Get Matched Free",
     browseListings: "Browse listings",
     statsFactorsLabel: "Compatibility factors",
     statsMatchesMade: "Connections made",
@@ -1442,10 +1442,10 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Landing
     getStarted: "התחל",
-    landingBadge: "האפליקציה החכמה ביותר לשותפים בישראל",
-    landingHeroTitle: "מצא את השותף המושלם והדירה — יחד",
+    landingBadge: "התאמת שותפים לפי אורח חיים",
+    landingHeroTitle: "מצא שותף שמתאים לך באמת",
     landingSubtitle: "התאמה לפי אורח חיים, לא רק מיקום. עיין בדירות, סווייפ על שותפים, ואפילו חפש כסקוואד — הכל במקום אחד.",
-    findMyRoommate: "מצא לי שותף",
+    findMyRoommate: "התחל להתאים — בחינם",
     browseListings: "עיין במודעות",
     statsFactorsLabel: "פקטורי תאימות",
     statsMatchesMade: "חיבורים שנוצרו",
@@ -2177,10 +2177,10 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Landing
     getStarted: "Commencer",
-    landingBadge: "L'appli colocataire la plus intelligente d'Israël",
-    landingHeroTitle: "Trouvez votre colocataire idéal et votre appartement — ensemble",
+    landingBadge: "La colocation par affinité de mode de vie",
+    landingHeroTitle: "Trouvez un colocataire qui vous correspond vraiment",
     landingSubtitle: "Correspondance par mode de vie, pas seulement par lieu. Parcourez des appartements, swipez sur des colocataires, et cherchez même en squad — tout au même endroit.",
-    findMyRoommate: "Trouver mon colocataire",
+    findMyRoommate: "Commencer gratuitement",
     browseListings: "Parcourir les annonces",
     statsFactorsLabel: "Facteurs de compatibilité",
     statsMatchesMade: "Connexions créées",
