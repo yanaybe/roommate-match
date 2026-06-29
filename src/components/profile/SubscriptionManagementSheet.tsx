@@ -77,7 +77,7 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
       setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error("Cancel subscription error:", err);
-      toast.error("Could not cancel automatically. Please contact support@roomatch.app");
+      toast.error("Could not cancel automatically. Please contact roomatchltd@gmail.com");
     } finally {
       setCancelling(false);
     }

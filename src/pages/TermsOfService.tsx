@@ -87,7 +87,7 @@ export default function TermsOfService() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-foreground">10. Contact Us</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            If you have any questions about these Terms, please contact us at support@roomatch.app.
+            If you have any questions about these Terms, please contact us at roomatchltd@gmail.com.
           </p>
         </section>
       </motion.div>

@@ -62,7 +62,7 @@ async function sendDigestEmail(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "RoomMatch <no-reply@roomatch.app>",
+      from: "RoomMatch <roomatchltd@gmail.com>",
       to: [email],
       subject: `Your daily RoomMatch digest — ${newMatchCount > 0 ? `${newMatchCount} new match${newMatchCount > 1 ? "es" : ""}` : `new listings in ${city}`}`,
       html: `

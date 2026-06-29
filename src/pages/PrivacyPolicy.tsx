@@ -103,7 +103,7 @@ export default function PrivacyPolicy() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-foreground">11. Contact Us</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            If you have any questions or concerns about this Privacy Policy, please contact us at privacy@roomatch.app.
+            If you have any questions or concerns about this Privacy Policy, please contact us at roomatchltd@gmail.com.
           </p>
         </section>
       </motion.div>

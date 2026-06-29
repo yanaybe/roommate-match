@@ -43,7 +43,7 @@ async function sendEmail(to: string, name: string, matchName: string) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "RoomMatch <no-reply@roomatch.app>",
+      from: "RoomMatch <roomatchltd@gmail.com>",
       to: [to],
       subject: `You matched with ${matchName} on RoomMatch!`,
       html: `
