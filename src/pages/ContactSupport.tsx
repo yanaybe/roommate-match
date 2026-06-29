@@ -13,11 +13,7 @@ function useContactMethods() {
     { icon: Phone, label: t("contactPhone"), value: "+972 54-540-4192", href: "tel:+972545404192", color: "from-emerald-500 to-green-600" },
     { icon: Mail, label: t("contactEmail"), value: "roomatchltd@gmail.com", href: "mailto:roomatchltd@gmail.com", color: "from-blue-500 to-cyan-600" },
     { icon: Instagram, label: t("contactInstagram"), value: "@_roomatch", href: "https://instagram.com/_roomatch", color: "from-pink-500 to-purple-600" },
-    // TODO (Medium | Bug + Consistency)
-    // Facebook handle is "_roomatch_" but Instagram is "@_roomatch" (no trailing underscore).
-    // Verify which is the correct Facebook handle and make them consistent.
-    // Also check whether the Facebook page actually exists — a broken social link is worse than none.
-    { icon: Facebook, label: t("contactFacebook"), value: "_roomatch_", href: "https://facebook.com/_roomatch_", color: "from-blue-600 to-indigo-600" },
+    { icon: Facebook, label: t("contactFacebook"), value: "_roomatch", href: "https://facebook.com/_roomatch", color: "from-blue-600 to-indigo-600" },
   ];
 }
 

@@ -78,13 +78,6 @@ export default function Auth() {
 
   const pwAnalysis = analyzePassword(password);
 
-  // TODO (Medium | Bug)
-  // Google OAuth redirects to `${window.location.origin}/` which bypasses
-  // the email verification wait page. Google users have verified emails already,
-  // so skipping /verify-email is correct — but the redirect should go to /onboarding
-  // for new users and / for returning users. Currently all Google users land on /
-  // which then re-routes via the useEffect below. This works but adds an extra
-  // redirect flash. Consider moving the profile check into the redirectTo URL instead.
   const handleGoogleAuth = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",

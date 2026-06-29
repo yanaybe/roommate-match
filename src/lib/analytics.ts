@@ -10,6 +10,10 @@ export function initAnalytics() {
     person_profiles: "identified_only",
     capture_pageview: true,
     capture_pageleave: true,
+    session_recording: {
+      maskAllInputs: true,
+      maskInputOptions: { password: true },
+    },
   });
 }
 

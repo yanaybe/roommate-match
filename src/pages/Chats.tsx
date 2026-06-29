@@ -443,15 +443,6 @@ export default function Chats() {
           </div>
         ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-            {/* TODO (Medium | Delight + UX)
-              Empty state is functional but generic. Consider:
-                1. Adding a fun illustration (not just an icon) — empty states are a
-                   branding opportunity. See Slack, Linear, Duolingo for reference.
-                2. Adding urgency copy: "Like a roommate profile to start chatting →"
-                   with a direct link to the Roommates tab.
-                3. For new users: show a guided tooltip or animated arrow pointing
-                   to the Roommates tab in the bottom nav.
-              See UX Audit: "Delight" section — empty states. */}
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <Send className="w-7 h-7 text-primary" />
             </div>
