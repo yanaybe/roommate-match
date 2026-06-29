@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -148,7 +149,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
       });
       onOpenChange(false);
     } catch (err) {
-      console.error("Paddle checkout error:", err instanceof Error ? err.message : String(err));
+      Sentry.captureException(err instanceof Error ? err : new Error(String(err)));
       toast.error("Could not open checkout. Please try again.");
     } finally {
       setLoading(false);

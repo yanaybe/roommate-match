@@ -10,13 +10,15 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import type { User } from "@supabase/supabase-js";
+import type { FullProfile } from "@/hooks/useProfile";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   // kept for API compatibility with Profile.tsx
-  user?: any;
-  profile?: any;
+  user?: User;
+  profile?: FullProfile;
   t: (key: string) => string;
 }
 

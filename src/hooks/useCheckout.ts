@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,7 +35,7 @@ export function useCheckout() {
       window.location.href = data.url;
     } catch (err) {
       toast.error("Couldn't start checkout. Please try again.");
-      console.error("Checkout error:", err instanceof Error ? err.message : String(err));
+      Sentry.captureException(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
     }

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { useState, useEffect } from "react";
 import { Crown, CreditCard, Calendar, AlertTriangle, Check, ChevronRight, X, Loader2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -76,7 +77,7 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
       onOpenChange(false);
       setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
-      console.error("Cancel subscription error:", err instanceof Error ? err.message : String(err));
+      Sentry.captureException(err instanceof Error ? err : new Error(String(err)));
       toast.error("Could not cancel automatically. Please contact roomatchltd@gmail.com");
     } finally {
       setCancelling(false);
