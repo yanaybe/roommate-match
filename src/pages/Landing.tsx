@@ -12,39 +12,6 @@ const fadeUp = {
   show: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.5 } }),
 };
 
-// TODO (Critical | Trust)
-// Testimonials are fabricated — there are currently 0 real users.
-// This destroys credibility with any investor or savvy user who checks.
-// Replace with honest early-adopter language ("Be among our first users")
-// OR replace with real quotes once beta users exist.
-// See UX Audit: "Trust" score 3/10.
-const TESTIMONIALS = [
-  {
-    name: "Maya L.",
-    city: "Tel Aviv",
-    quote: "Found my perfect roommate in 3 days. The compatibility score actually works — we're now best friends!",
-    avatar: "M",
-    color: "from-pink-500 to-rose-500",
-    stars: 5,
-  },
-  {
-    name: "Yonatan K.",
-    city: "Jerusalem",
-    quote: "Used the squad feature with 2 friends — we found an apartment together in under a week. Game changer.",
-    avatar: "Y",
-    color: "from-blue-500 to-indigo-500",
-    stars: 5,
-  },
-  {
-    name: "Noa S.",
-    city: "Haifa",
-    quote: "As a French speaker, having the app in my language made everything so much easier. Highly recommend.",
-    avatar: "N",
-    color: "from-emerald-500 to-teal-500",
-    stars: 5,
-  },
-];
-
 // TODO (High | Product)
 // Preview listings use stock Unsplash photos and dummy data.
 // Once real listings exist, pull the 3 most recently posted from DB instead.
@@ -121,10 +88,6 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background" onClick={() => setLangOpen(false)}>
 
-      {/* TODO (Medium | UI)
-        Desktop nav has no logo image — just text "RoomMatch". Now that we have
-        a logo (public/logo.png), add it to the left of the brand name in the nav.
-        Also add an Instagram/social link icon in the nav for trust/discovery. */}
       {/* ── Nav ── */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="w-full px-5 h-14 flex items-center justify-between">
@@ -380,46 +343,41 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* TODO (Critical | Trust + Copywriting)
-        "What our users say" / "Real stories from people who found their match" —
-        these testimonials are fabricated (see TESTIMONIALS array at top of file).
-        This section should be REMOVED or replaced with:
-          - A waitlist CTA ("Join 200+ people waiting for their match")
-          - OR replaced with real quotes once beta users provide them
-          - OR an honest early-adopter social proof section
-        Showing fake reviews is an ethical and trust issue that will backfire.
-        See UX Audit: Priority #1 in Trust section. */}
-      {/* ── Testimonials ── */}
+      {/* ── Why RooMatch? ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
         <motion.div
           variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
           className="text-center mb-10"
         >
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">What our users say</h2>
-          <p className="text-muted-foreground mt-2">Real stories from people who found their match</p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">Why RooMatch?</h2>
+          <p className="text-muted-foreground mt-2">Built differently — because finding a roommate is about more than location</p>
         </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {TESTIMONIALS.map((item, i) => (
+          {[
+            {
+              icon: "🧬",
+              title: "14 lifestyle factors",
+              desc: "We match on sleep schedule, cleanliness, noise level, pets, cooking habits, and 9 more — not just budget and city.",
+            },
+            {
+              icon: "👥",
+              title: "Squad search",
+              desc: "The only roommate platform that lets 2–4 friends search together, vote on apartments, and move in as a group.",
+            },
+            {
+              icon: "🔒",
+              title: "Verified profiles",
+              desc: "Every account is email-verified. No anonymous browsing — everyone on the platform is real and accountable.",
+            },
+          ].map((item, i) => (
             <motion.div
-              key={item.name}
+              key={item.title}
               variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }} custom={i}
-              className="bg-card rounded-2xl p-5 shadow-card flex flex-col gap-3"
+              className="bg-card rounded-2xl p-6 shadow-card flex flex-col gap-3 text-center items-center"
             >
-              <div className="flex gap-0.5">
-                {Array.from({ length: item.stars }).map((_, j) => (
-                  <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-              <p className="text-sm text-foreground leading-relaxed flex-1">"{item.quote}"</p>
-              <div className="flex items-center gap-3 mt-auto pt-2 border-t border-border/50">
-                <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${item.color} flex items-center justify-center shrink-0`}>
-                  <span className="text-white text-sm font-bold">{item.avatar}</span>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{item.name}</p>
-                  <p className="text-xs text-muted-foreground">{item.city}</p>
-                </div>
-              </div>
+              <span className="text-4xl mb-1">{item.icon}</span>
+              <h3 className="font-bold text-foreground text-base">{item.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -588,17 +546,6 @@ export default function Landing() {
         </motion.div>
       </section>
 
-      {/* TODO (Medium | UI + Trust)
-        Footer is too minimal — only Privacy, Terms, Contact links in tiny text.
-        A professional footer should include:
-          - Logo + tagline
-          - Social links (Instagram @_roomatch, Facebook)
-          - Company email (roomatchltd@gmail.com)
-          - "Made in Israel 🇮🇱" if targeting local market
-          - Copyright and brand name (currently inconsistent: "RoomMatch" vs "Roomatch")
-        Also: brand name in footer reads "RoomMatch" but nav/other places say "Roomatch".
-        Pick ONE spelling and use it everywhere.
-        See UX Audit: Priority #12 (footer), #20 (brand name consistency). */}
       {/* ── Footer ── */}
       <footer className="border-t border-border/50 px-5 py-10">
         <div className="max-w-5xl mx-auto space-y-6">
@@ -611,13 +558,13 @@ export default function Landing() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <a href="https://instagram.com/_roomatch" target="_blank" rel="noopener noreferrer" aria-label="RooMatch on Instagram"
+              <a href="https://instagram.com/_roomatch" target="_blank" rel="noopener noreferrer" aria-label="Follow RooMatch on Instagram"
                 className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center hover:scale-105 transition-transform">
                 <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                 </svg>
               </a>
-              <a href="mailto:roomatchltd@gmail.com" aria-label="Email RooMatch"
+              <a href="mailto:roomatchltd@gmail.com" aria-label="Email RooMatch support"
                 className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center hover:scale-105 transition-transform">
                 <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>

@@ -1,0 +1,295 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: full-audit-2026.spec.ts >> RooMatch Full UX Audit 2026 >> 01 - Landing page desktop
+- Location: e2e/full-audit-2026.spec.ts:26:3
+
+# Error details
+
+```
+Test timeout of 60000ms exceeded.
+```
+
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - img "RooMatch" [ref=e7]
+          - generic [ref=e8]: RooMatch
+        - generic [ref=e9]:
+          - button "EN" [ref=e11] [cursor=pointer]:
+            - img [ref=e12]
+            - generic [ref=e15]: EN
+          - button "Sign In" [ref=e16] [cursor=pointer]
+          - button "Get started" [ref=e17] [cursor=pointer]
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - img [ref=e23]
+        - text: Lifestyle-first roommate matching
+      - heading "Find a roommate who actually fits your life" [level=1] [ref=e25]
+      - paragraph [ref=e26]: Match on lifestyle, not just location. Browse apartments, swipe on roommates, and even search as a squad — all in one place.
+      - generic [ref=e27]:
+        - button "Get Matched Free" [ref=e28] [cursor=pointer]:
+          - text: Get Matched Free
+          - img [ref=e29]
+        - button "Browse listings" [ref=e31] [cursor=pointer]
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - paragraph [ref=e34]: "14"
+          - paragraph [ref=e35]: Compatibility factors
+        - generic [ref=e36]:
+          - paragraph [ref=e37]: "3"
+          - paragraph [ref=e38]: Languages
+        - generic [ref=e39]:
+          - paragraph [ref=e40]: ₪0
+          - paragraph [ref=e41]: Free to start
+    - generic [ref=e43]:
+      - generic [ref=e44] [cursor=pointer]:
+        - generic [ref=e45]:
+          - img "Modern Flat · Florentin" [ref=e46]
+          - generic [ref=e48]: 92% match
+          - generic [ref=e49]:
+            - img [ref=e50]
+            - text: Sign in to view
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: Modern Flat · Florentin
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - img [ref=e57]
+              - text: Tel Aviv
+            - generic [ref=e60]: ₪3,200/mo
+      - generic [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]:
+          - img "Penthouse · Neve Tzedek" [ref=e63]
+          - generic [ref=e65]: 87% match
+          - generic [ref=e66]:
+            - img [ref=e67]
+            - text: Sign in to view
+        - generic [ref=e70]:
+          - paragraph [ref=e71]: Penthouse · Neve Tzedek
+          - generic [ref=e72]:
+            - generic [ref=e73]:
+              - img [ref=e74]
+              - text: Tel Aviv
+            - generic [ref=e77]: ₪3,800/mo
+      - generic [ref=e78] [cursor=pointer]:
+        - generic [ref=e79]:
+          - img "Sea View · Bat Galim" [ref=e80]
+          - generic [ref=e82]: 81% match
+          - generic [ref=e83]:
+            - img [ref=e84]
+            - text: Sign in to view
+        - generic [ref=e87]:
+          - paragraph [ref=e88]: Sea View · Bat Galim
+          - generic [ref=e89]:
+            - generic [ref=e90]:
+              - img [ref=e91]
+              - text: Haifa
+            - generic [ref=e94]: ₪2,600/mo
+      - generic [ref=e95] [cursor=pointer]:
+        - img [ref=e97]
+        - paragraph [ref=e100]: See all listings
+        - paragraph [ref=e101]: Sign up free to browse
+    - generic [ref=e103]:
+      - generic [ref=e104]:
+        - heading "How it works" [level=2] [ref=e105]
+        - paragraph [ref=e106]: From sign-up to move-in in days, not weeks
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - generic [ref=e109]: "01"
+          - img [ref=e111]
+          - heading "Build your profile" [level=3] [ref=e116]
+          - paragraph [ref=e117]: Answer a few questions about your lifestyle, budget, and habits. Takes 3 minutes.
+        - generic [ref=e118]:
+          - generic [ref=e119]: "02"
+          - img [ref=e121]
+          - heading "Swipe & match" [level=3] [ref=e123]
+          - paragraph [ref=e124]: Browse roommates and apartments. Swipe right on who feels right — matches are mutual.
+        - generic [ref=e125]:
+          - generic [ref=e126]: "03"
+          - img [ref=e128]
+          - heading "Chat & move in" [level=3] [ref=e130]
+          - paragraph [ref=e131]: Message your matches directly. Find your new home and roommate in one place.
+    - generic [ref=e132]:
+      - generic [ref=e133]:
+        - heading "What our users say" [level=2] [ref=e134]
+        - paragraph [ref=e135]: Real stories from people who found their match
+      - generic [ref=e136]:
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - img [ref=e139]
+            - img [ref=e141]
+            - img [ref=e143]
+            - img [ref=e145]
+            - img [ref=e147]
+          - paragraph [ref=e149]: "\"Found my perfect roommate in 3 days. The compatibility score actually works — we're now best friends!\""
+          - generic [ref=e150]:
+            - generic [ref=e152]: M
+            - generic [ref=e153]:
+              - paragraph [ref=e154]: Maya L.
+              - paragraph [ref=e155]: Tel Aviv
+        - generic [ref=e156]:
+          - generic [ref=e157]:
+            - img [ref=e158]
+            - img [ref=e160]
+            - img [ref=e162]
+            - img [ref=e164]
+            - img [ref=e166]
+          - paragraph [ref=e168]: "\"Used the squad feature with 2 friends — we found an apartment together in under a week. Game changer.\""
+          - generic [ref=e169]:
+            - generic [ref=e171]: "Y"
+            - generic [ref=e172]:
+              - paragraph [ref=e173]: Yonatan K.
+              - paragraph [ref=e174]: Jerusalem
+        - generic [ref=e175]:
+          - generic [ref=e176]:
+            - img [ref=e177]
+            - img [ref=e179]
+            - img [ref=e181]
+            - img [ref=e183]
+            - img [ref=e185]
+          - paragraph [ref=e187]: "\"As a French speaker, having the app in my language made everything so much easier. Highly recommend.\""
+          - generic [ref=e188]:
+            - generic [ref=e190]: "N"
+            - generic [ref=e191]:
+              - paragraph [ref=e192]: Noa S.
+              - paragraph [ref=e193]: Haifa
+    - generic [ref=e194]:
+      - generic [ref=e195]:
+        - heading "Everything you need" [level=2] [ref=e196]
+        - paragraph [ref=e197]: Built specifically for the Israeli rental market
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - img [ref=e201]
+          - generic [ref=e203]:
+            - generic [ref=e204]:
+              - heading "Squad Search" [level=3] [ref=e205]
+              - generic [ref=e206]: Unique
+            - paragraph [ref=e207]: Search for apartments as a group. The only roommate app that lets you house-hunt together.
+        - generic [ref=e208]:
+          - img [ref=e210]
+          - generic [ref=e212]:
+            - heading "Smart Matching" [level=3] [ref=e214]
+            - paragraph [ref=e215]: 14 weighted lifestyle factors — sleep schedule, cleanliness, noise level, pets and more.
+        - generic [ref=e216]:
+          - img [ref=e218]
+          - generic [ref=e220]:
+            - heading "Safe & Trusted" [level=3] [ref=e222]
+            - paragraph [ref=e223]: Report and block system, profile verification, and moderated listings.
+        - generic [ref=e224]:
+          - img [ref=e226]
+          - generic [ref=e229]:
+            - heading "Map View" [level=3] [ref=e231]
+            - paragraph [ref=e232]: Browse apartments on an interactive map. See listings in your exact neighbourhood.
+    - generic [ref=e236]:
+      - generic [ref=e237]:
+        - img [ref=e238]
+        - text: Only on RoomMatch
+      - heading "Search as a Squad 🚀" [level=2] [ref=e240]
+      - paragraph [ref=e241]: Already know some people you want to live with? Form a squad, invite your friends, and vote on apartments together. No other app does this.
+      - generic [ref=e242]:
+        - generic [ref=e244]:
+          - generic [ref=e246]: "1"
+          - generic [ref=e247]: Invite 2–4 friends
+        - generic [ref=e248]:
+          - img [ref=e249]
+          - generic [ref=e251]:
+            - generic [ref=e253]: "2"
+            - generic [ref=e254]: Browse & vote together
+        - generic [ref=e255]:
+          - img [ref=e256]
+          - generic [ref=e258]:
+            - generic [ref=e260]: "3"
+            - generic [ref=e261]: Move in as a group
+      - button "Start a squad" [ref=e262] [cursor=pointer]:
+        - img [ref=e263]
+        - text: Start a squad
+    - generic [ref=e268]:
+      - generic [ref=e269]:
+        - heading "Simple pricing" [level=2] [ref=e270]
+        - paragraph [ref=e271]: Start free. Upgrade when you're ready.
+      - generic [ref=e272]:
+        - generic [ref=e273]:
+          - paragraph [ref=e274]: Free
+          - paragraph [ref=e275]: ₪0/mo
+          - generic [ref=e276]:
+            - generic [ref=e277]:
+              - img [ref=e278]
+              - generic [ref=e280]: Browse listings
+            - generic [ref=e281]:
+              - img [ref=e282]
+              - generic [ref=e284]: 8 likes/day
+            - generic [ref=e285]:
+              - img [ref=e286]
+              - generic [ref=e288]: Match & chat
+          - button "Get started" [ref=e289] [cursor=pointer]
+        - generic [ref=e290]:
+          - generic [ref=e291]: MOST POPULAR
+          - paragraph [ref=e292]: Gold
+          - paragraph [ref=e293]: ₪29/mo
+          - generic [ref=e294]:
+            - generic [ref=e295]:
+              - img [ref=e296]
+              - generic [ref=e298]: Unlimited likes
+            - generic [ref=e299]:
+              - img [ref=e300]
+              - generic [ref=e302]: See who liked you
+            - generic [ref=e303]:
+              - img [ref=e304]
+              - generic [ref=e306]: Weekly boost
+          - button "Get started" [ref=e307] [cursor=pointer]
+        - generic [ref=e308]:
+          - paragraph [ref=e309]: Platinum
+          - paragraph [ref=e310]: ₪39/mo
+          - generic [ref=e311]:
+            - generic [ref=e312]:
+              - img [ref=e313]
+              - generic [ref=e315]: Message before matching
+            - generic [ref=e316]:
+              - img [ref=e317]
+              - generic [ref=e319]: Priority placement
+            - generic [ref=e320]:
+              - img [ref=e321]
+              - generic [ref=e323]: 3 boosts/week
+          - button "Get started" [ref=e324] [cursor=pointer]
+    - generic [ref=e326]:
+      - heading "Ready to find your people?" [level=2] [ref=e327]
+      - paragraph [ref=e328]: Join thousands of Israelis who found their roommate on RoomMatch.
+      - button "Create your free profile" [ref=e329] [cursor=pointer]:
+        - img [ref=e330]
+        - text: Create your free profile
+      - paragraph [ref=e332]: No credit card required
+    - contentinfo [ref=e333]:
+      - generic [ref=e334]:
+        - generic [ref=e335]:
+          - generic [ref=e336]:
+            - img "RooMatch" [ref=e337]
+            - generic [ref=e338]:
+              - generic [ref=e339]: RooMatch
+              - paragraph [ref=e340]: Find your perfect roommate
+          - generic [ref=e341]:
+            - link "RooMatch on Instagram" [ref=e342] [cursor=pointer]:
+              - /url: https://instagram.com/_roomatch
+              - img [ref=e343]
+            - link "Email RooMatch" [ref=e345] [cursor=pointer]:
+              - /url: mailto:roomatchltd@gmail.com
+              - img [ref=e346]
+        - generic [ref=e349]:
+          - generic [ref=e350]:
+            - button "Privacy" [ref=e351] [cursor=pointer]
+            - button "Terms" [ref=e352] [cursor=pointer]
+            - button "Contact" [ref=e353] [cursor=pointer]
+          - paragraph [ref=e354]: © 2026 RooMatch · Made in Israel 🇮🇱
+```

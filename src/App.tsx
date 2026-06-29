@@ -200,6 +200,7 @@ const App = () => (
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/contact-support" element={<ContactSupport />} />
+              <Route path="/help-center" element={<HelpCenter />} />
               <Route path="*" element={<NotFound />} />
 
               {/* Protected — must be signed in, gets sidebar */}
@@ -212,7 +213,6 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/billing-history" element={<BillingHistory />} />
-                <Route path="/help-center" element={<HelpCenter />} />
                 <Route path="/admin/reports" element={<Admin />} />
 
                 {/* Require completed onboarding profile */}

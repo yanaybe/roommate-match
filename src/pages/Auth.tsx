@@ -71,6 +71,7 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -122,20 +123,26 @@ export default function Auth() {
       return;
     }
 
+    setAuthError("");
     if (isLogin) {
-      if (!password) { toast.error(t("passwordRequired")); setLoading(false); return; }
+      if (!password) { setAuthError(t("passwordRequired")); setLoading(false); return; }
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) toast.error(mapAuthError(error));
-      else { analytics.login(); navigate("/"); }
+      if (error) {
+        const msg = mapAuthError(error);
+        setAuthError(msg);
+        toast.error(msg, { duration: 8000 });
+      } else { analytics.login(); navigate("/"); }
     } else {
       const pwResult = passwordSchema.safeParse(password);
       if (!pwResult.success) {
-        toast.error(pwResult.error.issues[0].message);
+        const msg = pwResult.error.issues[0].message;
+        setAuthError(msg);
+        toast.error(msg, { duration: 8000 });
         setLoading(false);
         return;
       }
       if (password !== confirmPassword) {
-        toast.error(t("passwordsDoNotMatch"));
+        setAuthError(t("passwordsDoNotMatch"));
         setLoading(false);
         return;
       }
@@ -144,8 +151,11 @@ export default function Auth() {
         password,
         options: { emailRedirectTo: `${window.location.origin}/verify-email` },
       });
-      if (error) toast.error(mapAuthError(error));
-      else { analytics.signup(); navigate("/verify-email"); }
+      if (error) {
+        const msg = mapAuthError(error);
+        setAuthError(msg);
+        toast.error(msg, { duration: 8000 });
+      } else { analytics.signup(); navigate("/verify-email"); }
     }
     setLoading(false);
   };
@@ -160,6 +170,7 @@ export default function Auth() {
           className="w-full max-w-sm"
         >
           <div className="text-center mb-8">
+            <img src="/logo.png" alt="RooMatch" className="w-12 h-12 object-contain mx-auto mb-3" />
             <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
               Roo<span className="text-primary">Match</span>
             </h1>
@@ -232,6 +243,11 @@ export default function Auth() {
                 </button>
               </div>
             </div>
+            {authError && (
+              <div className="bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3 text-sm text-destructive font-medium">
+                {authError}
+              </div>
+            )}
             <button
               type="submit"
               disabled={loading}
@@ -243,7 +259,7 @@ export default function Auth() {
 
           <p className="text-center text-muted-foreground text-sm mt-6">
             {t("dontHaveAccount")}{" "}
-            <button onClick={() => setIsLogin(false)} className="text-primary font-semibold">
+            <button onClick={() => { setIsLogin(false); setAuthError(""); }} className="text-primary font-semibold">
               {t("signUp")}
             </button>
           </p>
@@ -404,6 +420,12 @@ export default function Auth() {
             <p className="text-destructive text-xs -mt-1 font-medium">{t("passwordsDoNotMatch")}</p>
           )}
 
+          {authError && (
+            <div className="bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3 text-sm text-destructive font-medium">
+              {authError}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading || pwAnalysis.strength === "weak" || password !== confirmPassword}
@@ -417,7 +439,7 @@ export default function Auth() {
 
         <p className="text-center text-muted-foreground text-sm mt-5">
           {t("alreadyHaveAccount")}{" "}
-          <button onClick={() => setIsLogin(true)} className="text-primary font-semibold">
+          <button onClick={() => { setIsLogin(true); setAuthError(""); }} className="text-primary font-semibold">
             {t("signIn")}
           </button>
         </p>

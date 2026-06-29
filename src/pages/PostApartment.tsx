@@ -231,7 +231,7 @@ export default function PostApartment() {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
-        { headers: { "User-Agent": "RoomMatch-App/1.0" } }
+        { headers: { "User-Agent": "RooMatch-App/1.0" } }
       );
       const data = await res.json();
       if (data.length > 0) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];

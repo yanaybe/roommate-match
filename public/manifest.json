@@ -4,7 +4,7 @@
   "description": "Find a roommate who actually fits your life",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
+  "background_color": "#fbfaf9",
   "theme_color": "#8b5cf6",
   "orientation": "portrait",
   "icons": [
