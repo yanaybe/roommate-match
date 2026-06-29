@@ -40,6 +40,7 @@ export default function BottomNav() {
 
   const publicOnlyPaths = ["/auth", "/terms-of-service", "/privacy-policy", "/contact-support", "/onboarding", "/help-center", "/verify-email", "/welcome"];
   if (publicOnlyPaths.includes(location.pathname)) return null;
+  if (location.pathname.startsWith("/admin")) return null;
   if (!user) return null;
 
   return (
