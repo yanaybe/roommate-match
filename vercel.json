@@ -1,4 +1,5 @@
 {
+  "rewrites": [{ "source": "/((?!_next|api|favicon|logo|apple-touch|robots|sw\\.js|placeholder).*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/(.*)",
@@ -10,7 +11,7 @@
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.paddle.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com; img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://ui-avatars.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://buy.paddle.com https://sandbox-buy.paddle.com; worker-src 'self' blob:;"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.paddle.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com; img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://ui-avatars.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://buy.paddle.com https://sandbox-buy.paddle.com; worker-src 'self' blob:;"
         }
       ]
     }
