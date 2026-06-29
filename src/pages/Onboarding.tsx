@@ -347,7 +347,6 @@ export default function Onboarding() {
       bio: sanitizeText(currentForm.bio),
       avatar_url: currentForm.photos[0] || null,
       photos: currentForm.photos,
-      onboarding_complete: false,
     };
     await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
   };
