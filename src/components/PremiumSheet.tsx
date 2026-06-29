@@ -148,7 +148,7 @@ export default function PremiumSheet({ open, onOpenChange }: PremiumSheetProps) 
       });
       onOpenChange(false);
     } catch (err) {
-      console.error("Paddle checkout error:", err);
+      console.error("Paddle checkout error:", err instanceof Error ? err.message : String(err));
       toast.error("Could not open checkout. Please try again.");
     } finally {
       setLoading(false);

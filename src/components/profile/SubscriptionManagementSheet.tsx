@@ -76,7 +76,7 @@ export default function SubscriptionManagementSheet({ open, onOpenChange, subscr
       onOpenChange(false);
       setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
-      console.error("Cancel subscription error:", err);
+      console.error("Cancel subscription error:", err instanceof Error ? err.message : String(err));
       toast.error("Could not cancel automatically. Please contact roomatchltd@gmail.com");
     } finally {
       setCancelling(false);

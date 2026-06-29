@@ -18,7 +18,7 @@ class ErrorBoundaryClass extends Component<Props & { t: (key: string) => string 
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("Uncaught error:", error, info);
+    console.error("Uncaught error:", error.message, info.componentStack?.split("\n")[1]?.trim());
   }
 
   render() {

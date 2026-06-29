@@ -34,7 +34,7 @@ export function useCheckout() {
       window.location.href = data.url;
     } catch (err) {
       toast.error("Couldn't start checkout. Please try again.");
-      console.error("Checkout error:", err);
+      console.error("Checkout error:", err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

@@ -169,7 +169,7 @@ export default function Index() {
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
-        if (error) { console.error("Failed to load apartments:", error); toast.error(t("failedToLoadApartments")); }
+        if (error) { console.error("Failed to load apartments:", error.message); toast.error(t("failedToLoadApartments")); }
         setApartments((data ?? []).map(dbRowToApartment));
         setApartmentsLoading(false);
         setGridKey(1);
