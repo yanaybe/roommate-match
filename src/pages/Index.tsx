@@ -384,7 +384,7 @@ export default function Index() {
                   ))}
                 </div>
               </div>
-            ) : user && profile?.onboarding_complete && (
+            ) : user && profile?.onboarding_complete && (!profile?.budget || !profile?.city) && (
               <div className="mb-5">
                 <button
                   onClick={() => navigate("/onboarding?edit=true")}
