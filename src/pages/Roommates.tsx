@@ -109,19 +109,26 @@ export default function Roommates() {
 
   useEffect(() => {
     if (!user?.id) return;
-    fetchBlockedIds(user.id).then(setBlockedIds);
+    let cancelled = false;
+    fetchBlockedIds(user.id).then((ids) => {
+      if (!cancelled) setBlockedIds(ids);
+    });
+    return () => { cancelled = true; };
   }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) return;
+    let cancelled = false;
     supabase
       .from("liked_profiles")
       .select("liked_user_id")
       .eq("user_id", user.id)
       .then(({ data }) => {
+        if (cancelled) return;
         const dbLikedIds = (data ?? []).map((r) => r.liked_user_id);
         setSwiped(dbLikedIds);
       });
+    return () => { cancelled = true; };
   }, [user?.id]);
 
   // Other profiles (not current user), with match percentages + breakdown

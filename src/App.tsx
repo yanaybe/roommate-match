@@ -44,6 +44,7 @@ const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
 const AdminSystem = lazy(() => import("./pages/admin/AdminSystem"));
+const Maintenance = lazy(() => import("./pages/Maintenance"));
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
@@ -201,15 +202,16 @@ const App = () => (
             <Routes>
               {/* Public — no auth, no sidebar */}
               <Route path="/" element={<HomeRoute />} />
-              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
               <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/onboarding" element={<ErrorBoundary><Onboarding /></ErrorBoundary>} />
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/contact-support" element={<ContactSupport />} />
               <Route path="/help-center" element={<HelpCenter />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/maintenance" element={<Maintenance />} />
               <Route path="*" element={<NotFound />} />
 
               {/* Admin — own layout + own auth guard, no app sidebar */}
@@ -226,13 +228,13 @@ const App = () => (
               {/* Protected — must be signed in, gets sidebar */}
               <Route element={<AuthedLayout />}>
                 {/* Accessible without completing onboarding */}
-                <Route path="/apartment/:id" element={<ApartmentDetail />} />
-                <Route path="/roommate/:id" element={<RoommateProfile />} />
-                <Route path="/create" element={<CreateApartment />} />
-                <Route path="/post-apartment" element={<PostApartment />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/billing-history" element={<BillingHistory />} />
+                <Route path="/apartment/:id" element={<ErrorBoundary><ApartmentDetail /></ErrorBoundary>} />
+                <Route path="/roommate/:id" element={<ErrorBoundary><RoommateProfile /></ErrorBoundary>} />
+                <Route path="/create" element={<ErrorBoundary><CreateApartment /></ErrorBoundary>} />
+                <Route path="/post-apartment" element={<ErrorBoundary><PostApartment /></ErrorBoundary>} />
+                <Route path="/profile" element={<ErrorBoundary><Profile /></ErrorBoundary>} />
+                <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
+                <Route path="/billing-history" element={<ErrorBoundary><BillingHistory /></ErrorBoundary>} />
 
                 {/* Require completed onboarding profile */}
                 <Route element={<OnboardedLayout />}>

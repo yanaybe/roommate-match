@@ -50,6 +50,8 @@ export function useProfile() {
       return;
     }
 
+    let cancelled = false;
+
     const load = async () => {
       const { data, error: fetchError } = await supabase
         .from("profiles")
@@ -57,6 +59,7 @@ export function useProfile() {
         .eq("user_id", user.id)
         .maybeSingle();
 
+      if (cancelled) return;
       if (fetchError) {
         setError(fetchError.message);
       } else {
@@ -66,6 +69,7 @@ export function useProfile() {
     };
 
     load();
+    return () => { cancelled = true; };
   }, [user]);
 
   const refetch = useCallback(async () => {
