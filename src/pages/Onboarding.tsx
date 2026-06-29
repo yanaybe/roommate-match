@@ -441,7 +441,7 @@ export default function Onboarding() {
           .eq("city", form.city)
           .eq("onboarding_complete", true)
           .neq("user_id", user.id);
-        navigate(`/welcome?city=${encodeURIComponent(form.city)}&count=${count ?? 0}`, { replace: true });
+        navigate(`/welcome?city=${encodeURIComponent(form.city)}&count=${count ?? 0}&name=${encodeURIComponent(form.name.trim().split(" ")[0])}`, { replace: true });
       } else {
         navigate("/profile", { replace: true });
       }

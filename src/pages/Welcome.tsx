@@ -7,6 +7,7 @@ export default function Welcome() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const city = searchParams.get("city") ?? "";
+  const name = searchParams.get("name") ?? "";
   const targetCount = parseInt(searchParams.get("count") ?? "0", 10);
   const [displayCount, setDisplayCount] = useState(0);
 
@@ -68,7 +69,7 @@ export default function Welcome() {
           ) : (
             <>
               Your profile is ready
-              {city && <>, {city}</>}!
+              {name && <>, {name}</>}!
             </>
           )}
         </motion.h1>
