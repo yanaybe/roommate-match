@@ -312,8 +312,8 @@ export default function Index() {
         </div>
       </div>
 
-      {/* content below sticky header — clipped so nothing bleeds horizontally */}
-      <div className="w-full" style={{ overflowX: "clip" }}>
+      {/* content below sticky header — clipped so nothing bleeds horizontally (disabled in map view: Leaflet breaks under overflow:clip) */}
+      <div className="w-full" style={view === "list" ? { overflowX: "clip" } : undefined}>
 
       {newApartments.length > 0 && (
         <div className="max-w-5xl mx-auto px-4 pt-3">
