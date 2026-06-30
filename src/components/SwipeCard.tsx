@@ -24,7 +24,7 @@ export default function SwipeCard({ user, matchPercent, matchBreakdown, onSwipe,
 
   const photos = user.photos?.length ? user.photos : [user.avatar];
 
-  const handleDragEnd = (_: any, info: PanInfo) => {
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (info.offset.x > 100) {
       onSwipe("right");
     } else if (info.offset.x < -100) {

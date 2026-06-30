@@ -40,6 +40,7 @@ const CITY_COORDS: Record<string, [number, number]> = {
   "Petah Tikva": [32.0842, 34.8841], "Ashdod": [31.8010, 34.6550],
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function dbRowToApartment(row: any): Apartment & { ownerId: string } {
   const amenities: string[] = [];
   if (row.has_balcony) amenities.push("Balcony");

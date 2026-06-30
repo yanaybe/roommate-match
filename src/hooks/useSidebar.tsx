@@ -24,7 +24,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   const toggle = () =>
     setCollapsed((v) => {
       const next = !v;
-      try { localStorage.setItem(SIDEBAR_KEY, String(next)); } catch {}
+      try { localStorage.setItem(SIDEBAR_KEY, String(next)); } catch { /* storage unavailable */ }
       return next;
     });
 

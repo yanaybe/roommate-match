@@ -18,6 +18,7 @@ interface Props {
 
 export default function MyListingsSheet({ open, onOpenChange, user, t, isPremium }: Props) {
   const navigate = useNavigate();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [listings, setListings] = useState<any[]>([]);
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,9 @@ export default function MyListingsSheet({ open, onOpenChange, user, t, isPremium
 
       if (isPremium && apts && apts.length > 0) {
         try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const ids = apts.map((a: any) => a.id);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: views } = await (supabase as any)
             .from("apartment_views")
             .select("apartment_id")

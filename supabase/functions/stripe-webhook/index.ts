@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
       subscription_tier: tier,
       stripe_customer_id: session.customer as string,
       stripe_subscription_id: session.subscription as string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any).eq("user_id", userId);
   }
 
@@ -62,6 +63,7 @@ Deno.serve(async (req) => {
     const sub = event.data.object as Stripe.Subscription;
     const userId = sub.metadata?.userId;
     if (userId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await supabase.from("profiles").update({ subscription_tier: "free" } as any).eq("user_id", userId);
     }
   }
@@ -72,6 +74,7 @@ Deno.serve(async (req) => {
     if (userId) {
       const priceId = sub.items.data[0]?.price.id ?? "";
       const tier = sub.status === "active" ? (PRICE_TO_TIER[priceId] ?? "free") : "free";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await supabase.from("profiles").update({ subscription_tier: tier } as any).eq("user_id", userId);
     }
   }

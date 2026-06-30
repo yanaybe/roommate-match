@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 const BASE = "https://roommate-match-nine.vercel.app";
 
-async function getBodyText(page: any, url: string): Promise<string> {
+async function getBodyText(page: Page, url: string): Promise<string> {
   await page.goto(url);
   await page.waitForLoadState("networkidle");
   return await page.textContent("body") ?? "";

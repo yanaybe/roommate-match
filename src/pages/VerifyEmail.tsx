@@ -26,6 +26,7 @@ export default function VerifyEmail() {
     if (user?.email_confirmed_at && !verified) {
       handleVerifiedRedirect();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading, navigate]);
 
   const handleVerifiedRedirect = async () => {
@@ -62,6 +63,7 @@ export default function VerifyEmail() {
       }
     }, 3000);
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, verified]);
 
   // Cooldown timer

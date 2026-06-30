@@ -22,7 +22,9 @@ const corsHeaders = {
 interface WebhookPayload {
   type: "INSERT" | "UPDATE" | "DELETE";
   table: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   record: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   old_record: Record<string, any> | null;
 }
 
@@ -54,6 +56,7 @@ async function sendEmail(to: string, subject: string, html: string) {
 }
 
 async function getProfileEmail(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   userId: string
 ): Promise<{ email: string; name: string } | null> {

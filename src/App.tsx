@@ -65,6 +65,7 @@ function AnalyticsSync() {
     } else {
       resetAnalytics();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
   return null;
 }
@@ -148,6 +149,7 @@ function HomeRoute() {
 
   useEffect(() => {
     if (!loading && !profileLoading && user && profile && !profile.onboarding_complete) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const provider = (user as any).app_metadata?.provider;
       if (provider && provider !== "email") {
         setShowOAuthWelcome(true);

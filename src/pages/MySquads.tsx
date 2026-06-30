@@ -80,6 +80,7 @@ export default function MySquads() {
     setFilterMinMatch(0);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAcceptInvite = async (invite: any) => {
     if (!user) return;
     // Distinguish join requests (creator accepting) from regular invites (invitee accepting)
@@ -146,6 +147,7 @@ export default function MySquads() {
       if (error) throw error;
       toast.success("Join request sent! 🙌");
       refetchDiscover();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error("Failed to send request");
     } finally {
@@ -236,7 +238,8 @@ export default function MySquads() {
                             {inv.squad?.name ?? "Squad"}
                           </p>
                           <p className="text-muted-foreground text-xs">
-                            {(inv.squad as any)?.creator_id === user.id
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                          {(inv.squad as any)?.creator_id === user.id
                               ? `${inv.inviter_profile?.name ?? "Someone"} wants to join`
                               : `${t("invitedBy")} ${inv.inviter_profile?.name ?? "someone"}`}
                           </p>

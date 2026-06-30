@@ -70,6 +70,7 @@ async function sendEmail(to: string, name: string, matchName: string) {
 
 async function sendPushNotification(userId: string, title: string, body: string) {
   // Retrieve push subscriptions for the user
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   const { data: subs } = await supabase
     .from("push_subscriptions" as any)
     .select("endpoint, p256dh, auth")

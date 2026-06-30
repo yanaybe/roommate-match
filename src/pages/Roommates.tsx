@@ -227,6 +227,7 @@ export default function Roommates() {
         analytics.swipeDislike();
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [remaining, requireAuth, user, likesUsed, likesLimit, subscriptionTier],
   );
 

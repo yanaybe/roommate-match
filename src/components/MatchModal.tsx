@@ -69,7 +69,7 @@ export default function MatchModal({ user, matchPercent, onClose, matchBreakdown
 
       onClose();
       navigate("/chats");
-    } catch (err: any) {
+    } catch {
       toast.error("Failed to send message. Please try again.");
     } finally {
       setSending(false);

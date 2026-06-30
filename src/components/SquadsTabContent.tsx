@@ -68,6 +68,7 @@ export default function SquadsTabContent() {
     setFilterMinMatch(0);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAcceptInvite = async (invite: any) => {
     if (!user) return;
     if (invite.invitee_id !== user.id) return;

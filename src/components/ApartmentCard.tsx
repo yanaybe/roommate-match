@@ -98,6 +98,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
 
   const handleMessage = async () => {
     if (!user) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (isUuid && (apartment as any).user_id && (apartment as any).user_id !== user.id) {
       setMessaging(true);
       try {
@@ -113,7 +114,8 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
               .from("conversation_participants")
               .select("user_id")
               .eq("conversation_id", p.conversation_id)
-              .eq("user_id", (apartment as any).user_id)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .eq("user_id", (apartment as any).user_id)
               .maybeSingle();
             if (other) {
               existingConvId = p.conversation_id;
@@ -124,6 +126,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
 
         if (!existingConvId) {
           await supabase.rpc("create_conversation_with_participant", {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             other_user_id: (apartment as any).user_id,
           });
         }

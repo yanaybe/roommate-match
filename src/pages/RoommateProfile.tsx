@@ -262,7 +262,7 @@ export default function RoommateProfile() {
                 {menuOpen && (
                   <div className="absolute right-0 top-12 w-44 bg-card rounded-2xl shadow-elevated border border-border/50 overflow-hidden z-50">
                     <button
-                      onClick={() => { setMenuOpen(false); isBlocked ? unblockUser() : blockUser().then((ok) => ok && navigate(-1)); }}
+                      onClick={() => { setMenuOpen(false); void (isBlocked ? unblockUser() : blockUser().then((ok) => { if (ok) navigate(-1); })); }}
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
                     >
                       <Ban size={15} className="text-destructive shrink-0" />

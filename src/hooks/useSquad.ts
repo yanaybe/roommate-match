@@ -136,6 +136,7 @@ export function useSquadDetail(squadId: string | null) {
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const profileMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
       rawMembers.forEach((m) => { m.profile = profileMap.get(m.user_id) as FullProfile | undefined; });
     }
@@ -202,7 +203,9 @@ export function useMyInvites() {
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const squadMap = new Map((squadsRes.data ?? []).map((s: any) => [s.id, s]));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const profileMap = new Map((profilesRes.data ?? []).map((p: any) => [p.user_id, p]));
 
       rawInvites.forEach((inv) => {
@@ -264,6 +267,7 @@ export function useDiscoverSquads() {
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const squadIds = allSquads.map((s: any) => s.id);
 
     const { data: allMembers, error: membersErr } = await supabase
@@ -279,6 +283,7 @@ export function useDiscoverSquads() {
     }
 
     const membersBySquad = new Map<string, SquadMember[]>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (allMembers ?? []).forEach((m: any) => {
       const list = membersBySquad.get(m.squad_id) ?? [];
       list.push(m as SquadMember);
@@ -290,6 +295,7 @@ export function useDiscoverSquads() {
       .select("squad_id")
       .eq("invitee_id", user.id)
       .eq("status", "pending");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pendingSquadIds = new Set((pendingInvites ?? []).map((i: any) => i.squad_id));
 
     const discoverable = (allSquads as Squad[]).filter((s) => {
@@ -310,6 +316,7 @@ export function useDiscoverSquads() {
     const { data: allProfilesData } = allUserIds.size > 0
       ? await supabase.from("profiles").select("*").in("user_id", [...allUserIds])
       : { data: [] };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profileMap = new Map((allProfilesData ?? []).map((p: any) => [p.user_id, p as FullProfile]));
 
     const result: DiscoverableSquad[] = discoverable.map((s) => {

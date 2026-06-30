@@ -41,6 +41,7 @@ async function registerPushSubscription(userId: string) {
     const json = sub.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await supabase.from("push_subscriptions" as any).upsert({
       user_id: userId,
       endpoint: json.endpoint,

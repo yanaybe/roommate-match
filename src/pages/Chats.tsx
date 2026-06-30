@@ -44,6 +44,7 @@ interface Message {
   is_read: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getSharedTraits(a: any, b: any): string[] {
   const traits: string[] = [];
   if (a?.sleep_schedule && a.sleep_schedule === b?.sleep_schedule)
@@ -65,6 +66,7 @@ function getSharedTraits(a: any, b: any): string[] {
   return traits.slice(0, 3);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function generateIcebreakers(me: any, other: any, otherName: string): string[] {
   const starters: string[] = [];
   if (me?.sleep_schedule && me.sleep_schedule === other?.sleep_schedule)
@@ -97,6 +99,7 @@ export default function Chats() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [otherProfile, setOtherProfile] = useState<any>(null);
   const [contextDismissed, setContextDismissed] = useState(false);
   const [otherIsTyping, setOtherIsTyping] = useState(false);
@@ -306,6 +309,7 @@ export default function Chats() {
           filter: `conversation_id=eq.${activeConv}`,
         },
         async (payload) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const newMsg = payload.new as any;
           setMessages((prev) => [
             ...prev,

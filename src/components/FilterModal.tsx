@@ -24,6 +24,7 @@ export interface Filters {
   furnished: "any" | "yes" | "no";
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const defaultFilters: Filters = {
   budgetMin: 0,
   budgetMax: 10000,

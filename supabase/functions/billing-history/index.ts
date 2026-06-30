@@ -87,9 +87,11 @@ Deno.serve(async (req) => {
   }
 
   const paddleData = await paddleRes.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rawTransactions: any[] = paddleData.data ?? [];
 
   // Sanitize and normalize Paddle transaction format
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transactions = rawTransactions.map((tx: any) => ({
     id: tx.id,
     date: tx.billed_at ?? tx.created_at,

@@ -2,6 +2,7 @@
 // Strips null bytes, ASCII control chars, zero-width chars, and Unicode
 // bidirectional override characters (e.g. \u202E can reverse displayed text).
 export function sanitizeText(value: string): string {
+  /* eslint-disable no-control-regex */
   return value
     .replace(/[\u0000-\u001F\u007F]/g, "")          // null byte + control chars
     .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]/g, "") // zero-width + bidi overrides

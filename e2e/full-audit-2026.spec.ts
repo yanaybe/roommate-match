@@ -616,7 +616,9 @@ test.describe('RooMatch Full UX Audit 2026', () => {
         let cls = 0;
         const observer = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if (!(entry as any).hadRecentInput) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               cls += (entry as any).value;
             }
           }
@@ -633,6 +635,7 @@ test.describe('RooMatch Full UX Audit 2026', () => {
         const observer = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           const last = entries[entries.length - 1];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           resolve((last as any)?.element?.tagName || 'unknown');
         });
         observer.observe({ type: 'largest-contentful-paint', buffered: true });
@@ -645,6 +648,7 @@ test.describe('RooMatch Full UX Audit 2026', () => {
     const resources = await page.evaluate(() => {
       return performance.getEntriesByType('resource')
         .filter(r => r.name.includes('.js') || r.name.includes('.css'))
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map(r => ({ name: r.name.split('/').pop(), size: (r as any).transferSize }))
         .sort((a, b) => (b.size || 0) - (a.size || 0))
         .slice(0, 5);
@@ -740,7 +744,7 @@ test.describe('RooMatch Full UX Audit 2026', () => {
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       const texts: string[] = [];
       let node;
-      while (node = walker.nextNode()) {
+      while ((node = walker.nextNode()) !== null) {
         const text = node.textContent?.trim();
         if (text && text.length > 3) texts.push(text);
       }

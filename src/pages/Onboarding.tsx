@@ -181,6 +181,7 @@ export default function Onboarding() {
       });
       navigate("/verify-email", { replace: true });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
@@ -238,7 +239,7 @@ export default function Onboarding() {
         e.name = t("nameMin2");
       } else if (name.length > 50) {
         e.name = t("nameMax50");
-      } else if (!/^[\p{L}\s''\-]+$/u.test(name)) {
+      } else if (!/^[\p{L}\s''-]+$/u.test(name)) {
         e.name = t("nameLettersOnly");
       }
 

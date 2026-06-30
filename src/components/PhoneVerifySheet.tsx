@@ -38,6 +38,7 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
       if (error) throw error;
       setStep("otp");
       toast.success("OTP sent! Check your SMS.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err.message ?? "Failed to send OTP. Make sure phone auth is enabled.");
     } finally {
@@ -64,6 +65,7 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
       setStep("done");
       toast.success("Phone verified! ✅");
       onVerified();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err.message ?? "Invalid code. Please try again.");
     } finally {

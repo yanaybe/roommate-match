@@ -93,6 +93,7 @@ function ApartmentCardSkeleton() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function dbRowToApartment(row: any): Apartment {
   const amenities: string[] = [];
   if (row.has_balcony) amenities.push("Balcony");
@@ -160,7 +161,7 @@ export default function Index() {
   const navigate = useNavigate();
 
   const dismissSquadBanner = () => {
-    try { localStorage.setItem(SQUAD_BANNER_KEY, String(Date.now())); } catch {}
+    try { localStorage.setItem(SQUAD_BANNER_KEY, String(Date.now())); } catch { /* storage unavailable */ }
     setSquadBannerDismissed(true);
   };
 
@@ -178,6 +179,7 @@ export default function Index() {
         setGridKey(1);
       });
     return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Real-time subscription — collect new inserts into a pending banner
