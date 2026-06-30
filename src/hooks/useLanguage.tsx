@@ -632,6 +632,7 @@ const translations: Record<Language, Record<string, string>> = {
     contactEmail: "Email",
     contactInstagram: "Instagram",
     contactFacebook: "Facebook",
+    contactTikTok: "TikTok",
 
     // SquadHub
     leftSquad: "You left the squad",
@@ -1376,6 +1377,7 @@ const translations: Record<Language, Record<string, string>> = {
     contactEmail: "אימייל",
     contactInstagram: "אינסטגרם",
     contactFacebook: "פייסבוק",
+    contactTikTok: "טיקטוק",
 
     // SquadHub
     leftSquad: "עזבת את הסקוואד",
@@ -2111,6 +2113,7 @@ const translations: Record<Language, Record<string, string>> = {
     contactEmail: "E-mail",
     contactInstagram: "Instagram",
     contactFacebook: "Facebook",
+    contactTikTok: "TikTok",
 
     // SquadHub
     leftSquad: "Vous avez quitté le squad",

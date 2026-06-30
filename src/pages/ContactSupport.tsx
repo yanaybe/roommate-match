@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Phone, Mail, MessageCircle, Instagram, Facebook, ExternalLink, Send, Bug, Lightbulb, Star, CheckCircle } from "lucide-react";
+
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.94a8.17 8.17 0 004.78 1.52V7.02a4.85 4.85 0 01-1.01-.33z"/>
+  </svg>
+);
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +20,7 @@ function useContactMethods() {
     { icon: Mail, label: t("contactEmail"), value: "roomatchltd@gmail.com", href: "mailto:roomatchltd@gmail.com", color: "from-blue-500 to-cyan-600" },
     { icon: Instagram, label: t("contactInstagram"), value: "@_roomatch", href: "https://instagram.com/_roomatch", color: "from-pink-500 to-purple-600" },
     { icon: Facebook, label: t("contactFacebook"), value: "_roomatch", href: "https://facebook.com/_roomatch", color: "from-blue-600 to-indigo-600" },
+    { icon: TikTokIcon, label: t("contactTikTok"), value: "@roomatch3", href: "https://tiktok.com/@roomatch3", color: "from-gray-900 to-gray-700" },
   ];
 }
 
