@@ -8,16 +8,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useSidebar } from "@/hooks/useSidebar";
 
-// TODO (Low | Accessibility)
-// Bottom nav tab icons have no aria-label attributes — screen readers can't identify
-// what each tab does. Add aria-label={tab.label} to each nav button.
-// Also: active tab has no visible focus ring for keyboard users.
-// See UX Audit: Accessibility section.
-
-// TODO (Low | UX + Mobile)
-// Bottom nav disappears on scroll in some scenarios due to fixed positioning
-// conflicting with certain inner scroll containers. Test on real iOS devices
-// with the home indicator — ensure `safe-area-inset-bottom` padding always applies.
 
 export default function BottomNav() {
   const location = useLocation();
@@ -49,7 +39,7 @@ export default function BottomNav() {
       {/* safe-area-inset-bottom via inline style for iOS home indicator */}
       <nav
         className="desk:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        style={{ paddingBottom: "env(safe-area-inset-bottom)", transform: "translateZ(0)" }}
       >
         <div className="flex items-center justify-around h-16 w-full px-2">
           {tabs.map((tab) => {
@@ -66,7 +56,7 @@ export default function BottomNav() {
                 onClick={() => navigate(tab.path)}
                 aria-label={tab.label}
                 aria-current={isActive ? "page" : undefined}
-                className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full cursor-pointer"
+                className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset rounded-lg"
               >
                 {isCreate ? (
                   <>
@@ -141,7 +131,7 @@ export default function BottomNav() {
                 aria-label={tab.label}
                 aria-current={isActive ? "page" : undefined}
                 title={collapsed ? tab.label : undefined}
-                className={`w-full flex items-center rounded-xl transition-all text-left ${
+                className={`w-full flex items-center rounded-xl transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 ${
                   collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3"
                 } ${
                   isCreate

@@ -3,11 +3,7 @@ import { z } from "https://esm.sh/zod@3.23.8";
 
 // notify is a server-to-server function; no browser client should ever call it.
 // CORS headers are included only so Supabase CLI tooling (which uses XHR) can reach it.
-// TODO [POST-LAUNCH]: Set ALLOWED_ORIGIN Supabase secret to production domain:
-//   supabase secrets set ALLOWED_ORIGIN=https://roomatch.co
-// TODO [POST-LAUNCH]: Add alerting for repeated calls from a single IP within 5 minutes —
-// indicates the service key has leaked. Monitor via Supabase Log Explorer:
-//   Project → Logs → Edge Functions → filter by function_id = "notify"
+// Set ALLOWED_ORIGIN via: supabase secrets set ALLOWED_ORIGIN=https://roomatch.co
 const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
 const corsHeaders = allowedOrigin
   ? {
@@ -25,7 +21,24 @@ const BodySchema = z.object({
   reference_id: z.string().max(255).nullable().optional(),
 });
 
+const ipCallLog = new Map<string, number[]>();
+
+function checkIpRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const window = 5 * 60 * 1000;
+  const calls = (ipCallLog.get(ip) ?? []).filter((t) => now - t < window);
+  calls.push(now);
+  ipCallLog.set(ip, calls);
+  if (calls.length > 10) {
+    console.warn(`[notify] High call volume from IP ${ip}: ${calls.length} calls in 5 min — possible service key leak`);
+  }
+  return true;
+}
+
 Deno.serve(async (req) => {
+  const clientIp = req.headers.get("x-forwarded-for") ?? "unknown";
+  checkIpRateLimit(clientIp);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
