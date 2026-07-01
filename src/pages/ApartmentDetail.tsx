@@ -20,6 +20,7 @@ import {
   Flag,
   Loader2,
   Trash2,
+  Edit,
 } from "lucide-react";
 import { type UserProfile, type Apartment } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
@@ -364,6 +365,14 @@ export default function ApartmentDetail() {
                 <div className="absolute right-0 top-11 w-48 bg-card rounded-2xl shadow-elevated border border-border/50 overflow-hidden z-50">
                   {isOwner && (
                     <>
+                      <button
+                        onClick={() => { setMenuOpen(false); navigate(`/post-apartment?id=${apartment.id}`); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                      >
+                        <Edit size={15} className="text-primary shrink-0" />
+                        <span className="text-foreground font-medium">Edit Listing</span>
+                      </button>
+                      <div className="border-t border-border/40" />
                       <button
                         onClick={() => { setMenuOpen(false); setBoostOpen(true); }}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"

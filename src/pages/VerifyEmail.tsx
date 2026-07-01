@@ -7,11 +7,21 @@ import { Mail, RefreshCw, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
 
+const RESEND_COOLDOWN_KEY = "email_resend_cooldown_until";
+
 export default function VerifyEmail() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState<number>(() => {
+    const until = localStorage.getItem(RESEND_COOLDOWN_KEY);
+    if (until) {
+      const remaining = Math.ceil((parseInt(until, 10) - Date.now()) / 1000);
+      if (remaining > 0) return remaining;
+      localStorage.removeItem(RESEND_COOLDOWN_KEY);
+    }
+    return 0;
+  });
   // Resolve the email to display — prefer live session, fall back to query param
   // (query param is set by AuthedLayout when redirecting an unverified user)
   const pendingEmail =
@@ -23,7 +33,7 @@ export default function VerifyEmail() {
   // If already verified, check onboarding and redirect
   useEffect(() => {
     if (!loading && !user) {
-      toast.error("Your session expired. Please sign in again to verify your email.");
+      toast.error(t("sessionExpiredVerify"));
       navigate("/auth", { replace: true });
       return;
     }
@@ -72,9 +82,12 @@ export default function VerifyEmail() {
 
   // Cooldown timer
   useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const t = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
+    if (resendCooldown <= 0) {
+      localStorage.removeItem(RESEND_COOLDOWN_KEY);
+      return;
+    }
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
   }, [resendCooldown]);
 
   const handleResend = async () => {
@@ -90,6 +103,7 @@ export default function VerifyEmail() {
       toast.error("Something went wrong. Please try again.");
     } else {
       toast.success(t("verificationEmailSentToast"));
+      localStorage.setItem(RESEND_COOLDOWN_KEY, String(Date.now() + 60000));
       setResendCooldown(60);
     }
   };
@@ -211,7 +225,7 @@ export default function VerifyEmail() {
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             className="w-2 h-2 rounded-full bg-primary"
           />
-          <span>Waiting for verification…</span>
+          <span>{t("waitingForVerification")}</span>
         </div>
 
         {/* Resend button */}

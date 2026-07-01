@@ -56,13 +56,13 @@ export default function SwipeCard({ user, matchPercent, matchBreakdown, onSwipe,
       <div className="w-full h-full bg-card rounded-3xl shadow-elevated overflow-hidden relative select-none">
         <img
           src={photos[photoIndex]}
-          alt={user.name}
+          alt={user.name || "User"}
           className="w-full h-full object-cover"
           draggable={false}
           loading="lazy"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&size=600`;
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "User")}&background=random&size=600`;
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
@@ -145,7 +145,7 @@ export default function SwipeCard({ user, matchPercent, matchBreakdown, onSwipe,
         >
           <div className="flex items-center gap-2">
             <h2 className="text-primary-foreground font-extrabold text-2xl">
-              {user.name}, {user.age}
+              {user.name || "New user"}, {user.age || "?"}
             </h2>
             {user.phoneVerified && (
               <div className="flex items-center gap-1 bg-green-500/20 border border-green-500/30 px-1.5 py-0.5 rounded-full">

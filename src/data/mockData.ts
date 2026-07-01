@@ -35,6 +35,7 @@ export interface Apartment {
   available: string;
   isBoosted?: boolean;
   listingType?: "room" | "entire_place";
+  ownerId?: string;
 }
 
 export interface ChatPreview {

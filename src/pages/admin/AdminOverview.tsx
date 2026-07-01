@@ -31,7 +31,7 @@ interface AnalyticsCache {
   timestamp: number;
 }
 let analyticsCache: AnalyticsCache | null = null;
-const ANALYTICS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const ANALYTICS_CACHE_TTL = 1 * 60 * 1000; // 1 minute
 
 function StatCardSkeleton() {
   return <div className="bg-card border border-border rounded-2xl p-5 animate-pulse h-24" />;

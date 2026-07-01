@@ -49,14 +49,15 @@ export default function WhoLikedMeSheet({ open, onOpenChange, user, t }: Props) 
 
       const likerIds = (likes ?? []).map((l) => l.user_id);
 
-      if (likerIds.length === 0 || !GOLD_TIERS.has(currentTier)) {
-        // For non-gold users we only need the count, not the actual profiles
-        if (!GOLD_TIERS.has(currentTier)) {
-          // Populate with placeholder profiles so the blur wall shows the right count
-          setProfiles(likerIds.map((id) => ({ user_id: id, name: "???", age: null, occupation: null, city: null, bio: null, avatar_url: null })));
-        } else {
-          setProfiles([]);
-        }
+      if (likerIds.length === 0) {
+        setProfiles([]);
+        setLoading(false);
+        return;
+      }
+
+      if (!GOLD_TIERS.has(currentTier)) {
+        // Populate with placeholder profiles so the blur wall shows the right count
+        setProfiles(likerIds.map((id) => ({ user_id: id, name: "???", age: null, occupation: null, city: null, bio: null, avatar_url: null })));
         setLoading(false);
         return;
       }
@@ -75,6 +76,118 @@ export default function WhoLikedMeSheet({ open, onOpenChange, user, t }: Props) 
 
   const isGold = GOLD_TIERS.has(tier);
 
+  const renderLikersContent = () => {
+    if (loading) {
+      return <p className="text-muted-foreground text-sm text-center py-10">{t("loading")}</p>;
+    }
+
+    // Free tier with no likers — plain empty state
+    if (!isGold && profiles.length === 0) {
+      return (
+        <div className="text-center py-16">
+          <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-7 h-7 text-muted-foreground/40" />
+          </div>
+          <p className="text-muted-foreground text-sm font-medium">No likes yet</p>
+          <p className="text-muted-foreground/60 text-xs mt-1">Keep completing your profile to get discovered!</p>
+        </div>
+      );
+    }
+
+    // Free tier with likers — blurred paywall
+    if (!isGold) {
+      return (
+        <div className="relative">
+          <div className="space-y-3 pointer-events-none select-none">
+            {profiles.slice(0, 5).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-sm blur-sm">
+                <div className="w-14 h-14 rounded-full bg-primary/20 shrink-0" />
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="h-4 w-28 bg-secondary rounded" />
+                  <div className="h-3 w-20 bg-secondary rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+            <div className="bg-card/95 backdrop-blur-md rounded-3xl p-6 shadow-elevated border border-border/50 max-w-xs w-full">
+              <div className="w-14 h-14 gradient-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                <Lock className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <h3 className="text-base font-extrabold text-foreground mb-1">
+                {`${profiles.length} ${profiles.length === 1 ? "person" : "people"} liked you`}
+              </h3>
+              <p className="text-muted-foreground text-xs mb-4">
+                Upgrade to Gold to see who liked you and message them first.
+              </p>
+              <button
+                onClick={() => { onOpenChange(false); setPremiumOpen(true); }}
+                className="w-full gradient-primary text-primary-foreground py-2.5 rounded-xl text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+              >
+                <Crown className="w-4 h-4" /> Upgrade to Gold
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Gold tier with no likers
+    if (profiles.length === 0) {
+      return (
+        <div className="text-center py-16">
+          <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-7 h-7 text-muted-foreground/40" />
+          </div>
+          <p className="text-muted-foreground text-sm font-medium">{t("noLikesReceived")}</p>
+          <p className="text-muted-foreground/60 text-xs mt-1">{t("noLikesReceivedDesc")}</p>
+        </div>
+      );
+    }
+
+    // Gold tier with real profiles
+    return (
+      <div className="space-y-3">
+        {profiles.map((p) => (
+          <motion.div
+            key={p.user_id}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => { onOpenChange(false); navigate(`/roommate/${p.user_id}`); }}
+            className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
+          >
+            <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shrink-0">
+              {p.avatar_url ? (
+                <img
+                  src={p.avatar_url}
+                  alt={p.name}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&size=112`;
+                  }}
+                />
+              ) : (
+                <span className="text-primary text-lg font-bold">{p.name?.charAt(0)?.toUpperCase()}</span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-card-foreground truncate">
+                {p.name}{p.age ? `, ${p.age}` : ""}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {p.occupation}{p.city ? ` · ${p.city}` : ""}
+              </p>
+              {p.bio && <p className="text-xs text-muted-foreground/70 truncate mt-0.5">{p.bio}</p>}
+            </div>
+            <Heart className="w-4 h-4 text-destructive fill-destructive shrink-0" />
+          </motion.div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -92,100 +205,7 @@ export default function WhoLikedMeSheet({ open, onOpenChange, user, t }: Props) 
           </SheetHeader>
 
           <ScrollArea className="h-[calc(85vh-80px)] px-5 py-4">
-            {loading ? (
-              <p className="text-muted-foreground text-sm text-center py-10">{t("loading")}</p>
-            ) : !isGold && profiles.length === 0 ? (
-              /* Free user with 0 actual likers — show empty state, not blurred placeholders */
-              <div className="text-center py-16">
-                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Heart className="w-7 h-7 text-muted-foreground/40" />
-                </div>
-                <p className="text-muted-foreground text-sm font-medium">No likes yet</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">Keep completing your profile to get discovered!</p>
-              </div>
-            ) : !isGold ? (
-              /* Paywall: free user WITH likers — show blurred cards + upgrade prompt */
-              <div className="relative">
-                <div className="space-y-3 pointer-events-none select-none">
-                  {profiles.slice(0, 5).map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-sm blur-sm">
-                      <div className="w-14 h-14 rounded-full bg-primary/20 shrink-0" />
-                      <div className="flex-1 min-w-0 space-y-1.5">
-                        <div className="h-4 w-28 bg-secondary rounded" />
-                        <div className="h-3 w-20 bg-secondary rounded" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-                  <div className="bg-card/95 backdrop-blur-md rounded-3xl p-6 shadow-elevated border border-border/50 max-w-xs w-full">
-                    <div className="w-14 h-14 gradient-primary rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Lock className="w-6 h-6 text-primary-foreground" />
-                    </div>
-                    <h3 className="text-base font-extrabold text-foreground mb-1">
-                      {`${profiles.length} ${profiles.length === 1 ? "person" : "people"} liked you`}
-                    </h3>
-                    <p className="text-muted-foreground text-xs mb-4">
-                      Upgrade to Gold to see who liked you and message them first.
-                    </p>
-                    <button
-                      onClick={() => { onOpenChange(false); setPremiumOpen(true); }}
-                      className="w-full gradient-primary text-primary-foreground py-2.5 rounded-xl text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
-                    >
-                      <Crown className="w-4 h-4" /> Upgrade to Gold
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : profiles.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Heart className="w-7 h-7 text-muted-foreground/40" />
-                </div>
-                <p className="text-muted-foreground text-sm font-medium">{t("noLikesReceived")}</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">{t("noLikesReceivedDesc")}</p>
-              </div>
-            ) : (
-              /* Gold user: show real profiles */
-              <div className="space-y-3">
-                {profiles.map((p) => (
-                  <motion.div
-                    key={p.user_id}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={() => { onOpenChange(false); navigate(`/roommate/${p.user_id}`); }}
-                    className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-card cursor-pointer hover:bg-secondary/50 transition-colors"
-                  >
-                    <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shrink-0">
-                      {p.avatar_url ? (
-                        <img
-                          src={p.avatar_url}
-                          alt={p.name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&size=112`;
-                          }}
-                        />
-                      ) : (
-                        <span className="text-primary text-lg font-bold">{p.name?.charAt(0)?.toUpperCase()}</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-card-foreground truncate">
-                        {p.name}{p.age ? `, ${p.age}` : ""}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {p.occupation}{p.city ? ` · ${p.city}` : ""}
-                      </p>
-                      {p.bio && <p className="text-xs text-muted-foreground/70 truncate mt-0.5">{p.bio}</p>}
-                    </div>
-                    <Heart className="w-4 h-4 text-destructive fill-destructive shrink-0" />
-                  </motion.div>
-                ))}
-              </div>
-            )}
+            {renderLikersContent()}
           </ScrollArea>
         </SheetContent>
       </Sheet>

@@ -38,6 +38,7 @@ export default function PostApartment() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const submittingRef = useRef(false);
   const [step, setStep] = useState(0);
   const [listingType, setListingType] = useState<"room" | "entire_place">("room");
   const [submitting, setSubmitting] = useState(false);
@@ -255,7 +256,9 @@ export default function PostApartment() {
   };
 
   const handleSubmit = async () => {
-    if (!user) { toast.error("Please sign in first"); return; }
+    if (submittingRef.current) return;
+    if (!user) { toast.error(t("pleaseSignIn")); return; }
+    submittingRef.current = true;
     setSubmitting(true);
     const uploadedPaths: string[] = [];
     try {
@@ -334,8 +337,10 @@ export default function PostApartment() {
       if (uploadedPaths.length > 0) {
         await supabase.storage.from("apartment-images").remove(uploadedPaths);
       }
-      toast.error(err.message || "Failed to save apartment");
+      console.error(err);
+      toast.error(isEditMode ? "Failed to update listing. Please try again." : "Failed to post listing. Please try again.");
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -380,8 +385,8 @@ export default function PostApartment() {
     );
   }
 
-  const pageTitle = isEditMode ? "Edit Listing" : t("postYourApartment");
-  const submitLabel = isEditMode ? "Save Changes" : t("postApartmentBtn");
+  const pageTitle = isEditMode ? t("editListingTitle") : t("postYourApartment");
+  const submitLabel = isEditMode ? t("saveChangesBtn") : t("postApartmentBtn");
   const submittingLabel = isEditMode ? "Saving…" : t("postingApt");
 
   // First image to show in the review preview

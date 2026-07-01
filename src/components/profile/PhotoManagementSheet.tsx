@@ -22,9 +22,10 @@ export default function PhotoManagementSheet({ open, onOpenChange, initialPhotos
 
   const handleSave = async () => {
     if (!user) return;
-    for (const url of photos) {
+    for (let i = 0; i < photos.length; i++) {
+      const url = photos[i];
       if (!isSafeImageUrl(url)) {
-        toast.error("One or more photo URLs are invalid");
+        toast.error(`Photo ${i + 1} has an invalid URL. Only Supabase storage images are allowed.`);
         return;
       }
     }

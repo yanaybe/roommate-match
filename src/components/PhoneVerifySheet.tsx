@@ -6,12 +6,16 @@
 //
 // Requires Phone auth to be enabled in the Supabase project settings.
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Phone, Loader2, CheckCircle2 } from "lucide-react";
+
+const OTP_ATTEMPTS_KEY = "otp_attempts";
+const OTP_LOCKOUT_KEY = "otp_lockout_until";
+const LOCKOUT_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
 interface Props {
   open: boolean;
@@ -25,7 +29,37 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"phone" | "otp" | "done">("phone");
   const [loading, setLoading] = useState(false);
-  const [otpAttempts, setOtpAttempts] = useState(0);
+  const [otpAttempts, setOtpAttempts] = useState<number>(() => {
+    const stored = sessionStorage.getItem(OTP_ATTEMPTS_KEY);
+    return stored ? parseInt(stored, 10) : 0;
+  });
+  const [lockedUntil, setLockedUntil] = useState<number>(() => {
+    const stored = sessionStorage.getItem(OTP_LOCKOUT_KEY);
+    return stored ? parseInt(stored, 10) : 0;
+  });
+
+  // Sync OTP attempts to sessionStorage so they survive DevTools state resets
+  useEffect(() => {
+    sessionStorage.setItem(OTP_ATTEMPTS_KEY, String(otpAttempts));
+  }, [otpAttempts]);
+
+  // When the sheet opens, check for an active lockout and expire stale data
+  useEffect(() => {
+    if (!open) return;
+    const stored = sessionStorage.getItem(OTP_LOCKOUT_KEY);
+    if (stored) {
+      const expiry = parseInt(stored, 10);
+      if (expiry > Date.now()) {
+        setLockedUntil(expiry);
+        toast.error("Too many attempts. Please wait before trying again.");
+      } else {
+        sessionStorage.removeItem(OTP_LOCKOUT_KEY);
+        sessionStorage.removeItem(OTP_ATTEMPTS_KEY);
+        setLockedUntil(0);
+        setOtpAttempts(0);
+      }
+    }
+  }, [open]);
 
   const handleSendOtp = async () => {
     const cleaned = phone.replace(/\s/g, "");
@@ -39,10 +73,13 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
       if (error) throw error;
       setStep("otp");
       setOtpAttempts(0);
+      setLockedUntil(0);
+      sessionStorage.removeItem(OTP_LOCKOUT_KEY);
       toast.success("OTP sent! Check your SMS.");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      toast.error(err.message ?? "Failed to send OTP. Make sure phone auth is enabled.");
+      console.error(err);
+      toast.error("Failed to send OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -71,10 +108,14 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
     } catch (err: any) {
       const newAttempts = otpAttempts + 1;
       setOtpAttempts(newAttempts);
+      console.error(err);
       if (newAttempts >= 3) {
+        const expiry = Date.now() + LOCKOUT_DURATION_MS;
+        sessionStorage.setItem(OTP_LOCKOUT_KEY, String(expiry));
+        setLockedUntil(expiry);
         toast.error("Too many attempts. Please request a new code.");
       } else {
-        toast.error(err.message ?? "Invalid code. Please try again.");
+        toast.error("OTP verification failed. Please check the code.");
       }
     } finally {
       setLoading(false);
@@ -144,7 +185,7 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
               </div>
               <button
                 onClick={handleVerifyOtp}
-                disabled={loading || otp.length < 4 || otpAttempts >= 3}
+                disabled={loading || otp.length < 4 || otpAttempts >= 3 || lockedUntil > Date.now()}
                 className="w-full py-3.5 gradient-primary text-primary-foreground rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}

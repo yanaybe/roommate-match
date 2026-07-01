@@ -38,7 +38,7 @@ export default function CreateSquad() {
   };
 
   const handleSubmit = async () => {
-    if (!user) { toast.error("Please sign in first"); navigate("/auth"); return; }
+    if (!user) { toast.error(t("pleaseSignIn")); navigate("/auth"); return; }
     setSaving(true);
 
     const { data: squad, error } = await supabase

@@ -22,10 +22,10 @@ export default function BottomNav() {
   const tabs = [
     { path: "/", icon: Home, label: t("navRooms") },
     { path: "/roommates", icon: Users, label: t("navRoommates") },
-    { path: "/my-squads", icon: Handshake, label: "Squads" },
+    { path: "/my-squads", icon: Handshake, label: t("navSquads") },
     { path: "/chats", icon: MessageCircle, label: t("navChats") },
     { path: "/profile", icon: User, label: t("navProfile") },
-    ...(profile?.is_admin ? [{ path: "/admin", icon: Shield, label: "Admin" }] : []),
+    ...(profile?.is_admin ? [{ path: "/admin", icon: Shield, label: t("navAdmin") }] : []),
   ];
 
   const publicOnlyPaths = ["/auth", "/terms-of-service", "/privacy-policy", "/contact-support", "/onboarding", "/help-center", "/verify-email", "/welcome"];
@@ -194,14 +194,15 @@ export default function BottomNav() {
           {/* Collapse toggle */}
           <button
             onClick={toggle}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? t("expandSidebar") : t("collapseSidebar")}
+            aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
             className={`w-full flex items-center rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors py-2 ${
               collapsed ? "justify-center px-0" : "gap-2 px-3"
             }`}
           >
             {collapsed
               ? <ChevronRight className="w-4 h-4" />
-              : <><ChevronLeft className="w-4 h-4" /><span className="text-xs font-medium">Collapse</span></>}
+              : <><ChevronLeft className="w-4 h-4" /><span className="text-xs font-medium">{t("collapseSidebarLabel")}</span></>}
           </button>
 
           {!collapsed && (

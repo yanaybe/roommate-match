@@ -130,6 +130,7 @@ function dbRowToApartment(row: any): Apartment {
     available: row.available_date,
     isBoosted: (row.is_featured === true && (!row.featured_until || new Date(row.featured_until) > new Date())) ?? false,
     listingType: (row.listing_type ?? "room") as "room" | "entire_place",
+    ownerId: row.user_id,
   };
 }
 
@@ -148,6 +149,7 @@ export default function Index() {
   const PAGE_SIZE = 20;
   const [view, setView] = useState<"list" | "map">("list");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [allLoaded, setAllLoaded] = useState<Apartment[]>([]);
@@ -169,6 +171,12 @@ export default function Index() {
     try { localStorage.setItem(SQUAD_BANNER_KEY, String(Date.now())); } catch { /* storage unavailable */ }
     setSquadBannerDismissed(true);
   };
+
+  // Debounce search input by 300ms so filtering doesn't fire on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     let cancelled = false;
@@ -200,7 +208,7 @@ export default function Index() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, loadKey]);
 
-  // Reset pagination when filters or search change
+  // Reset pagination when filters or debounced search change
   useEffect(() => {
     setAllLoaded([]);
     setHasMore(true);
@@ -210,7 +218,7 @@ export default function Index() {
       setPage(0);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, search]);
+  }, [filters, debouncedSearch]);
 
   // Real-time subscription — collect new inserts into a pending banner
   useEffect(() => {
@@ -254,8 +262,8 @@ export default function Index() {
 
   const filtered = useMemo(() => {
     return allLoaded.filter((apt) => {
-      if (search.trim()) {
-        const q = search.toLowerCase();
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.toLowerCase();
         if (
           !apt.location.toLowerCase().includes(q) &&
           !apt.title.toLowerCase().includes(q)
@@ -273,7 +281,7 @@ export default function Index() {
       if (filters.furnished === "no" && apt.amenities.includes("Furnished")) return false;
       return true;
     });
-  }, [search, filters, allLoaded]);
+  }, [debouncedSearch, filters, allLoaded]);
 
   const activeFilterCount = (() => {
     let c = 0;
@@ -466,7 +474,7 @@ export default function Index() {
             </>
           ) : (
             <>
-            {activeFilterCount > 0 || search.trim() ? (
+            {activeFilterCount > 0 || debouncedSearch.trim() ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-5">
                   <Search className="w-9 h-9 text-primary" />

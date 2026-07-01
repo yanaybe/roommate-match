@@ -51,6 +51,8 @@ function mapAuthError(err: { message?: string; code?: string; status?: number } 
   return "Something went wrong. Please try again.";
 }
 
+const RESET_COOLDOWN_KEY = "pwd_reset_cooldown_until";
+
 const emailSchema = z.string().email("Invalid email address");
 
 const passwordSchema = z
@@ -83,6 +85,30 @@ export default function Auth() {
     return () => {
       if (resetIntervalRef.current) clearInterval(resetIntervalRef.current);
     };
+  }, []);
+
+  // Restore password reset cooldown from localStorage on mount (survives page navigation)
+  useEffect(() => {
+    const until = localStorage.getItem(RESET_COOLDOWN_KEY);
+    if (until) {
+      const remaining = Math.ceil((parseInt(until, 10) - Date.now()) / 1000);
+      if (remaining > 0) {
+        setResetCooldown(remaining);
+        resetIntervalRef.current = setInterval(() => {
+          setResetCooldown((c) => {
+            if (c <= 1) {
+              clearInterval(resetIntervalRef.current!);
+              resetIntervalRef.current = null;
+              localStorage.removeItem(RESET_COOLDOWN_KEY);
+              return 0;
+            }
+            return c - 1;
+          });
+        }, 1000);
+      } else {
+        localStorage.removeItem(RESET_COOLDOWN_KEY);
+      }
+    }
   }, []);
 
   const pwAnalysis = analyzePassword(password);
@@ -242,12 +268,14 @@ export default function Auth() {
                       toast.error(mapAuthError(error));
                     } else {
                       toast.success(t("passwordResetSent"));
+                      localStorage.setItem(RESET_COOLDOWN_KEY, String(Date.now() + 60000));
                       setResetCooldown(60);
                       resetIntervalRef.current = setInterval(() => {
                         setResetCooldown((c) => {
                           if (c <= 1) {
                             clearInterval(resetIntervalRef.current!);
                             resetIntervalRef.current = null;
+                            localStorage.removeItem(RESET_COOLDOWN_KEY);
                             return 0;
                           }
                           return c - 1;

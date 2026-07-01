@@ -10,7 +10,7 @@ export interface ProfileData {
   age: number | null;
   city: string;
   occupation: string;
-  budget: number;
+  budget: number | null;
   desired_room_type: string;
   sleep_schedule: string;
   cleanliness: number;
@@ -40,7 +40,8 @@ export interface ProfileData {
 }
 
 
-function numericSimilarity(a: number, b: number, max: number): number {
+function numericSimilarity(a: number | null, b: number | null, max: number): number {
+  if (a == null || b == null) return 0.5; // unknown, not perfect
   return 1 - Math.abs(a - b) / max;
 }
 
@@ -130,9 +131,9 @@ export function calculateUserMatch(a: ProfileData, b: ProfileData): number {
   }
 
   // Budget: extreme gap means they won't realistically target the same flat.
-  if (a.budget > 0 && b.budget > 0) {
-    const avg = (a.budget + b.budget) / 2;
-    const ratio = Math.abs(a.budget - b.budget) / avg;
+  if ((a.budget ?? 0) > 0 && (b.budget ?? 0) > 0) {
+    const avg = ((a.budget ?? 0) + (b.budget ?? 0)) / 2;
+    const ratio = Math.abs((a.budget ?? 0) - (b.budget ?? 0)) / avg;
     if (ratio > 0.6) penalties += 12;
     else if (ratio > 0.4) penalties += 7;
     else if (ratio > 0.25) penalties += 3;
@@ -316,13 +317,13 @@ export function calculateUserMatchBreakdown(a: ProfileData, b: ProfileData): Mat
   // Budget
   let budgetScore = 100;
   let budgetDetail = "Budgets align well";
-  if (a.budget > 0 && b.budget > 0) {
-    const avg = (a.budget + b.budget) / 2;
-    const ratio = Math.abs(a.budget - b.budget) / avg;
-    if (ratio > 0.6) { budgetScore = 25; budgetDetail = `Large budget gap — ₪${a.budget.toLocaleString()} vs ₪${b.budget.toLocaleString()}`; }
-    else if (ratio > 0.4) { budgetScore = 50; budgetDetail = `Budget gap — ₪${a.budget.toLocaleString()} vs ₪${b.budget.toLocaleString()}`; }
+  if ((a.budget ?? 0) > 0 && (b.budget ?? 0) > 0) {
+    const avg = ((a.budget ?? 0) + (b.budget ?? 0)) / 2;
+    const ratio = Math.abs((a.budget ?? 0) - (b.budget ?? 0)) / avg;
+    if (ratio > 0.6) { budgetScore = 25; budgetDetail = `Large budget gap — ₪${(a.budget ?? 0).toLocaleString()} vs ₪${(b.budget ?? 0).toLocaleString()}`; }
+    else if (ratio > 0.4) { budgetScore = 50; budgetDetail = `Budget gap — ₪${(a.budget ?? 0).toLocaleString()} vs ₪${(b.budget ?? 0).toLocaleString()}`; }
     else if (ratio > 0.25) { budgetScore = 75; budgetDetail = `Slight budget difference`; }
-    else { budgetDetail = `₪${a.budget.toLocaleString()} · ₪${b.budget.toLocaleString()}`; }
+    else { budgetDetail = `₪${(a.budget ?? 0).toLocaleString()} · ₪${(b.budget ?? 0).toLocaleString()}`; }
   }
   factors.push({
     label: "Budget",
@@ -360,7 +361,7 @@ export function calculateRoomMatch(
   roomPrice: number,
   roommateProfiles: ProfileData[]
 ): number {
-  const budgetDiff = Math.abs(userProfile.budget - roomPrice);
+  const budgetDiff = Math.abs((userProfile.budget ?? 0) - roomPrice);
   const budgetScore = Math.max(0, 1 - budgetDiff / 3000);
 
   if (roommateProfiles.length === 0) {
@@ -386,10 +387,10 @@ export function calculateSquadMatch(
   memberProfiles: ProfileData[]
 ): number {
   // 1. Budget fit (20%)
-  const inBudget = userProfile.budget >= squad.budget_min && userProfile.budget <= squad.budget_max;
+  const inBudget = (userProfile.budget ?? 0) >= squad.budget_min && (userProfile.budget ?? 0) <= squad.budget_max;
   const budgetScore = inBudget ? 1 : Math.max(0, 1 - Math.min(
-    Math.abs(userProfile.budget - squad.budget_min),
-    Math.abs(userProfile.budget - squad.budget_max)
+    Math.abs((userProfile.budget ?? 0) - squad.budget_min),
+    Math.abs((userProfile.budget ?? 0) - squad.budget_max)
   ) / 2000);
 
   // 2. Preference alignment (20%) — squad hard rules

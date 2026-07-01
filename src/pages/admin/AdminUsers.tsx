@@ -41,27 +41,36 @@ export default function AdminUsers() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
   const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "user_id,name,avatar_url,city,subscription_tier,is_banned,is_admin,onboarding_complete,created_at"
-        )
-        .order("created_at", { ascending: false });
+      const [{ data, error }, { count }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select(
+            "user_id,name,avatar_url,city,subscription_tier,is_banned,is_admin,onboarding_complete,created_at"
+          )
+          .order("created_at", { ascending: false })
+          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1),
+        supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true }),
+      ]);
 
       if (error) {
-        toast.error(error.message);
+        console.error(error);
+        toast.error("Failed to load users. Please try again.");
       } else {
         setUsers((data ?? []) as UserRow[]);
+        setTotalCount(count ?? 0);
       }
       setLoading(false);
     };
     load();
-  }, []);
+  }, [page]);
 
   const filtered = useMemo(() => {
     let rows = users;
@@ -77,8 +86,8 @@ export default function AdminUsers() {
     return rows;
   }, [users, filter, search]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const pageRows = filtered;
 
   const handleBanToggle = async (userId: string, banned: boolean) => {
     if (!window.confirm(banned ? "Ban this user?" : "Unban this user?")) return;
@@ -87,22 +96,23 @@ export default function AdminUsers() {
       .update({ is_banned: banned })
       .eq("user_id", userId);
     if (error) {
-      toast.error(`Failed to ${banned ? "ban" : "unban"} user: ${error.message}`);
+      console.error(error);
+      toast.error(`Failed to ${banned ? "ban" : "unban"} user. Please try again.`);
     } else {
       toast.success(banned ? "User banned" : "User unbanned");
       setUsers((prev) => prev.map((u) => (u.user_id === userId ? { ...u, is_banned: banned } : u)));
       // Audit log: record admin action
       if (adminUser) {
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (supabase as any).from("admin_audit_log").insert({
-            admin_id: adminUser.id,
-            action: banned ? "ban_user" : "unban_user",
-            target_user_id: userId,
-            details: { reason: "admin action" },
-          });
-        } catch {
-          // Audit log failure should not block the primary action
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: auditError } = await (supabase as any).from("admin_audit_log").insert({
+          admin_id: adminUser.id,
+          action: banned ? "ban_user" : "unban_user",
+          target_user_id: userId,
+          details: { reason: "admin action" },
+        });
+        if (auditError) {
+          console.error("Admin audit log failed:", auditError);
+          toast.error("Action completed but audit logging failed.");
         }
       }
     }
@@ -118,22 +128,23 @@ export default function AdminUsers() {
       .update({ is_admin: isAdmin })
       .eq("user_id", userId);
     if (error) {
-      toast.error(`Failed to ${isAdmin ? "grant" : "remove"} admin privileges: ${error.message}`);
+      console.error(error);
+      toast.error(`Failed to ${isAdmin ? "grant" : "remove"} admin privileges. Please try again.`);
     } else {
       toast.success(isAdmin ? "Admin granted" : "Admin removed");
       setUsers((prev) => prev.map((u) => (u.user_id === userId ? { ...u, is_admin: isAdmin } : u)));
       // Audit log: record admin privilege change
       if (adminUser) {
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (supabase as any).from("admin_audit_log").insert({
-            admin_id: adminUser.id,
-            action: isAdmin ? "grant_admin" : "revoke_admin",
-            target_user_id: userId,
-            details: { reason: "admin action" },
-          });
-        } catch {
-          // Audit log failure should not block the primary action
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: auditError } = await (supabase as any).from("admin_audit_log").insert({
+          admin_id: adminUser.id,
+          action: isAdmin ? "grant_admin" : "revoke_admin",
+          target_user_id: userId,
+          details: { reason: "admin action" },
+        });
+        if (auditError) {
+          console.error("Admin audit log failed:", auditError);
+          toast.error("Action completed but audit logging failed.");
         }
       }
     }
@@ -151,7 +162,7 @@ export default function AdminUsers() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-extrabold text-foreground">Users</h1>
-        <p className="text-sm text-muted-foreground mt-1">{users.length} total registered users</p>
+        <p className="text-sm text-muted-foreground mt-1">{totalCount} total registered users</p>
       </div>
 
       {/* Search + filters */}
@@ -276,10 +287,10 @@ export default function AdminUsers() {
         )}
 
         {/* Pagination */}
-        {!loading && filtered.length > PAGE_SIZE && (
+        {!loading && totalCount > PAGE_SIZE && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-border">
             <p className="text-xs text-muted-foreground">
-              {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} of {filtered.length}
+              {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, totalCount)} of {totalCount}
             </p>
             <div className="flex gap-2">
               <button

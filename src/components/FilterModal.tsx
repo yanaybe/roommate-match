@@ -13,14 +13,8 @@ export interface Filters {
   sizeMin: number;
   matchMin: number;
   amenities: string[];
-  smoking: "any" | "no" | "yes";
-  pets: "any" | "no" | "yes";
   listingType: "any" | "room" | "entire_place";
   roomType: "any" | "private" | "shared";
-  religiousLevel: "any" | "secular" | "traditional" | "religious";
-  sleepSchedule: "any" | "early" | "night" | "flexible";
-  cleanlinessMin: number;
-  wfh: "any" | "yes" | "no";
   furnished: "any" | "yes" | "no";
 }
 
@@ -33,14 +27,8 @@ export const defaultFilters: Filters = {
   sizeMin: 0,
   matchMin: 0,
   amenities: [],
-  smoking: "any",
-  pets: "any",
   listingType: "any",
   roomType: "any",
-  religiousLevel: "any",
-  sleepSchedule: "any",
-  cleanlinessMin: 1,
-  wfh: "any",
   furnished: "any",
 };
 

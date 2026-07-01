@@ -116,12 +116,21 @@ export default function MySquads() {
       refetchInvites();
       return;
     }
-    await supabase.from("squad_members").insert({
+    const { error: insertError } = await supabase.from("squad_members").insert({
       squad_id: invite.squad_id,
       user_id: userIdToAdd,
       status: "joined",
       role: "member",
     });
+    if (insertError) {
+      if (insertError.message?.includes("squad_full")) {
+        toast.error("Sorry, this squad is now full.");
+      } else {
+        toast.error("Failed to join squad. Please try again.");
+      }
+      refetchInvites();
+      return;
+    }
     await supabase.from("squad_invites").update({ status: "accepted" }).eq("id", invite.id);
 
     const { data: members } = await supabase

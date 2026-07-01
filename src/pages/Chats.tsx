@@ -95,6 +95,7 @@ export default function Chats() {
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
@@ -105,6 +106,7 @@ export default function Chats() {
   const [otherIsTyping, setOtherIsTyping] = useState(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const readReceiptChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const activeConvData = conversations.find((c) => c.id === activeConv);
   const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(activeConvData?.other_user_id);
@@ -303,13 +305,43 @@ export default function Chats() {
           message_id: m.id,
           user_id: user.id,
         }));
-        await supabase.from("message_read_receipts").insert(inserts);
+        const { error: markReadError } = await supabase.from("message_read_receipts").insert(inserts);
+        if (markReadError) {
+          console.error("Failed to mark messages as read:", markReadError);
+        } else {
+          // Update local conversation unread count to 0
+          setConversations((prev) =>
+            prev.map((c) => c.id === activeConv ? { ...c, unread_count: 0 } : c)
+          );
+          refreshUnread();
+        }
+      }
 
-        // Update local conversation unread count to 0
-        setConversations((prev) =>
-          prev.map((c) => c.id === activeConv ? { ...c, unread_count: 0 } : c)
-        );
-        refreshUnread();
+      // H-12: Subscribe to read receipts scoped to this conversation's messages only
+      if (msgIds.length > 0) {
+        if (readReceiptChannelRef.current) {
+          supabase.removeChannel(readReceiptChannelRef.current);
+        }
+        readReceiptChannelRef.current = supabase
+          .channel(`read_receipts:${activeConv}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "message_read_receipts",
+              filter: `message_id=in.(${msgIds.join(",")})`,
+            },
+            (payload) => {
+              const receipt = payload.new as { message_id: string };
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === receipt.message_id ? { ...m, is_read: true } : m
+                )
+              );
+            }
+          )
+          .subscribe();
       }
     };
 
@@ -336,29 +368,16 @@ export default function Chats() {
 
           // Auto mark as read if from other user
           if (newMsg.sender_id !== user.id) {
-            await supabase.from("message_read_receipts").insert({
+            const { error: receiptError } = await supabase.from("message_read_receipts").insert({
               message_id: newMsg.id,
               user_id: user.id,
             });
+            if (receiptError) {
+              console.error("Failed to mark incoming message as read:", receiptError);
+              return;
+            }
             refreshUnread();
           }
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "message_read_receipts",
-        },
-        (payload) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const receipt = payload.new as any;
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === receipt.message_id ? { ...m, is_read: true } : m
-            )
-          );
         }
       )
       .subscribe();
@@ -375,6 +394,10 @@ export default function Chats() {
 
     return () => {
       supabase.removeChannel(channel);
+      if (readReceiptChannelRef.current) {
+        supabase.removeChannel(readReceiptChannelRef.current);
+        readReceiptChannelRef.current = null;
+      }
       supabase.removeChannel(presenceChannel);
       presenceChannelRef.current = null;
       setOtherIsTyping(false);
@@ -386,7 +409,7 @@ export default function Chats() {
   }, [messages, scrollToBottom]);
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !activeConv || !user) return;
+    if (!newMessage.trim() || !activeConv || !user || sending) return;
 
     // ── Client-side rate limit: 1.5s between messages ─────────────────────────
     if (Date.now() - lastSentRef.current < 1500) {
@@ -396,7 +419,7 @@ export default function Chats() {
 
     // ── Sanitize content (strip control chars + bidi overrides) ──────────────
     const content = sanitizeText(newMessage);
-    if (!content) return;
+    if (!content) { toast.error(t("messageCantBeEmpty") ?? "Message cannot be empty"); return; }
 
     // ── Enforce max message length ────────────────────────────────────────────
     if (content.length > 2000) {
@@ -404,14 +427,22 @@ export default function Chats() {
       return;
     }
 
-    setNewMessage("");
-
-    await supabase.from("messages").insert({
-      conversation_id: activeConv,
-      sender_id: user.id,
-      content,
-    });
+    setSending(true);
     lastSentRef.current = Date.now();
+    try {
+      const { error } = await supabase.from("messages").insert({
+        conversation_id: activeConv,
+        sender_id: user.id,
+        content,
+      });
+      if (error) throw error;
+      setNewMessage("");
+    } catch {
+      toast.error("Failed to send message. Please try again.");
+      lastSentRef.current = Date.now() - 1500;
+    } finally {
+      setSending(false);
+    }
   };
 
   const formatTime = (dateStr: string) => {
@@ -735,7 +766,7 @@ export default function Chats() {
             maxLength={2000}
             className="flex-1 bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <button onClick={sendMessage} disabled={!newMessage.trim()} className="gradient-primary p-2.5 rounded-full disabled:opacity-50">
+          <button onClick={sendMessage} disabled={!newMessage.trim() || sending} className="gradient-primary p-2.5 rounded-full disabled:opacity-50">
             <Send className="w-4 h-4 text-primary-foreground" />
           </button>
         </div>

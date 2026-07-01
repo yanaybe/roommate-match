@@ -105,6 +105,12 @@ export default function SquadHub() {
 
   const handleLeaveSquad = async () => {
     if (!user || !id) return;
+    // Guard: creator with other members must transfer leadership or disband instead
+    if (isCreator && members.length > 1) {
+      toast.error("You're the squad leader. Please promote another member to leader first, or disband the squad.");
+      setLeaveOpen(false);
+      return;
+    }
     setLeaving(true);
     try {
       const { error } = await supabase
@@ -367,7 +373,7 @@ export default function SquadHub() {
   // Filtered apartments: remove ones with >50% dislikes
   const visibleApartments = useMemo(() => {
     if (members.length === 0) return apartmentsWithMatch;
-    const threshold = Math.ceil(members.length / 2);
+    const threshold = Math.floor(members.length / 2) + 1;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return apartmentsWithMatch.filter((apt: any) => {
       const dislikes = likes.filter(l => l.apartment_id === apt.id && !l.liked).length;
@@ -397,7 +403,7 @@ export default function SquadHub() {
   // Check majority like → open chat with leader & poster
   const checkMajorityLike = useCallback(async (apartmentId: string) => {
     if (!id || !squad || members.length < 2) return;
-    const threshold = Math.ceil(members.length / 2);
+    const threshold = Math.floor(members.length / 2) + 1;
     const aptLikes = likes.filter(l => l.apartment_id === apartmentId && l.liked);
 
     // Need fresh count after refetch
@@ -464,7 +470,7 @@ export default function SquadHub() {
     if (liked) checkMajorityLike(apartmentId);
     if (!liked) {
       // Check if this dislike triggers removal
-      const threshold = Math.ceil(members.length / 2);
+      const threshold = Math.floor(members.length / 2) + 1;
       const currentDislikes = likes.filter(l => l.apartment_id === apartmentId && !l.liked).length + 1;
       if (currentDislikes >= threshold) {
         toast(t("listingRemovedByVote"), { icon: "👎" });
@@ -888,7 +894,7 @@ export default function SquadHub() {
                   const aptLikesCount = likes.filter(l => l.apartment_id === apt.id && l.liked).length;
                   const aptDislikesCount = likes.filter(l => l.apartment_id === apt.id && !l.liked).length;
                   const myVote = likes.find(l => l.apartment_id === apt.id && l.user_id === user?.id);
-                  const threshold = Math.ceil(members.length / 2);
+                  const threshold = Math.floor(members.length / 2) + 1;
                   const majorityLiked = aptLikesCount >= threshold && members.length > 1;
 
                   return (

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -132,7 +133,7 @@ function ErrorMsg({ msg }: { msg?: string }) {
 
 export default function Onboarding() {
   const { user, loading: authLoading } = useAuth();
-  const { profile } = useProfile();
+  const { profile, refetch } = useProfile();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
@@ -143,6 +144,9 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [photosDialogOpen, setPhotosDialogOpen] = useState(false);
+  // Tracks whether user explicitly confirmed proceeding without photos in the dialog.
+  // Using a ref so handleSubmit sees the updated value synchronously.
+  const photoConfirmedRef = useRef(false);
 
   const STEPS = [t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences"), t("stepPhotos")];
 
@@ -275,6 +279,22 @@ export default function Onboarding() {
       }
     }
 
+    if (step === 1) {
+      if (!form.sleep_schedule) e.sleep_schedule = "Please select a sleep schedule";
+      if (!form.cleanliness) e.cleanliness = "Please set your cleanliness level";
+      if (!form.cooking_habits) e.cooking_habits = "Please select your cooking habits";
+    }
+
+    if (step === 2) {
+      if (!form.smoking_preference) e.smoking_preference = "Please select a smoking preference";
+      if (!form.pet_preference) e.pet_preference = "Please select a pet preference";
+    }
+
+    if (step === 3) {
+      if (form.social_level == null) e.social_level = "Please set your social level";
+      if (form.noise_level == null) e.noise_level = "Please set your noise level";
+    }
+
     if (step === 4) {
       const minAge = Number(form.preferred_age_min);
       const maxAge = Number(form.preferred_age_max);
@@ -339,14 +359,16 @@ export default function Onboarding() {
     await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
   };
 
-  const handleSubmit = async (skipPhotoCheck = false) => {
+  const handleSubmit = async () => {
     if (!user) return;
 
-    // Require at least one photo — show confirmation dialog if none
-    if (!skipPhotoCheck && form.photos.length === 0) {
+    // Require at least one photo — show confirmation dialog if none.
+    // Only bypassed when the user explicitly confirms in the dialog (photoConfirmedRef).
+    if (form.photos.length === 0 && !photoConfirmedRef.current) {
       setPhotosDialogOpen(true);
       return;
     }
+    photoConfirmedRef.current = false; // reset after use
 
     // Sanitize all free-text inputs (strip control chars, bidi overrides, null bytes)
     const safeName       = sanitizeText(form.name);
@@ -423,7 +445,8 @@ export default function Onboarding() {
       .upsert(payload, { onConflict: "user_id" });
     setSaving(false);
     if (error) {
-      toast.error(t("failedToSaveProfile") + error.message);
+      console.error(error);
+      toast.error("Failed to save profile. Please try again.");
     } else {
       toast.success(isEdit ? t("preferencesUpdated") : t("profileCreated"));
       if (!isEdit) {
@@ -436,6 +459,7 @@ export default function Onboarding() {
           .neq("user_id", user.id);
         navigate(`/welcome?city=${encodeURIComponent(form.city)}&count=${count ?? 0}&name=${encodeURIComponent(form.name.trim().split(" ")[0])}`, { replace: true });
       } else {
+        await refetch();
         navigate("/profile", { replace: true });
       }
     }
@@ -554,8 +578,10 @@ export default function Onboarding() {
                   <OptionButton key={o} label={to(o)} selected={form.sleep_schedule === o} onClick={() => update("sleep_schedule", o)} />
                 ))}
               </div>
+              <ErrorMsg msg={errors.sleep_schedule} />
             </div>
             <SliderField label={t("cleanlinessLevel")} value={form.cleanliness} onChange={(v) => update("cleanliness", v)} labels={[t("sliderMessy"), "", t("sliderAverage"), "", t("spotless")]} />
+            <ErrorMsg msg={errors.cleanliness as string | undefined} />
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("cookingHabitsLbl")}</label>
               <div className="flex flex-wrap gap-2">
@@ -563,6 +589,7 @@ export default function Onboarding() {
                   <OptionButton key={o} label={to(o)} selected={form.cooking_habits === o} onClick={() => update("cooking_habits", o)} />
                 ))}
               </div>
+              <ErrorMsg msg={errors.cooking_habits as string | undefined} />
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("sharedSpaceOrgLbl")}</label>
@@ -585,6 +612,7 @@ export default function Onboarding() {
                   <OptionButton key={o} label={to(o)} selected={form.smoking_preference === o} onClick={() => update("smoking_preference", o)} />
                 ))}
               </div>
+              <ErrorMsg msg={errors.smoking_preference as string | undefined} />
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">🐾 {t("pets")}</label>
@@ -593,6 +621,7 @@ export default function Onboarding() {
                   <OptionButton key={o} label={to(o)} selected={form.pet_preference === o} onClick={() => update("pet_preference", o)} />
                 ))}
               </div>
+              <ErrorMsg msg={errors.pet_preference as string | undefined} />
             </div>
             <div className="flex flex-wrap gap-2">
               <Toggle label={`🏠 ${t("workFromHome")}`} value={form.wfh} onChange={(v) => update("wfh", v)} />
@@ -639,7 +668,9 @@ export default function Onboarding() {
         return (
           <div className="space-y-5">
             <SliderField label={t("socialVsPrivate")} value={form.social_level} onChange={(v) => update("social_level", v)} labels={[t("sliderVeryPrivate"), "", t("sliderBalanced"), "", t("sliderVerySocial")]} />
+            <ErrorMsg msg={errors.social_level as string | undefined} />
             <SliderField label={t("noiseLevelLabel")} value={form.noise_level} onChange={(v) => update("noise_level", v)} labels={[t("sliderSilent"), "", t("sliderModerate"), "", t("sliderLoud")]} />
+            <ErrorMsg msg={errors.noise_level as string | undefined} />
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("partyingEventsLbl")}</label>
               <div className="flex flex-wrap gap-2">
@@ -870,30 +901,32 @@ export default function Onboarding() {
       </div>
 
       {/* No-photos confirmation dialog */}
-      {photosDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-card rounded-3xl p-6 max-w-sm w-full shadow-elevated border border-border/50">
-            <h3 className="text-base font-extrabold text-foreground mb-2">No photos yet</h3>
-            <p className="text-muted-foreground text-sm mb-5">
-              You haven't added any photos yet. Profiles with photos get 5x more matches. Continue without photos?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setPhotosDialogOpen(false)}
-                className="flex-1 py-2.5 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => { setPhotosDialogOpen(false); handleSubmit(true); }}
-                className="flex-1 py-2.5 gradient-primary text-primary-foreground rounded-xl font-semibold text-sm"
-              >
-                Continue
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={photosDialogOpen} onOpenChange={setPhotosDialogOpen}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>{t("onboardingNoPhotosTitle")}</DialogTitle>
+            <DialogDescription>{t("onboardingNoPhotosDesc")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row gap-3 sm:flex-row">
+            <button
+              onClick={() => setPhotosDialogOpen(false)}
+              className="flex-1 py-2.5 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                photoConfirmedRef.current = true;
+                setPhotosDialogOpen(false);
+                handleSubmit();
+              }}
+              className="flex-1 py-2.5 gradient-primary text-primary-foreground rounded-xl font-semibold text-sm"
+            >
+              {t("onboardingNoPhotosContinue")}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

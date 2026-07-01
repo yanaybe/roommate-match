@@ -837,6 +837,33 @@ const translations: Record<Language, Record<string, string>> = {
     // Contact Support extra
     needToSendMsg: "Need to send us a message?",
     signInToContact: "Sign in to send us a message directly",
+
+    // Nav (extra)
+    navSquads: "Squads",
+    navAdmin: "Admin",
+    expandSidebar: "Expand sidebar",
+    collapseSidebar: "Collapse sidebar",
+    collapseSidebarLabel: "Collapse",
+
+    // Edit Listing
+    editListingTitle: "Edit Listing",
+    saveChangesBtn: "Save Changes",
+
+    // Verify Email extra
+    sessionExpiredVerify: "Your session expired. Please sign in again to verify your email.",
+    waitingForVerification: "Waiting for verification…",
+
+    // Onboarding no photos dialog
+    onboardingNoPhotosTitle: "No photos yet",
+    onboardingNoPhotosDesc: "You haven't added any photos yet. Profiles with photos get 5x more matches. Continue without photos?",
+    onboardingNoPhotosContinue: "Continue without photos",
+
+    // Squad highlight inline steps
+    squadInlineStep1: "Invite 2–4 friends",
+    squadInlineStep2: "Browse & vote together",
+
+    // Footer nav
+    footerPricing: "Pricing",
   },
   he: {
     // Settings
@@ -1659,6 +1686,33 @@ const translations: Record<Language, Record<string, string>> = {
     // Contact Support extra
     needToSendMsg: "צריך לשלוח לנו הודעה?",
     signInToContact: "היכנס כדי לשלוח לנו הודעה ישירות",
+
+    // Nav (extra)
+    navSquads: "חברים",
+    navAdmin: "ניהול",
+    expandSidebar: "הרחב תפריט",
+    collapseSidebar: "כווץ תפריט",
+    collapseSidebarLabel: "כווץ",
+
+    // Edit Listing
+    editListingTitle: "ערוך מודעה",
+    saveChangesBtn: "שמור שינויים",
+
+    // Verify Email extra
+    sessionExpiredVerify: "תוקף הסשן פג. אנא התחבר מחדש כדי לאמת את האימייל שלך.",
+    waitingForVerification: "ממתין לאימות...",
+
+    // Onboarding no photos dialog
+    onboardingNoPhotosTitle: "אין תמונות עדיין",
+    onboardingNoPhotosDesc: "טרם הוספת תמונות. פרופילים עם תמונות מקבלים 5 פעמים יותר התאמות. להמשיך ללא תמונות?",
+    onboardingNoPhotosContinue: "המשך ללא תמונות",
+
+    // Squad highlight inline steps
+    squadInlineStep1: "הזמן 2–4 חברים",
+    squadInlineStep2: "עיינו והצביעו יחד",
+
+    // Footer nav
+    footerPricing: "תמחור",
   },
   fr: {
     // Settings
@@ -2472,6 +2526,33 @@ const translations: Record<Language, Record<string, string>> = {
     // Contact Support extra
     needToSendMsg: "Besoin de nous envoyer un message ?",
     signInToContact: "Connectez-vous pour nous envoyer un message directement",
+
+    // Nav (extra)
+    navSquads: "Équipes",
+    navAdmin: "Admin",
+    expandSidebar: "Développer",
+    collapseSidebar: "Réduire",
+    collapseSidebarLabel: "Réduire",
+
+    // Edit Listing
+    editListingTitle: "Modifier l'annonce",
+    saveChangesBtn: "Enregistrer",
+
+    // Verify Email extra
+    sessionExpiredVerify: "Votre session a expiré. Veuillez vous reconnecter pour vérifier votre e-mail.",
+    waitingForVerification: "En attente de vérification…",
+
+    // Onboarding no photos dialog
+    onboardingNoPhotosTitle: "Pas encore de photos",
+    onboardingNoPhotosDesc: "Vous n'avez pas encore ajouté de photos. Les profils avec photos obtiennent 5x plus de matchs. Continuer sans photos ?",
+    onboardingNoPhotosContinue: "Continuer sans photos",
+
+    // Squad highlight inline steps
+    squadInlineStep1: "Invitez 2–4 amis",
+    squadInlineStep2: "Parcourez & votez ensemble",
+
+    // Footer nav
+    footerPricing: "Tarifs",
   },
 };
 

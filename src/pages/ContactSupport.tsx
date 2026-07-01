@@ -18,9 +18,9 @@ function useContactMethods() {
   return [
     { icon: Phone, label: t("contactPhone"), value: "+972 54-540-4192", href: "tel:+972545404192", color: "from-emerald-500 to-green-600" },
     { icon: Mail, label: t("contactEmail"), value: "roomatchltd@gmail.com", href: "mailto:roomatchltd@gmail.com", color: "from-blue-500 to-cyan-600" },
-    { icon: Instagram, label: t("contactInstagram"), value: "@_roomatch", href: "https://instagram.com/_roomatch", color: "from-pink-500 to-purple-600" },
+    { icon: Instagram, label: t("contactInstagram"), value: "@_roomatch", href: "https://www.instagram.com/_roomatch", color: "from-pink-500 to-purple-600" },
     { icon: Facebook, label: t("contactFacebook"), value: "_roomatch", href: "https://facebook.com/_roomatch", color: "from-blue-600 to-indigo-600" },
-    { icon: TikTokIcon, label: t("contactTikTok"), value: "@roomatch3", href: "https://tiktok.com/@roomatch3", color: "from-gray-900 to-gray-700" },
+    { icon: TikTokIcon, label: t("contactTikTok"), value: "@roomatch3", href: "https://www.tiktok.com/@roomatch3", color: "from-gray-900 to-gray-700" },
   ];
 }
 
