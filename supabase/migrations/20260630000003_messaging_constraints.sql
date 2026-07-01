@@ -1,7 +1,15 @@
 -- Add message length constraint at DB level (client checks 2000 chars but can be bypassed)
-ALTER TABLE messages
-  ADD CONSTRAINT IF NOT EXISTS messages_content_length
-  CHECK (char_length(content) <= 2000);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'messages_content_length'
+  ) THEN
+    ALTER TABLE messages
+      ADD CONSTRAINT messages_content_length
+      CHECK (char_length(content) <= 2000);
+  END IF;
+END $$;
 
 -- Message rate limiting trigger (max 20 messages per user per minute)
 CREATE OR REPLACE FUNCTION check_message_rate_limit()
