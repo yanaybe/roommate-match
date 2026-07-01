@@ -48,8 +48,11 @@ async function registerPushSubscription(userId: string) {
       p256dh: json.keys.p256dh,
       auth: json.keys.auth,
     }, { onConflict: "user_id,endpoint" });
-  } catch {
-    // Permission denied or browser doesn't support push — fail silently
+  } catch (err) {
+    console.warn("[RooMatch] Push notification setup failed:", err);
+    if (import.meta.env.DEV) {
+      console.warn("Ensure VITE_VAPID_PUBLIC_KEY is set in .env");
+    }
   }
 }
 

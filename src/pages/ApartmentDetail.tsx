@@ -19,6 +19,7 @@ import {
   MoreVertical,
   Flag,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { type UserProfile, type Apartment } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
@@ -235,6 +236,35 @@ export default function ApartmentDetail() {
       await supabase.from("saved_apartments").delete().eq("user_id", user.id).eq("apartment_id", id);
     }
   };
+  const handleDelete = async () => {
+    if (!user || !apartment || !id) return;
+    const confirmed = window.confirm("Are you sure you want to delete this listing? This action cannot be undone.");
+    if (!confirmed) return;
+    try {
+      // Delete images from Supabase Storage
+      const imagePaths = (apartment.images ?? []).reduce<string[]>((acc, url) => {
+        const marker = "/apartment-images/";
+        const idx = url.indexOf(marker);
+        if (idx !== -1) acc.push(url.slice(idx + marker.length));
+        return acc;
+      }, []);
+      if (imagePaths.length > 0) {
+        await supabase.storage.from("apartment-images").remove(imagePaths);
+      }
+      // Delete the apartment row
+      const { error } = await supabase
+        .from("apartments")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
+      if (error) throw error;
+      toast.success("Listing deleted");
+      navigate("/");
+    } catch {
+      toast.error("Failed to delete listing");
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -340,6 +370,14 @@ export default function ApartmentDetail() {
                       >
                         <Zap size={15} className="text-primary shrink-0" />
                         <span className="text-foreground font-medium">{t("boostListing")}</span>
+                      </button>
+                      <div className="border-t border-border/40" />
+                      <button
+                        onClick={() => { setMenuOpen(false); handleDelete(); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
+                      >
+                        <Trash2 size={15} className="text-destructive shrink-0" />
+                        <span className="text-destructive font-medium">Delete Listing</span>
                       </button>
                       <div className="border-t border-border/40" />
                     </>
@@ -560,7 +598,10 @@ export default function ApartmentDetail() {
             onClick={() => requireAuth(async () => {
               if (!user || !apartment) return;
               const ownerId = apartment.ownerId;
-              if (!ownerId || ownerId === user.id) { navigate("/chats"); return; }
+              if (!ownerId || ownerId === user.id) {
+                toast.info(t("cantMessageYourself") || "You can't message yourself");
+                return;
+              }
               setMessaging(true);
               try {
                 const { data: existing } = await supabase

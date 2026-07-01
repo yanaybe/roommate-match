@@ -145,11 +145,16 @@ function isSquadBannerDismissed() {
 }
 
 export default function Index() {
+  const PAGE_SIZE = 20;
   const [view, setView] = useState<"list" | "map">("list");
   const [search, setSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>(defaultFilters);
-  const [apartments, setApartments] = useState<Apartment[]>([]);
+  const [allLoaded, setAllLoaded] = useState<Apartment[]>([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadKey, setLoadKey] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [apartmentsLoading, setApartmentsLoading] = useState(true);
   const [gridKey, setGridKey] = useState(0);
   const [newApartments, setNewApartments] = useState<Apartment[]>([]);
@@ -167,20 +172,45 @@ export default function Index() {
 
   useEffect(() => {
     let cancelled = false;
+    if (page === 0) {
+      setApartmentsLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     supabase
       .from("apartments")
       .select("*")
       .order("created_at", { ascending: false })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) { Sentry.captureMessage(error.message, "error"); toast.error(t("failedToLoadApartments")); }
-        setApartments((data ?? []).map(dbRowToApartment));
-        setApartmentsLoading(false);
-        setGridKey(1);
+        const newApts = (data ?? []).map(dbRowToApartment);
+        if (page === 0) {
+          setAllLoaded(newApts);
+          setApartmentsLoading(false);
+          setGridKey((k) => k + 1);
+        } else {
+          setAllLoaded((prev) => [...prev, ...newApts]);
+          setLoadingMore(false);
+        }
+        setHasMore(newApts.length === PAGE_SIZE);
       });
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page, loadKey]);
+
+  // Reset pagination when filters or search change
+  useEffect(() => {
+    setAllLoaded([]);
+    setHasMore(true);
+    if (page === 0) {
+      setLoadKey((k) => k + 1);
+    } else {
+      setPage(0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, search]);
 
   // Real-time subscription — collect new inserts into a pending banner
   useEffect(() => {
@@ -203,7 +233,7 @@ export default function Index() {
   }, []);
 
   const showNewListings = () => {
-    setApartments((prev) => {
+    setAllLoaded((prev) => {
       const deduped = newApartments.filter((a) => !prev.some((p) => p.id === a.id));
       return [...deduped, ...prev];
     });
@@ -213,17 +243,17 @@ export default function Index() {
 
   const recommended = useMemo(() => {
     if (!profile?.budget || !profile?.city) return [];
-    return apartments
+    return allLoaded
       .filter((apt) => {
         const withinBudget = apt.price <= profile.budget * 1.15;
         const cityMatch = apt.location.toLowerCase().includes(profile.city.toLowerCase());
         return withinBudget && cityMatch;
       })
       .slice(0, 3);
-  }, [apartments, profile]);
+  }, [allLoaded, profile]);
 
   const filtered = useMemo(() => {
-    return apartments.filter((apt) => {
+    return allLoaded.filter((apt) => {
       if (search.trim()) {
         const q = search.toLowerCase();
         if (
@@ -239,9 +269,11 @@ export default function Index() {
         if (!filters.amenities.every((a) => apt.amenities.includes(a))) return false;
       }
       if (filters.listingType !== "any" && apt.listingType !== filters.listingType) return false;
+      if (filters.furnished === "yes" && !apt.amenities.includes("Furnished")) return false;
+      if (filters.furnished === "no" && apt.amenities.includes("Furnished")) return false;
       return true;
     });
-  }, [search, filters, apartments]);
+  }, [search, filters, allLoaded]);
 
   const activeFilterCount = (() => {
     let c = 0;
@@ -250,13 +282,6 @@ export default function Index() {
     if (filters.sizeMin > 0) c++;
     if (filters.matchMin > 0) c++;
     if (filters.amenities.length > 0) c++;
-    if (filters.smoking !== "any") c++;
-    if (filters.pets !== "any") c++;
-    if (filters.roomType !== "any") c++;
-    if (filters.religiousLevel !== "any") c++;
-    if (filters.sleepSchedule !== "any") c++;
-    if (filters.cleanlinessMin > 1) c++;
-    if (filters.wfh !== "any") c++;
     if (filters.furnished !== "any") c++;
     if (filters.listingType !== "any") c++;
     return c;
@@ -427,6 +452,17 @@ export default function Index() {
                 </React.Fragment>
               ))}
             </div>
+            {hasMore && view === "list" && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={loadingMore}
+                  className="px-8 py-3 rounded-xl font-bold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98] transition-all disabled:opacity-60"
+                >
+                  {loadingMore ? "Loading…" : "Load More"}
+                </button>
+              </div>
+            )}
             </>
           ) : (
             <>

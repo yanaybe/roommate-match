@@ -31,13 +31,19 @@ function checkIpRateLimit(ip: string): boolean {
   ipCallLog.set(ip, calls);
   if (calls.length > 10) {
     console.warn(`[notify] High call volume from IP ${ip}: ${calls.length} calls in 5 min — possible service key leak`);
+    return false;
   }
   return true;
 }
 
 Deno.serve(async (req) => {
   const clientIp = req.headers.get("x-forwarded-for") ?? "unknown";
-  checkIpRateLimit(clientIp);
+  if (!checkIpRateLimit(clientIp)) {
+    return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });

@@ -23,6 +23,16 @@ interface WeekBucket {
   count: number;
 }
 
+// Module-level cache: shared across renders, survives component re-mounts
+interface AnalyticsCache {
+  stats: StatCard[];
+  userGrowth: WeekBucket[];
+  listingGrowth: WeekBucket[];
+  timestamp: number;
+}
+let analyticsCache: AnalyticsCache | null = null;
+const ANALYTICS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 function StatCardSkeleton() {
   return <div className="bg-card border border-border rounded-2xl p-5 animate-pulse h-24" />;
 }
@@ -62,6 +72,14 @@ export default function AdminOverview() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      // Serve cached data if still fresh (< 5 minutes old)
+      if (analyticsCache && Date.now() - analyticsCache.timestamp < ANALYTICS_CACHE_TTL) {
+        setStats(analyticsCache.stats);
+        setUserGrowth(analyticsCache.userGrowth);
+        setListingGrowth(analyticsCache.listingGrowth);
+        setLoading(false);
+        return;
+      }
       const now = new Date();
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
@@ -91,7 +109,7 @@ export default function AdminOverview() {
         supabase.from("apartments").select("created_at").gte("created_at", eightWeeksAgo),
       ]);
 
-      setStats([
+      const newStats: StatCard[] = [
         { label: "Total Users", value: totalUsers ?? 0 },
         { label: "New Today", value: newToday ?? 0 },
         { label: "New This Week", value: newWeek ?? 0 },
@@ -100,15 +118,25 @@ export default function AdminOverview() {
         { label: "Premium Users", value: premiumUsers ?? 0 },
         { label: "Pending Reports", value: pendingReports ?? 0 },
         { label: "Active Convos", value: activeConvos ?? 0 },
-      ]);
+      ];
+      const newUserGrowth = recentProfiles
+        ? groupByWeek(recentProfiles.map((p) => p.created_at))
+        : [];
+      const newListingGrowth = recentListings
+        ? groupByWeek(recentListings.map((a) => a.created_at))
+        : [];
 
-      if (recentProfiles) {
-        setUserGrowth(groupByWeek(recentProfiles.map((p) => p.created_at)));
-      }
-      if (recentListings) {
-        setListingGrowth(groupByWeek(recentListings.map((a) => a.created_at)));
-      }
+      // Populate in-memory cache so subsequent renders within TTL skip the fetch
+      analyticsCache = {
+        stats: newStats,
+        userGrowth: newUserGrowth,
+        listingGrowth: newListingGrowth,
+        timestamp: Date.now(),
+      };
 
+      setStats(newStats);
+      setUserGrowth(newUserGrowth);
+      setListingGrowth(newListingGrowth);
       setLoading(false);
     };
 

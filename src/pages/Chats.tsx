@@ -136,6 +136,7 @@ export default function Chats() {
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastSentRef = useRef<number>(0);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -242,7 +243,20 @@ export default function Chats() {
       }
     }
 
-    setConversations(Array.from(convMap.values()));
+    // Sort by most recent message (or creation date as fallback)
+    const sortedConvs = Array.from(convMap.values()).sort((a, b) => {
+      const aTime = new Date(a.last_message_at || a.created_at || 0).getTime();
+      const bTime = new Date(b.last_message_at || b.created_at || 0).getTime();
+      return bTime - aTime;
+    });
+    setConversations(sortedConvs);
+
+    // Deep link: auto-open a specific conversation when ?conv=<id> is present
+    const convParam = new URLSearchParams(window.location.search).get("conv");
+    if (convParam && sortedConvs.some((c) => c.id === convParam)) {
+      setActiveConv(convParam);
+    }
+
     setLoading(false);
   }, [user]);
 
@@ -262,10 +276,14 @@ export default function Chats() {
         .order("created_at", { ascending: true });
 
       const msgIds = msgs?.map((m) => m.id) ?? [];
-      const { data: receipts } = await supabase
-        .from("message_read_receipts")
-        .select("message_id")
-        .in("message_id", msgIds.length > 0 ? msgIds : ["none"]);
+      let receipts: Array<{ message_id: string }> | null = null;
+      if (msgIds.length > 0) {
+        const { data } = await supabase
+          .from("message_read_receipts")
+          .select("message_id")
+          .in("message_id", msgIds);
+        receipts = data;
+      }
 
       const readSet = new Set(receipts?.map((r) => r.message_id) ?? []);
 
@@ -333,9 +351,13 @@ export default function Chats() {
           schema: "public",
           table: "message_read_receipts",
         },
-        () => {
+        (payload) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const receipt = payload.new as any;
           setMessages((prev) =>
-            prev.map((m) => ({ ...m, is_read: true }))
+            prev.map((m) =>
+              m.id === receipt.message_id ? { ...m, is_read: true } : m
+            )
           );
         }
       )
@@ -366,6 +388,12 @@ export default function Chats() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !activeConv || !user) return;
 
+    // ── Client-side rate limit: 1.5s between messages ─────────────────────────
+    if (Date.now() - lastSentRef.current < 1500) {
+      toast.error("Please wait before sending another message");
+      return;
+    }
+
     // ── Sanitize content (strip control chars + bidi overrides) ──────────────
     const content = sanitizeText(newMessage);
     if (!content) return;
@@ -383,6 +411,7 @@ export default function Chats() {
       sender_id: user.id,
       content,
     });
+    lastSentRef.current = Date.now();
   };
 
   const formatTime = (dateStr: string) => {

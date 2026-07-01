@@ -94,11 +94,20 @@ export default function WhoLikedMeSheet({ open, onOpenChange, user, t }: Props) 
           <ScrollArea className="h-[calc(85vh-80px)] px-5 py-4">
             {loading ? (
               <p className="text-muted-foreground text-sm text-center py-10">{t("loading")}</p>
+            ) : !isGold && profiles.length === 0 ? (
+              /* Free user with 0 actual likers — show empty state, not blurred placeholders */
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Heart className="w-7 h-7 text-muted-foreground/40" />
+                </div>
+                <p className="text-muted-foreground text-sm font-medium">No likes yet</p>
+                <p className="text-muted-foreground/60 text-xs mt-1">Keep completing your profile to get discovered!</p>
+              </div>
             ) : !isGold ? (
-              /* Paywall: always shown for free users — dummy cards if no real likes yet */
+              /* Paywall: free user WITH likers — show blurred cards + upgrade prompt */
               <div className="relative">
                 <div className="space-y-3 pointer-events-none select-none">
-                  {(profiles.length > 0 ? profiles.slice(0, 5) : [{}, {}, {}]).map((_, i) => (
+                  {profiles.slice(0, 5).map((_, i) => (
                     <div key={i} className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-sm blur-sm">
                       <div className="w-14 h-14 rounded-full bg-primary/20 shrink-0" />
                       <div className="flex-1 min-w-0 space-y-1.5">
@@ -114,9 +123,7 @@ export default function WhoLikedMeSheet({ open, onOpenChange, user, t }: Props) 
                       <Lock className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <h3 className="text-base font-extrabold text-foreground mb-1">
-                      {profiles.length > 0
-                        ? `${profiles.length} ${profiles.length === 1 ? "person" : "people"} liked you`
-                        : "See who likes you"}
+                      {`${profiles.length} ${profiles.length === 1 ? "person" : "people"} liked you`}
                     </h3>
                     <p className="text-muted-foreground text-xs mb-4">
                       Upgrade to Gold to see who liked you and message them first.

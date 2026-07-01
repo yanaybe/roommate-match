@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Route, Routes, Outlet } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, Outlet, useLocation } from "react-router-dom";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -167,9 +167,19 @@ function HomeRoute() {
 function AuthedLayout() {
   const { user, loading } = useAuth();
   const { collapsed } = useSidebar();
+  const location = useLocation();
   const offsetClass = collapsed ? "desk:ltr:pl-14 desk:rtl:pr-14" : "desk:ltr:pl-64 desk:rtl:pr-64";
   if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
+
+  // Require email verification for all protected routes except these
+  const exemptPaths = ["/onboarding", "/verify-email", "/welcome"];
+  const isExempt = exemptPaths.some((p) => location.pathname.startsWith(p));
+  if (!user.email_confirmed_at && !isExempt) {
+    const emailParam = user.email ? `?email=${encodeURIComponent(user.email)}` : "";
+    return <Navigate to={`/verify-email${emailParam}`} replace />;
+  }
+
   return <div className={`transition-all duration-200 ${offsetClass}`}><div className="desk:max-w-[1400px] desk:mx-auto"><Outlet /></div></div>;
 }
 

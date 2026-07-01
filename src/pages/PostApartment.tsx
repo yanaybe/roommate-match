@@ -113,12 +113,15 @@ export default function PostApartment() {
   }, []);
 
   useEffect(() => {
-    try {
-      const sanitizedForm = Object.fromEntries(
-        Object.entries(form).map(([k, v]) => [k, typeof v === "string" ? sanitizeText(v) : v])
-      );
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form: sanitizedForm, step }));
-    } catch { /* storage unavailable */ }
+    const timer = setTimeout(() => {
+      try {
+        const sanitizedForm = Object.fromEntries(
+          Object.entries(form).map(([k, v]) => [k, typeof v === "string" ? sanitizeText(v) : v])
+        );
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ form: sanitizedForm, step }));
+      } catch { /* storage unavailable */ }
+    }, 500);
+    return () => clearTimeout(timer);
   }, [form, step]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -174,30 +177,40 @@ export default function PostApartment() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId, user]);
 
-  const handleImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    e.target.value = "";
 
     const invalidType = files.find(f => !ALLOWED_MIME_TYPES.has(f.type));
     if (invalidType) {
       toast.error("Only JPG, PNG, WebP, and GIF images are allowed");
-      e.target.value = "";
       return;
     }
 
     const tooBig = files.find(f => f.size > MAX_FILE_SIZE);
     if (tooBig) {
       toast.error("Each image must be under 10MB");
-      e.target.value = "";
       return;
     }
 
-    if (keptImages.length + images.length + files.length > 8) {
+    // Validate magic bytes for each file before adding
+    const validFiles: File[] = [];
+    for (const file of files) {
+      if (!(await validateImageMagicBytes(file))) {
+        toast.error(`${file.name} is not a valid image`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    if (keptImages.length + images.length + validFiles.length > 8) {
       toast.error("Maximum 8 photos allowed");
-      e.target.value = "";
       return;
     }
-    setImages(prev => [...prev, ...files]);
-    files.forEach(file => {
+    setImages(prev => [...prev, ...validFiles]);
+    validFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = (ev) => setImagePreviews(prev => [...prev, ev.target?.result as string]);
       reader.readAsDataURL(file);
@@ -218,7 +231,7 @@ export default function PostApartment() {
   const canProceed = () => {
     switch (currentStepKey) {
       case "listing-type": return true;
-      case "photos": return isEditMode ? totalImageCount > 0 : images.length > 0;
+      case "photos": return totalImageCount > 0;
       case "location": return !!(form.address && form.city && form.neighborhood);
       case "details": return !!(form.title && form.price && form.size);
       case "room-type": return !!form.roomType;
@@ -244,6 +257,7 @@ export default function PostApartment() {
   const handleSubmit = async () => {
     if (!user) { toast.error("Please sign in first"); return; }
     setSubmitting(true);
+    const uploadedPaths: string[] = [];
     try {
       setSubmitPhase("locating");
       const coords = await geocodeAddress(form.address, form.neighborhood, form.city);
@@ -252,15 +266,11 @@ export default function PostApartment() {
       setSubmitPhase("uploading");
       const newImageUrls: string[] = [];
       for (const file of images) {
-        if (!(await validateImageMagicBytes(file))) {
-          toast.error("One or more files are not valid images. Please upload JPEG, PNG, WebP, or GIF.");
-          setSubmitting(false);
-          return;
-        }
         const ext = MIME_TO_EXT[file.type] ?? "jpg";
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error } = await supabase.storage.from("apartment-images").upload(path, file);
         if (error) throw error;
+        uploadedPaths.push(path);
         const { data: urlData } = supabase.storage.from("apartment-images").getPublicUrl(path);
         newImageUrls.push(urlData.publicUrl);
       }
@@ -304,6 +314,7 @@ export default function PostApartment() {
           .eq("id", editId)
           .eq("user_id", user.id);
         if (error) throw error;
+        localStorage.removeItem(DRAFT_KEY);
         toast.success("Listing updated! 🎉");
         navigate(`/apartment/${editId}`);
       } else {
@@ -319,6 +330,10 @@ export default function PostApartment() {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
+      // Clean up any images that were uploaded before the insert/update failed
+      if (uploadedPaths.length > 0) {
+        await supabase.storage.from("apartment-images").remove(uploadedPaths);
+      }
       toast.error(err.message || "Failed to save apartment");
     } finally {
       setSubmitting(false);

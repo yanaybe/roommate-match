@@ -6,6 +6,7 @@ import PhotoUpload from "@/components/PhotoUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { isSafeImageUrl } from "@/lib/security";
 
 interface Props {
   open: boolean;
@@ -21,6 +22,12 @@ export default function PhotoManagementSheet({ open, onOpenChange, initialPhotos
 
   const handleSave = async () => {
     if (!user) return;
+    for (const url of photos) {
+      if (!isSafeImageUrl(url)) {
+        toast.error("One or more photo URLs are invalid");
+        return;
+      }
+    }
     setSaving(true);
     const { error } = await supabase
       .from("profiles")

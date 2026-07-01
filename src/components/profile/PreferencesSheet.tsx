@@ -13,11 +13,14 @@ function ProfileSection({ title, children }: { title: string; children: React.Re
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
+  const display = value != null && value !== "" ? value : undefined;
   return (
     <div className="flex justify-between py-1.5 border-b border-border/30 last:border-0">
       <span className="text-muted-foreground text-sm">{label}</span>
-      <span className="text-foreground text-sm font-medium">{value}</span>
+      <span className={`text-sm font-medium ${display == null ? "text-muted-foreground/50 italic" : "text-foreground"}`}>
+        {display ?? "Not specified"}
+      </span>
     </div>
   );
 }
@@ -40,7 +43,7 @@ export default function PreferencesSheet({ open, onOpenChange, profile, t }: Pro
         </SheetHeader>
         <ScrollArea className="h-[calc(85vh-70px)] px-5 py-4">
           <ProfileSection title={t("basicInfo")}>
-            <InfoRow label={t("budget")} value={`₪${profile.budget.toLocaleString()}/mo`} />
+            <InfoRow label={t("budget")} value={profile.budget != null ? `₪${profile.budget.toLocaleString()}/mo` : null} />
             <InfoRow label={t("roomType")} value={profile.desired_room_type} />
           </ProfileSection>
 

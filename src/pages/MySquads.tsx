@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -42,6 +42,8 @@ export default function MySquads() {
     }
   }, [loading, squads.length, invites.length]);
   const [requesting, setRequesting] = useState<string | null>(null);
+  // Optimistic lock: tracks invite IDs currently being processed to prevent double-accepts
+  const processingInvitesRef = useRef<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
 
   // Filter state
@@ -83,6 +85,10 @@ export default function MySquads() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAcceptInvite = async (invite: any) => {
     if (!user) return;
+    // Optimistic lock: bail out if this invite is already being processed (prevents double-tap race)
+    if (processingInvitesRef.current.has(invite.id)) return;
+    processingInvitesRef.current.add(invite.id);
+    try {
     // Distinguish join requests (creator accepting) from regular invites (invitee accepting)
     const isJoinRequest = invite.squad?.creator_id === user.id && invite.inviter_id !== user.id;
     const userIdToAdd = isJoinRequest ? invite.inviter_id : user.id;
@@ -96,6 +102,17 @@ export default function MySquads() {
       .eq("status", "joined");
     if (invite.squad?.target_size && (currentMemberCount ?? 0) >= invite.squad.target_size) {
       toast.error("This squad is already full.");
+      refetchInvites();
+      return;
+    }
+    // Re-check member count right before insert to minimize TOCTOU window
+    const { count: reCheckCount } = await supabase
+      .from("squad_members")
+      .select("id", { count: "exact", head: true })
+      .eq("squad_id", invite.squad_id)
+      .eq("status", "joined");
+    if (invite.squad?.target_size && (reCheckCount ?? 0) >= invite.squad.target_size) {
+      toast.error("This squad just filled up.");
       refetchInvites();
       return;
     }
@@ -125,6 +142,9 @@ export default function MySquads() {
     refetch();
     refetchInvites();
     refetchDiscover();
+    } finally {
+      processingInvitesRef.current.delete(invite.id);
+    }
   };
 
   const handleDeclineInvite = async (inviteId: string) => {

@@ -245,10 +245,19 @@ export default function SquadHub() {
     setSwiped((prev) => [...prev, current.user.id]);
 
     if (direction === "right") {
+      const inviteeId = current.profile.user_id;
+      if (inviteeId === user.id) {
+        toast.error("You can't invite yourself");
+        return;
+      }
+      if (members.some(m => m.user_id === inviteeId)) {
+        toast.error("This person is already in your squad");
+        return;
+      }
       const { error } = await supabase.from("squad_invites").insert({
         squad_id: id,
         inviter_id: user.id,
-        invitee_id: current.profile.user_id,
+        invitee_id: inviteeId,
       });
       if (error) {
         toast.error(t("failedToSendInvite"));
@@ -406,8 +415,13 @@ export default function SquadHub() {
       const apt = apartments.find((a: any) => a.id === apartmentId);
       if (!apt) return;
 
-      const leader = members.find(m => m.role === "leader");
-      if (!leader || leader.user_id === apt.user_id) return;
+      // Fix: fall back to squad creator or first member if no role=leader found
+      const leader = members.find(m => m.role === "leader")
+        ?? members.find(m => m.user_id === squad.creator_id)
+        ?? members[0]
+        ?? null;
+      if (!leader) return;
+      if (leader.user_id === apt.user_id) return;
 
       // Check if conversation already exists
       const { data: leaderConvos } = await supabase
@@ -520,8 +534,10 @@ export default function SquadHub() {
   const sendMessage = async () => {
     if (!newMsg.trim() || !user || !id) return;
     const now = Date.now();
-    if (now - lastMsgTimeRef.current < 500) return;
-    lastMsgTimeRef.current = now;
+    if (now - lastMsgTimeRef.current < 2000) {
+      toast.error("Please wait before sending another message");
+      return;
+    }
     const content = sanitizeText(newMsg.trim()).substring(0, 2000);
     if (!content) return;
     setNewMsg("");
@@ -530,6 +546,7 @@ export default function SquadHub() {
       sender_id: user.id,
       content,
     });
+    lastMsgTimeRef.current = Date.now();
   };
 
   const formatMsgTime = (dateStr: string) => {

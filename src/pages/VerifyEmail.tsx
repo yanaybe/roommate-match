@@ -12,6 +12,10 @@ export default function VerifyEmail() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [resendCooldown, setResendCooldown] = useState(0);
+  // Resolve the email to display — prefer live session, fall back to query param
+  // (query param is set by AuthedLayout when redirecting an unverified user)
+  const pendingEmail =
+    user?.email ?? new URLSearchParams(window.location.search).get("email") ?? "";
   const [resending, setResending] = useState(false);
   const [verified, setVerified] = useState(false);
   const redirectingRef = useRef(false);
@@ -83,7 +87,7 @@ export default function VerifyEmail() {
     });
     setResending(false);
     if (error) {
-      toast.error(error.message);
+      toast.error("Something went wrong. Please try again.");
     } else {
       toast.success(t("verificationEmailSentToast"));
       setResendCooldown(60);
@@ -174,9 +178,11 @@ export default function VerifyEmail() {
         <p className="text-muted-foreground text-sm mb-1">
           {t("weSentVerificationLink")}
         </p>
-        <p className="text-foreground font-semibold text-sm mb-6">
-          {user?.email}
-        </p>
+        {pendingEmail && (
+          <p className="text-foreground font-bold text-sm mb-6">
+            {pendingEmail}
+          </p>
+        )}
 
         <div className="bg-secondary/50 rounded-2xl p-4 mb-6 text-left space-y-3">
           <div className="flex items-start gap-3">

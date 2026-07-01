@@ -1,6 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useNavigate } from "react-router-dom";
 import type { Apartment } from "@/data/mockData";
 import MatchBadge from "./MatchBadge";
 
@@ -18,6 +19,7 @@ interface ApartmentMapProps {
 }
 
 export default function ApartmentMap({ apartments }: ApartmentMapProps) {
+  const navigate = useNavigate();
   const center: [number, number] = [32.075, 34.775]; // Tel Aviv center
 
   return (
@@ -56,6 +58,12 @@ export default function ApartmentMap({ apartments }: ApartmentMapProps) {
                     {apt.rooms} rooms · {apt.size}m²
                   </span>
                 </div>
+                <button
+                  onClick={() => navigate(`/apartment/${apt.id}`)}
+                  className="mt-2 w-full py-1.5 rounded-lg text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-all"
+                >
+                  View Listing
+                </button>
               </div>
             </Popup>
           </Marker>

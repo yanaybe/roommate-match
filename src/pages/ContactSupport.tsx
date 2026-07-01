@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Phone, Mail, MessageCircle, Instagram, Facebook, ExternalLink, Send, Bug, Lightbulb, Star, CheckCircle } from "lucide-react";
 
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -33,6 +33,7 @@ export default function ContactSupport() {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSentState] = useState(false);
+  const submittingRef = useRef(false);
 
   const categories = [
     { value: "bug", label: t("bugReport"), icon: Bug, color: "text-red-500 bg-red-500/10" },
@@ -46,27 +47,32 @@ export default function ContactSupport() {
   }, []);
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
     if (!message.trim()) { toast.error(t("pleaseWriteMessage")); return; }
     if (!user) { toast.error(t("pleaseLogIn")); return; }
+    submittingRef.current = true;
     setSending(true);
-    const oneDayAgo = new Date(Date.now() - 86_400_000).toISOString();
-    const { count: recentSupport } = await supabase
-      .from("support_messages")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .gte("created_at", oneDayAgo);
-    if ((recentSupport ?? 0) >= 5) {
-      setSending(false);
-      toast.error(t("tooManySupportMessages") || "You've sent too many messages today. Please try again tomorrow.");
-      return;
-    }
+    try {
+      const oneDayAgo = new Date(Date.now() - 86_400_000).toISOString();
+      const { count: recentSupport } = await supabase
+        .from("support_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .gte("created_at", oneDayAgo);
+      if ((recentSupport ?? 0) >= 5) {
+        toast.error(t("tooManySupportMessages"));
+        return;
+      }
 
-    const { error } = await supabase
-      .from("support_messages")
-      .insert({ user_id: user.id, category, message: message.trim() });
-    setSending(false);
-    if (error) { toast.error(t("failedToSend")); }
-    else { setSentState(true); setMessage(""); setTimeout(() => setSentState(false), 3000); toast.success(t("messageSent")); }
+      const { error } = await supabase
+        .from("support_messages")
+        .insert({ user_id: user.id, category, message: message.trim() });
+      if (error) { toast.error(t("failedToSend")); }
+      else { setSentState(true); setMessage(""); setTimeout(() => setSentState(false), 3000); toast.success(t("messageSent")); }
+    } finally {
+      setSending(false);
+      submittingRef.current = false;
+    }
   };
 
   const getPlaceholder = () => {
@@ -162,8 +168,20 @@ export default function ContactSupport() {
                     <motion.button key="send" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={handleSubmit}
                       disabled={sending || !message.trim()}
                       className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:opacity-90 transition-opacity">
-                      {sending ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
-                      {sending ? t("sending") : t("send")}
+                      {sending ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                          </svg>
+                          {t("sending")}
+                        </span>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          {t("send")}
+                        </>
+                      )}
                     </motion.button>
                   )}
                 </AnimatePresence>
@@ -173,8 +191,8 @@ export default function ContactSupport() {
         ) : (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
             className="rounded-2xl bg-primary/5 border border-primary/20 p-5 text-center space-y-2">
-            <p className="text-sm font-semibold text-foreground">Need to send us a message?</p>
-            <p className="text-xs text-muted-foreground">Reach us directly via email or Instagram above — we respond within 24 hours.</p>
+            <p className="text-sm font-semibold text-foreground">{t("needToSendMsg")}</p>
+            <p className="text-xs text-muted-foreground">{t("signInToContact")}</p>
           </motion.div>
         )}
 

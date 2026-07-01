@@ -138,7 +138,7 @@ function FilterRow({
 
 // ────────────────────────────────────────────────────────────────────────────
 
-const TABS = ["Basics", "Vibe", "Amenities"] as const;
+const TABS = ["Basics", "Amenities"] as const;
 type Tab = typeof TABS[number];
 
 export default function FilterModal({ open, onClose, filters, onApply }: FilterModalProps) {
@@ -193,13 +193,6 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
     if (local.sizeMin > 0) c++;
     if (local.matchMin > 0) c++;
     if (local.amenities.length > 0) c++;
-    if (local.smoking !== "any") c++;
-    if (local.pets !== "any") c++;
-    if (local.roomType !== "any") c++;
-    if (local.religiousLevel !== "any") c++;
-    if (local.sleepSchedule !== "any") c++;
-    if (local.cleanlinessMin > 1) c++;
-    if (local.wfh !== "any") c++;
     if (local.furnished !== "any") c++;
     if (local.listingType !== "any") c++;
     return c;
@@ -408,115 +401,6 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                           onClick={() => update("listingType", opt.value)}
                         />
                       ))}
-                    </div>
-                  </div>
-                </>}
-
-                {/* ── VIBE TAB ── */}
-                {activeTab === "Vibe" && <>
-                  {/* Lifestyle rows */}
-                  <div>
-                    <SectionLabel>🌿 {t("lifestylePreferences")}</SectionLabel>
-                    <div className="bg-secondary/50 rounded-2xl px-3 py-2 space-y-2">
-                      <FilterRow
-                        emoji="🚬"
-                        label={t("smokingLbl")}
-                        options={[
-                          { value: "any", label: t("optAny") },
-                          { value: "no", label: t("optNo") },
-                          { value: "yes", label: t("optYes") },
-                        ]}
-                        value={local.smoking}
-                        onChange={(v) => update("smoking", v as Filters["smoking"])}
-                      />
-                      <div className="h-px bg-border/50" />
-                      <FilterRow
-                        emoji="🐾"
-                        label={t("petsLbl")}
-                        options={[
-                          { value: "any", label: t("optAny") },
-                          { value: "no", label: t("optNo") },
-                          { value: "yes", label: t("optYes") },
-                        ]}
-                        value={local.pets}
-                        onChange={(v) => update("pets", v as Filters["pets"])}
-                      />
-                      <div className="h-px bg-border/50" />
-                      <FilterRow
-                        emoji="🏠"
-                        label={t("wfhFilter")}
-                        options={[
-                          { value: "any", label: t("optAny") },
-                          { value: "yes", label: t("optYes") },
-                          { value: "no", label: t("optNo") },
-                        ]}
-                        value={local.wfh}
-                        onChange={(v) => update("wfh", v as Filters["wfh"])}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Religious level */}
-                  <div>
-                    <SectionLabel>🕍 {t("religiousLevelFilter")}</SectionLabel>
-                    <div className="flex flex-wrap gap-2">
-                      {(["any", "secular", "traditional", "religious"] as const).map((opt) => (
-                        <Chip
-                          key={opt}
-                          label={
-                            opt === "any" ? t("optAny") :
-                            opt === "secular" ? t("optSecular") :
-                            opt === "traditional" ? t("optTrad") :
-                            t("optReligious")
-                          }
-                          selected={local.religiousLevel === opt}
-                          onClick={() => update("religiousLevel", opt)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Sleep schedule */}
-                  <div>
-                    <SectionLabel>🌙 {t("sleepScheduleFilter")}</SectionLabel>
-                    <div className="flex gap-2 flex-wrap">
-                      {([
-                        { value: "any" as const, label: t("optAny") },
-                        { value: "early" as const, label: `🌅 ${t("optEarlyBird")}` },
-                        { value: "night" as const, label: `🦉 ${t("optNightOwl")}` },
-                        { value: "flexible" as const, label: `〜 ${t("optFlexible")}` },
-                      ]).map((opt) => (
-                        <Chip
-                          key={opt.value}
-                          label={opt.label}
-                          selected={local.sleepSchedule === opt.value}
-                          onClick={() => update("sleepSchedule", opt.value)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Cleanliness slider */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2.5">
-                      <SectionLabel>✨ {t("minCleanliness")}</SectionLabel>
-                      <span className="text-xs font-bold text-primary -mt-0.5">
-                        {"⭐".repeat(local.cleanlinessMin)}
-                        {"☆".repeat(5 - local.cleanlinessMin)}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={1}
-                      max={5}
-                      step={1}
-                      value={local.cleanlinessMin}
-                      onChange={(e) => update("cleanlinessMin", Number(e.target.value))}
-                      className="w-full accent-primary"
-                    />
-                    <div className="flex justify-between mt-1">
-                      <span className="text-xs text-muted-foreground">{t("sliderRelaxed")}</span>
-                      <span className="text-xs text-muted-foreground">{t("spotless")}</span>
                     </div>
                   </div>
                 </>}

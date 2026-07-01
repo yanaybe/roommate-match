@@ -33,5 +33,33 @@ export function useAdminGuard(): AdminGuard {
       });
   }, [user, loading, navigate]);
 
+  // Real-time subscription — redirect immediately if admin status is revoked
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`admin-guard-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updatedIsAdmin =
+            (payload.new as Record<string, unknown>)?.is_admin === true;
+          setIsAdmin(updatedIsAdmin);
+          if (!updatedIsAdmin) navigate("/", { replace: true });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, navigate]);
+
   return { isAdmin, user };
 }

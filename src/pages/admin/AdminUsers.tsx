@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import AdminUserDetail from "./AdminUserDetail";
@@ -34,6 +35,7 @@ function statusLabel(u: UserRow): { text: string; cls: string } {
 }
 
 export default function AdminUsers() {
+  const { user: adminUser } = useAuth();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -85,10 +87,24 @@ export default function AdminUsers() {
       .update({ is_banned: banned })
       .eq("user_id", userId);
     if (error) {
-      toast.error(error.message);
+      toast.error(`Failed to ${banned ? "ban" : "unban"} user: ${error.message}`);
     } else {
       toast.success(banned ? "User banned" : "User unbanned");
       setUsers((prev) => prev.map((u) => (u.user_id === userId ? { ...u, is_banned: banned } : u)));
+      // Audit log: record admin action
+      if (adminUser) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase as any).from("admin_audit_log").insert({
+            admin_id: adminUser.id,
+            action: banned ? "ban_user" : "unban_user",
+            target_user_id: userId,
+            details: { reason: "admin action" },
+          });
+        } catch {
+          // Audit log failure should not block the primary action
+        }
+      }
     }
   };
 
@@ -102,10 +118,24 @@ export default function AdminUsers() {
       .update({ is_admin: isAdmin })
       .eq("user_id", userId);
     if (error) {
-      toast.error(error.message);
+      toast.error(`Failed to ${isAdmin ? "grant" : "remove"} admin privileges: ${error.message}`);
     } else {
       toast.success(isAdmin ? "Admin granted" : "Admin removed");
       setUsers((prev) => prev.map((u) => (u.user_id === userId ? { ...u, is_admin: isAdmin } : u)));
+      // Audit log: record admin privilege change
+      if (adminUser) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase as any).from("admin_audit_log").insert({
+            admin_id: adminUser.id,
+            action: isAdmin ? "grant_admin" : "revoke_admin",
+            target_user_id: userId,
+            details: { reason: "admin action" },
+          });
+        } catch {
+          // Audit log failure should not block the primary action
+        }
+      }
     }
   };
 

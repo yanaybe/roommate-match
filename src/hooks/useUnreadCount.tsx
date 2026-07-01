@@ -46,7 +46,28 @@ export function UnreadCountProvider({ children }: { children: ReactNode }) {
     setTotalUnread(msgs.filter(m => !readSet.has(m.id)).length);
   }, [user]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+
+    // Subscribe to new messages and read receipts so the badge updates in real-time
+    // without requiring a page refresh. re-running refresh() is acceptable because it
+    // already filters to this user's conversations.
+    const channel = supabase
+      .channel("unread-count-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        () => { refresh(); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "message_read_receipts" },
+        () => { refresh(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [refresh]);
 
   return (
     <UnreadCountContext.Provider value={{ totalUnread, refresh }}>

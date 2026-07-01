@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -72,9 +72,18 @@ export default function Auth() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [resetCooldown, setResetCooldown] = useState(0);
+  const resetIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
+
+  // Clean up password-reset cooldown interval on unmount
+  useEffect(() => {
+    return () => {
+      if (resetIntervalRef.current) clearInterval(resetIntervalRef.current);
+    };
+  }, []);
 
   const pwAnalysis = analyzePassword(password);
 
@@ -222,17 +231,33 @@ export default function Auth() {
               <div className="flex justify-end">
                 <button
                   type="button"
+                  disabled={resetCooldown > 0}
                   onClick={async () => {
                     if (!email) { toast.error(t("enterEmailFirst")); return; }
+                    if (resetCooldown > 0) return;
                     const { error } = await supabase.auth.resetPasswordForEmail(email, {
                       redirectTo: `${window.location.origin}/auth`,
                     });
-                    if (error) toast.error(mapAuthError(error));
-                    else toast.success(t("passwordResetSent"));
+                    if (error) {
+                      toast.error(mapAuthError(error));
+                    } else {
+                      toast.success(t("passwordResetSent"));
+                      setResetCooldown(60);
+                      resetIntervalRef.current = setInterval(() => {
+                        setResetCooldown((c) => {
+                          if (c <= 1) {
+                            clearInterval(resetIntervalRef.current!);
+                            resetIntervalRef.current = null;
+                            return 0;
+                          }
+                          return c - 1;
+                        });
+                      }, 1000);
+                    }
                   }}
-                  className="text-xs text-primary font-semibold hover:underline"
+                  className="text-xs text-primary font-semibold hover:underline disabled:opacity-50"
                 >
-                  {t("forgotPassword")}
+                  {resetCooldown > 0 ? `Resend in ${resetCooldown}s` : t("forgotPassword")}
                 </button>
               </div>
             </div>

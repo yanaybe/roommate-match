@@ -142,6 +142,7 @@ export default function Onboarding() {
   const [form, setForm] = useState<FormData>(initial);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
+  const [photosDialogOpen, setPhotosDialogOpen] = useState(false);
 
   const STEPS = [t("stepBasicInfo"), t("stepLivingHabits"), t("stepLifestyle"), t("stepPersonality"), t("stepPreferences"), t("stepPhotos")];
 
@@ -247,7 +248,7 @@ export default function Onboarding() {
       if (!form.age.trim()) {
         e.age = t("ageRequired");
       } else if (!Number.isInteger(age) || age < 18 || age > 100) {
-        e.age = t("ageBetween16and100");
+        e.age = t("ageBetween18and100");
       }
 
       const city = form.city.trim();
@@ -278,10 +279,10 @@ export default function Onboarding() {
       const minAge = Number(form.preferred_age_min);
       const maxAge = Number(form.preferred_age_max);
       if (!Number.isInteger(minAge) || minAge < 18 || minAge > 100) {
-        e.preferred_age_min = t("ageBetween16and100");
+        e.preferred_age_min = t("ageBetween18and100");
       }
       if (!Number.isInteger(maxAge) || maxAge < 18 || maxAge > 100) {
-        e.preferred_age_max = t("ageBetween16and100");
+        e.preferred_age_max = t("ageBetween18and100");
       }
       if (!e.preferred_age_min && !e.preferred_age_max && minAge >= maxAge) {
         e.preferred_age_max = t("maxAgeGreaterThanMin");
@@ -293,6 +294,7 @@ export default function Onboarding() {
 
   const canProceed = () => {
     if (step === 0) return !!(form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget);
+    if (step === 5) return form.photos.length > 0;
     return true;
   };
 
@@ -306,7 +308,7 @@ export default function Onboarding() {
       city: sanitizeText(currentForm.city) || null,
       neighborhood: sanitizeText(currentForm.neighborhood) || null,
       occupation: sanitizeText(currentForm.occupation) || null,
-      budget: parseInt(currentForm.budget) || 0,
+      budget: currentForm.budget?.trim() ? parseInt(currentForm.budget) : null,
       move_in_date: currentForm.move_in_date || null,
       desired_room_type: currentForm.desired_room_type,
       sleep_schedule: currentForm.sleep_schedule,
@@ -330,15 +332,21 @@ export default function Onboarding() {
       lifestyle_similarity: currentForm.lifestyle_similarity,
       cleanliness_expectations: currentForm.cleanliness_expectations,
       activity_hours: currentForm.activity_hours,
-      bio: sanitizeText(currentForm.bio),
+      bio: currentForm.bio,
       avatar_url: currentForm.photos[0] || null,
       photos: currentForm.photos,
     };
     await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (skipPhotoCheck = false) => {
     if (!user) return;
+
+    // Require at least one photo — show confirmation dialog if none
+    if (!skipPhotoCheck && form.photos.length === 0) {
+      setPhotosDialogOpen(true);
+      return;
+    }
 
     // Sanitize all free-text inputs (strip control chars, bidi overrides, null bytes)
     const safeName       = sanitizeText(form.name);
@@ -347,7 +355,7 @@ export default function Onboarding() {
     const safeBio        = sanitizeText(form.bio);
 
     const ageNum    = parseInt(form.age);
-    const budgetNum = parseInt(form.budget);
+    const budgetNum = form.budget?.trim() ? parseInt(form.budget) : null;
     // Clamp preferred ages to valid range regardless of what was typed
     const minAge = Math.max(18, Math.min(100, parseInt(form.preferred_age_min) || 18));
     const maxAge = Math.max(minAge + 1, Math.min(100, parseInt(form.preferred_age_max) || 40));
@@ -360,7 +368,7 @@ export default function Onboarding() {
       toast.error(t("validAge"));
       return;
     }
-    if (isNaN(budgetNum) || budgetNum < 500) {
+    if (budgetNum === null || isNaN(budgetNum) || budgetNum < 500) {
       toast.error(t("validBudget"));
       return;
     }
@@ -380,7 +388,7 @@ export default function Onboarding() {
       city: safeCity,
       neighborhood: sanitizeText(form.neighborhood) || null,
       occupation: safeOccupation,
-      budget: budgetNum,
+      budget: budgetNum!,
       desired_room_type: form.desired_room_type,
       sleep_schedule: form.sleep_schedule,
       cleanliness: form.cleanliness,
@@ -476,7 +484,7 @@ export default function Onboarding() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">Neighborhood <span className="text-muted-foreground font-normal">(optional)</span></label>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("neighborhoodLbl")} <span className="text-muted-foreground font-normal">({t("optional")})</span></label>
               <input
                 value={form.neighborhood}
                 onChange={(e) => update("neighborhood", e.target.value)}
@@ -497,16 +505,7 @@ export default function Onboarding() {
               <ErrorMsg msg={errors.occupation} />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-semibold text-foreground">{t("monthlyBudget")}</label>
-                <button
-                  type="button"
-                  onClick={() => { update("budget", ""); setErrors((e) => ({ ...e, budget: undefined })); }}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Skip for now →
-                </button>
-              </div>
+              <label className="text-sm font-semibold text-foreground block mb-1.5">{t("monthlyBudget")}</label>
               <input
                 type="number"
                 value={form.budget}
@@ -788,7 +787,7 @@ export default function Onboarding() {
           ))}
         </div>
         <p className="text-xs text-muted-foreground/60 text-center mt-1">
-          {step === 0 ? "Required" : "Optional — you can skip anytime"}
+          {step === 0 ? "Required" : t("optionalSkipAnytime")}
         </p>
       </div>
 
@@ -842,18 +841,26 @@ export default function Onboarding() {
               }
             }}
             disabled={!canProceed() || saving}
-            className="flex-1 flex items-center justify-center gap-1 py-3 gradient-primary text-primary-foreground rounded-xl font-bold text-sm disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1 py-3 gradient-primary text-primary-foreground rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {step < STEPS.length - 1 ? (
+            {saving ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Saving...
+              </span>
+            ) : step < STEPS.length - 1 ? (
               <>{t("nextBtn")} <ArrowRight className="w-4 h-4" /></>
-            ) : saving ? t("savingProfile") : (
+            ) : (
               <>{t("completeBtn")} <Check className="w-4 h-4" /></>
             )}
           </button>
         </div>
         {step >= 1 && step < STEPS.length - 1 && (
           <button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={saving}
             className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
           >
@@ -861,6 +868,32 @@ export default function Onboarding() {
           </button>
         )}
       </div>
+
+      {/* No-photos confirmation dialog */}
+      {photosDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-card rounded-3xl p-6 max-w-sm w-full shadow-elevated border border-border/50">
+            <h3 className="text-base font-extrabold text-foreground mb-2">No photos yet</h3>
+            <p className="text-muted-foreground text-sm mb-5">
+              You haven't added any photos yet. Profiles with photos get 5x more matches. Continue without photos?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPhotosDialogOpen(false)}
+                className="flex-1 py-2.5 bg-secondary text-secondary-foreground rounded-xl font-semibold text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setPhotosDialogOpen(false); handleSubmit(true); }}
+                className="flex-1 py-2.5 gradient-primary text-primary-foreground rounded-xl font-semibold text-sm"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

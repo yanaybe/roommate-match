@@ -25,6 +25,7 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"phone" | "otp" | "done">("phone");
   const [loading, setLoading] = useState(false);
+  const [otpAttempts, setOtpAttempts] = useState(0);
 
   const handleSendOtp = async () => {
     const cleaned = phone.replace(/\s/g, "");
@@ -37,6 +38,7 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
       const { error } = await supabase.auth.updateUser({ phone: cleaned });
       if (error) throw error;
       setStep("otp");
+      setOtpAttempts(0);
       toast.success("OTP sent! Check your SMS.");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -67,7 +69,13 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
       onVerified();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      toast.error(err.message ?? "Invalid code. Please try again.");
+      const newAttempts = otpAttempts + 1;
+      setOtpAttempts(newAttempts);
+      if (newAttempts >= 3) {
+        toast.error("Too many attempts. Please request a new code.");
+      } else {
+        toast.error(err.message ?? "Invalid code. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -136,7 +144,7 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
               </div>
               <button
                 onClick={handleVerifyOtp}
-                disabled={loading || otp.length < 4}
+                disabled={loading || otp.length < 4 || otpAttempts >= 3}
                 className="w-full py-3.5 gradient-primary text-primary-foreground rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
