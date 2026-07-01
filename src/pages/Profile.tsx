@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Settings, ChevronRight, Crown, Sparkles, Bell, LogOut, LogIn, Bookmark, ShieldCheck, Pencil, Building2, Heart, TrendingUp, CreditCard } from "lucide-react";
@@ -298,16 +297,7 @@ export default function Profile() {
       <PremiumSheet open={premiumOpen} onOpenChange={setPremiumOpen} />
       <PhoneVerifySheet open={phoneVerifyOpen} onOpenChange={setPhoneVerifyOpen} onVerified={() => window.location.reload()} />
 
-      {import.meta.env.DEV && (
-        <div className="fixed bottom-24 right-4 z-50">
-          <button
-            onClick={() => { throw new Error("Sentry test — This is your first error!"); }}
-            className="bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-lg opacity-70 hover:opacity-100"
-          >
-            🐛 Test Sentry
-          </button>
-        </div>
-      )}
+
     </div>
   );
 }
