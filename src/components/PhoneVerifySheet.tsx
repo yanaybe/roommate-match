@@ -13,6 +13,30 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Phone, Loader2, CheckCircle2 } from "lucide-react";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "";
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
+
+async function trackOtpAttempt(
+  phone: string,
+  failed: boolean,
+): Promise<{ allowed: boolean; locked_until: string | null }> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/otp-rate-limit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_PUBLISHABLE_KEY,
+        "Authorization": `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({ identifier: phone, action: "otp_verify", failed }),
+    });
+    return await res.json();
+  } catch {
+    // Fail open if edge function is unreachable so users aren't blocked by infra issues
+    return { allowed: true, locked_until: null };
+  }
+}
+
 const OTP_ATTEMPTS_KEY = "otp_attempts";
 const OTP_LOCKOUT_KEY = "otp_lockout_until";
 const LOCKOUT_DURATION_MS = 5 * 60 * 1000; // 5 minutes
@@ -76,6 +100,8 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
       setLockedUntil(0);
       sessionStorage.removeItem(OTP_LOCKOUT_KEY);
       toast.success("OTP sent! Check your SMS.");
+      // Reset any server-side rate limit record when a new OTP is issued
+      trackOtpAttempt(cleaned, false);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
@@ -101,6 +127,9 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
         p_phone: cleaned,
       });
 
+      // Clear server-side rate limit on successful verification
+      trackOtpAttempt(cleaned, false);
+
       setStep("done");
       toast.success("Phone verified! ✅");
       onVerified();
@@ -109,7 +138,16 @@ export default function PhoneVerifySheet({ open, onOpenChange, onVerified }: Pro
       const newAttempts = otpAttempts + 1;
       setOtpAttempts(newAttempts);
       console.error(err);
-      if (newAttempts >= 3) {
+
+      // Report failure to server-side rate limiter and check if now locked
+      const rlResult = await trackOtpAttempt(cleaned, true);
+      if (!rlResult.allowed) {
+        // Server-side lock takes precedence — use a 15-minute local mirror
+        const expiry = Date.now() + 15 * 60 * 1000;
+        sessionStorage.setItem(OTP_LOCKOUT_KEY, String(expiry));
+        setLockedUntil(expiry);
+        toast.error("Too many attempts. Please try again in 15 minutes.");
+      } else if (newAttempts >= 3) {
         const expiry = Date.now() + LOCKOUT_DURATION_MS;
         sessionStorage.setItem(OTP_LOCKOUT_KEY, String(expiry));
         setLockedUntil(expiry);

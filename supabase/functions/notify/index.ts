@@ -116,6 +116,21 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Fire-and-forget push notification — don't await so it doesn't block the response
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  fetch(`${supabaseUrl}/functions/v1/send-push`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${serviceKey}`,
+    },
+    body: JSON.stringify({
+      user_id: user_id,
+      title: title,
+      body: body ?? undefined,
+    }),
+  }).catch((err) => console.error("[notify] send-push fire-and-forget failed:", err));
+
   return new Response(JSON.stringify(data), {
     status: 201,
     headers: { ...corsHeaders, "Content-Type": "application/json" },

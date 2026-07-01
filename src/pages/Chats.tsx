@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -437,7 +438,9 @@ export default function Chats() {
       });
       if (error) throw error;
       setNewMessage("");
-    } catch {
+    } catch (err) {
+      Sentry.captureException(err);
+      console.error("Failed to send message:", err);
       toast.error("Failed to send message. Please try again.");
       lastSentRef.current = Date.now() - 1500;
     } finally {
