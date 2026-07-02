@@ -6,8 +6,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Cigarette, PawPrint } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Cigarette, PawPrint, Home } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/hooks/useLanguage";
 import { analytics } from "@/lib/analytics";
 import { sanitizeText, isSafeImageUrl } from "@/lib/security";
@@ -97,30 +99,18 @@ function SliderField({ label, value, onChange, min = 1, max = 5, labels }: {
   return (
     <div>
       <label className="text-sm font-semibold text-foreground block mb-2">{label}</label>
-      <input
-        type="range" min={min} max={max} value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-primary"
+      <Slider
+        value={[value]}
+        min={min}
+        max={max}
+        step={1}
+        onValueChange={(v) => onChange(v[0])}
+        aria-label={label}
       />
       <div className="flex justify-between text-xs text-muted-foreground mt-1">
         {labels ? labels.map((l, i) => <span key={i}>{l}</span>) : Array.from({ length: max - min + 1 }, (_, i) => <span key={i}>{min + i}</span>)}
       </div>
     </div>
-  );
-}
-
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!value)}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-        value ? "gradient-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/70"
-      }`}
-    >
-      {value && <Check className="w-4 h-4" />}
-      {label}
-    </button>
   );
 }
 
@@ -172,6 +162,20 @@ export default function Onboarding() {
     "Prefer no pets": t("optPreferNoPets"),
   };
   const to = (val: string) => optMap[val] ?? val;
+
+  // Quick move-in chips instead of the native month picker (which rendered
+  // raw "----" chrome and produced YYYY-MM values a `date` column rejects).
+  const monthStart = (offset: number) => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + offset);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  };
+  const moveInOptions = [
+    { key: "asap", label: t("moveInAsap"), value: monthStart(0) },
+    { key: "next", label: t("moveInNextMonth"), value: monthStart(1) },
+    { key: "later", label: t("moveInFewMonths"), value: monthStart(2) },
+  ];
 
   // Guard: redirect unverified users to verify-email, unauthenticated to auth
   useEffect(() => {
@@ -554,12 +558,16 @@ export default function Onboarding() {
               <label className="text-sm font-semibold text-foreground block mb-1.5">
                 {t("moveInLabel")}
               </label>
-              <input
-                type="month"
-                value={form.move_in_date}
-                onChange={(e) => update("move_in_date", e.target.value)}
-                className="w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <div className="flex flex-wrap gap-2">
+                {moveInOptions.map((o) => (
+                  <OptionButton
+                    key={o.key}
+                    label={o.label}
+                    selected={form.move_in_date === o.value}
+                    onClick={() => update("move_in_date", form.move_in_date === o.value ? "" : o.value)}
+                  />
+                ))}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">{t("moveInOptional")}</p>
             </div>
             <div>
@@ -632,8 +640,11 @@ export default function Onboarding() {
               </div>
               <ErrorMsg msg={errors.pet_preference as string | undefined} />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Toggle label={t("workFromHome")} value={form.wfh} onChange={(v) => update("wfh", v)} />
+            <div className="flex items-center justify-between bg-secondary rounded-xl px-4 py-3">
+              <label htmlFor="wfh-switch" className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Home className="w-4 h-4 text-muted-foreground" /> {t("workFromHome")}
+              </label>
+              <Switch id="wfh-switch" checked={form.wfh} onCheckedChange={(v) => update("wfh", v)} />
             </div>
           </div>
         ) : (

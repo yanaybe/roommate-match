@@ -958,6 +958,9 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Onboarding extras
     moveInLabel: "When are you looking to move in?",
+    moveInAsap: "ASAP",
+    moveInNextMonth: "Next month",
+    moveInFewMonths: "In 2–3 months",
     moveInOptional: "Optional — helps match timing",
     dealBreakers: "Deal-breakers",
     lifestyleDetails: "Lifestyle details",
@@ -1930,7 +1933,10 @@ const translations: Record<Language, Record<string, string>> = {
     browseAllCities: "עיין בכל הערים",
 
     // Onboarding extras
-    moveInLabel: "מתי מתוכננת הכניסה?",
+    moveInLabel: "××ª× ××ª××× × ×ª ××× ××¡×?",
+    moveInAsap: "×××",
+    moveInNextMonth: "×××××© ×××",
+    moveInFewMonths: "××¢×× 2–3 ××××©××",
     moveInOptional: "אופציונלי — עוזר בתיאום",
     dealBreakers: "קווים אדומים",
     lifestyleDetails: "פרטי סגנון חיים",
@@ -2894,7 +2900,10 @@ const translations: Record<Language, Record<string, string>> = {
     browseAllCities: "Parcourir toutes les villes",
 
     // Onboarding extras
-    moveInLabel: "Quand souhaitez-vous emménager ?",
+    moveInLabel: "Quand souhaitez-vous emmÃ©nager ?",
+    moveInAsap: "Dès que possible",
+    moveInNextMonth: "Le mois prochain",
+    moveInFewMonths: "Dans 2–3 mois",
     moveInOptional: "Optionnel — aide à synchroniser",
     dealBreakers: "Points non négociables",
     lifestyleDetails: "Détails de style de vie",
