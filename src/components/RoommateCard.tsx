@@ -1,4 +1,4 @@
-import { Heart, Briefcase, Moon, Sun, Sparkles } from "lucide-react";
+import { Heart, Briefcase, Moon, Sun, Sparkles, Home, PawPrint } from "lucide-react";
 import { motion } from "framer-motion";
 import MatchBadge from "./MatchBadge";
 import type { UserProfile } from "@/data/mockData";
@@ -59,10 +59,10 @@ export default function RoommateCard({ user, matchPercent, index }: RoommateCard
             ₪{user.budget.toLocaleString()}/mo
           </span>
           {user.wfh && (
-            <span className="bg-secondary text-secondary-foreground text-xs px-2.5 py-1 rounded-full">🏠 WFH</span>
+            <span className="inline-flex items-center gap-1 bg-secondary text-secondary-foreground text-xs px-2.5 py-1 rounded-full"><Home className="w-3 h-3" /> WFH</span>
           )}
           {user.pets && (
-            <span className="bg-secondary text-secondary-foreground text-xs px-2.5 py-1 rounded-full">🐾 Pets</span>
+            <span className="inline-flex items-center gap-1 bg-secondary text-secondary-foreground text-xs px-2.5 py-1 rounded-full"><PawPrint className="w-3 h-3" /> Pets</span>
           )}
         </div>
       </div>

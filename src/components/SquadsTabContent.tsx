@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
   Percent,
   ChevronDown,
+  CigaretteOff, PawPrint,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useMySquads, useMyInvites, useDiscoverSquads } from "@/hooks/useSquad";
@@ -499,13 +500,13 @@ export default function SquadsTabContent() {
                           </span>
                         )}
                         {squad.no_smoking && (
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                            🚭
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary text-muted-foreground" title="No smoking">
+                            <CigaretteOff className="w-3 h-3" />
                           </span>
                         )}
                         {squad.pet_friendly && (
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                            🐾
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary text-muted-foreground" title="Pet friendly">
+                            <PawPrint className="w-3 h-3" />
                           </span>
                         )}
                       </div>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Camera, X, MapPin, Home, Bed, Bath, Ruler, Building, Calendar, Plus, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, X, MapPin, Home, Bed, Bath, Ruler, Building, Calendar, Plus, Check, Loader2, DoorOpen, Users, Calendar as CalendarIcon2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
+import { AMENITY_ICONS } from "@/lib/amenityIcons";
 import { analytics } from "@/lib/analytics";
 import { validateImageMagicBytes, sanitizeText } from "@/lib/security";
 
@@ -346,18 +347,18 @@ export default function PostApartment() {
   };
 
   const amenities = [
-    { key: "hasBalcony", label: t("amenityBalcony"), icon: "🌅" },
-    { key: "hasParking", label: t("amenityParking"), icon: "🅿️" },
-    { key: "hasElevator", label: t("amenityElevator"), icon: "🛗" },
-    { key: "hasAc", label: t("amenityAC"), icon: "❄️" },
-    { key: "hasLaundry", label: t("amenityLaundry"), icon: "🧺" },
-    { key: "hasWifi", label: t("amenityWifi"), icon: "📶" },
-    { key: "hasGym", label: t("amenityGym"), icon: "💪" },
-    { key: "hasSecurity", label: t("amenitySecurity"), icon: "🔒" },
-    { key: "hasRooftop", label: t("amenityRooftop"), icon: "🏙️" },
-    { key: "hasGarden", label: t("amenityGarden"), icon: "🌿" },
-    { key: "petFriendly", label: t("amenityPetFriendly"), icon: "🐾" },
-    { key: "isFurnished", label: t("amenityFurnished"), icon: "🛋️" },
+    { key: "hasBalcony", label: t("amenityBalcony"), icon: AMENITY_ICONS.Balcony },
+    { key: "hasParking", label: t("amenityParking"), icon: AMENITY_ICONS.Parking },
+    { key: "hasElevator", label: t("amenityElevator"), icon: AMENITY_ICONS.Elevator },
+    { key: "hasAc", label: t("amenityAC"), icon: AMENITY_ICONS.AC },
+    { key: "hasLaundry", label: t("amenityLaundry"), icon: AMENITY_ICONS.Laundry },
+    { key: "hasWifi", label: t("amenityWifi"), icon: AMENITY_ICONS.WiFi },
+    { key: "hasGym", label: t("amenityGym"), icon: AMENITY_ICONS.Gym },
+    { key: "hasSecurity", label: t("amenitySecurity"), icon: AMENITY_ICONS.Security },
+    { key: "hasRooftop", label: t("amenityRooftop"), icon: AMENITY_ICONS.Rooftop },
+    { key: "hasGarden", label: t("amenityGarden"), icon: AMENITY_ICONS.Garden },
+    { key: "petFriendly", label: t("amenityPetFriendly"), icon: AMENITY_ICONS["Pet Friendly"] },
+    { key: "isFurnished", label: t("amenityFurnished"), icon: AMENITY_ICONS.Furnished },
   ];
 
   // Show loading skeleton while fetching existing listing data
@@ -432,9 +433,9 @@ export default function PostApartment() {
                 </div>
                 <div className="grid grid-cols-1 gap-3">
                   {([
-                    { value: "room" as const, emoji: "🚪", title: "A Room", desc: "List a private or shared room in your apartment" },
-                    { value: "entire_place" as const, emoji: "🏠", title: "An Entire Apartment", desc: "List the whole place — ideal for squads and groups" },
-                  ]).map(({ value, emoji, title, desc }) => (
+                    { value: "room" as const, icon: DoorOpen, title: t("postRoomTitle"), desc: t("postRoomDesc") },
+                    { value: "entire_place" as const, icon: Home, title: t("postEntireTitle"), desc: t("postEntireDesc") },
+                  ]).map(({ value, icon: Icon, title, desc }) => (
                     <button
                       key={value}
                       onClick={() => setListingType(value)}
@@ -444,7 +445,9 @@ export default function PostApartment() {
                           : "border-border hover:border-muted-foreground/40"
                       }`}
                     >
-                      <span className="text-3xl shrink-0">{emoji}</span>
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${listingType === value ? "bg-primary/15" : "bg-secondary"}`}>
+                        <Icon className={`w-6 h-6 ${listingType === value ? "text-primary" : "text-muted-foreground"}`} />
+                      </div>
                       <div>
                         <p className={`font-bold text-base ${listingType === value ? "text-primary" : "text-foreground"}`}>{title}</p>
                         <p className="text-muted-foreground text-sm">{desc}</p>
@@ -586,7 +589,7 @@ export default function PostApartment() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label className="text-foreground flex items-center gap-1.5"><span>💰</span> {t("monthlyPrice")}</Label>
+                      <Label className="text-foreground">{t("monthlyPrice")}</Label>
                       <Input type="number" placeholder="3,500" value={form.price} onChange={e => update("price", e.target.value)} className="rounded-xl" />
                     </div>
                     <div className="space-y-2">
@@ -637,7 +640,7 @@ export default function PostApartment() {
                     <div className="grid grid-cols-2 gap-3">
                       {["Private", "Shared"].map(type => (
                         <button key={type} onClick={() => update("roomType", type)} className={`p-4 rounded-2xl border-2 transition-all text-center ${form.roomType === type ? "border-primary bg-primary/10" : "border-border hover:border-muted-foreground/30"}`}>
-                          <span className="text-2xl mb-1 block">{type === "Private" ? "🚪" : "👥"}</span>
+                          <span className="flex justify-center mb-1">{type === "Private" ? <DoorOpen className={`w-6 h-6 ${form.roomType === type ? "text-primary" : "text-muted-foreground"}`} /> : <Users className={`w-6 h-6 ${form.roomType === type ? "text-primary" : "text-muted-foreground"}`} />}</span>
                           <span className={`font-semibold text-sm ${form.roomType === type ? "text-primary" : "text-foreground"}`}>{type === "Private" ? t("privateRoom") : t("sharedRoom")}</span>
                         </button>
                       ))}
@@ -675,11 +678,11 @@ export default function PostApartment() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  {amenities.map(({ key, label, icon }) => {
+                  {amenities.map(({ key, label, icon: Icon }) => {
                     const active = form[key as keyof typeof form] as boolean;
                     return (
                       <button key={key} onClick={() => update(key, !active)} className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all ${active ? "border-primary bg-primary/10" : "border-border hover:border-muted-foreground/30"}`}>
-                        <span className="text-xl">{icon}</span>
+                        <Icon className={`w-5 h-5 shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`} />
                         <span className={`font-medium text-sm ${active ? "text-primary" : "text-foreground"}`}>{label}</span>
                         {active && <Check className="w-4 h-4 text-primary ml-auto" />}
                       </button>
@@ -729,16 +732,16 @@ export default function PostApartment() {
 
                     <div className="flex flex-wrap gap-1.5">
                       {amenities.filter(a => form[a.key as keyof typeof form]).map(a => (
-                        <span key={a.key} className="text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground">{a.icon} {a.label}</span>
+                        <span key={a.key} className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground"><a.icon className="w-3 h-3" /> {a.label}</span>
                       ))}
                     </div>
 
                     <div className="flex items-center gap-2 pt-1">
                       {listingType === "entire_place"
-                        ? <span className="text-xs px-2.5 py-1 bg-primary/10 rounded-full text-primary">🏠 Entire Apartment</span>
+                        ? <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-primary/10 rounded-full text-primary"><Home className="w-3 h-3" /> {t("entireApartment")}</span>
                         : <span className="text-xs px-2.5 py-1 bg-accent rounded-full text-accent-foreground">{form.roomType} Room</span>
                       }
-                      <span className="text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground">📅 {form.availableDate}</span>
+                      <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground"><CalendarIcon2 className="w-3 h-3" /> {form.availableDate}</span>
                       {totalImageCount > 0 && (
                         <span className="text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground">📷 {totalImageCount} photos</span>
                       )}

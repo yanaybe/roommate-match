@@ -34,7 +34,7 @@ import { useBlockReport } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
 import { useLanguage } from "@/hooks/useLanguage";
 import BoostListingSheet from "@/components/BoostListingSheet";
-import { Zap } from "lucide-react";
+import { Zap, Flame, Home, PawPrint } from "lucide-react";
 
 const CITY_COORDS: Record<string, [number, number]> = {
   "Tel Aviv": [32.0853, 34.7818], "Jerusalem": [31.7683, 35.2137],
@@ -287,7 +287,7 @@ export default function ApartmentDetail() {
             <MapPin className="w-9 h-9 text-muted-foreground" />
           </div>
           <h2 className="text-xl font-extrabold text-foreground mb-2">{t("apartmentNotFound")}</h2>
-          <p className="text-muted-foreground text-sm mb-6">This listing may have been removed or is no longer available.</p>
+          <p className="text-muted-foreground text-sm mb-6">{t("listingRemovedDesc")}</p>
           <button
             onClick={() => navigate("/")}
             className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
@@ -333,6 +333,7 @@ export default function ApartmentDetail() {
           {/* Nav buttons */}
           <button
             onClick={() => navigate(-1)}
+            aria-label={t("back")}
             className="absolute top-4 left-4 bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
@@ -348,12 +349,15 @@ export default function ApartmentDetail() {
                   navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info(`Copy: ${url}`));
                 }
               }}
+              aria-label={t("shareListing")}
               className="bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg"
             >
               <Share2 className="w-4 h-4 text-foreground" />
             </button>
             <button
               onClick={() => requireAuth(() => toggleSave())}
+              aria-label={saved ? t("unsave") : t("save")}
+              aria-pressed={saved}
               className="bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg"
             >
               <Bookmark
@@ -363,6 +367,7 @@ export default function ApartmentDetail() {
             <div className="relative">
               <button
                 onClick={() => setMenuOpen((v) => !v)}
+                aria-label={t("listingOptions")}
                 className="bg-card/70 backdrop-blur-md p-2.5 rounded-full shadow-lg"
               >
                 <MoreVertical className="w-4 h-4 text-foreground" />
@@ -414,12 +419,14 @@ export default function ApartmentDetail() {
             <>
               <button
                 onClick={prevImg}
+                aria-label={t("previousPhoto")}
                 className="absolute left-3 top-1/2 -translate-y-1/2 bg-card/70 backdrop-blur-md p-2 rounded-full shadow-lg hover:bg-card/90 transition-colors"
               >
                 <ChevronLeft className="w-5 h-5 text-foreground" />
               </button>
               <button
                 onClick={nextImg}
+                aria-label={t("nextPhoto")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 bg-card/70 backdrop-blur-md p-2 rounded-full shadow-lg hover:bg-card/90 transition-colors"
               >
                 <ChevronRight className="w-5 h-5 text-foreground" />
@@ -439,8 +446,8 @@ export default function ApartmentDetail() {
 
           {/* Hot listing badge */}
           {apartment.isBoosted && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 gradient-primary text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg">
-              🔥 Hot Listing
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 gradient-primary text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg">
+              <Flame className="w-3.5 h-3.5" /> {t("hotListing")}
             </div>
           )}
         </div>
@@ -483,7 +490,7 @@ export default function ApartmentDetail() {
             </div>
             {apartment.listingType === "entire_place" && (
               <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                🏠 Entire Apartment
+                <Home className="w-3 h-3" /> {t("entireApartment")}
               </span>
             )}
           </div>
@@ -493,7 +500,7 @@ export default function ApartmentDetail() {
         <div className="space-y-3">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">{apartment.listingType === "entire_place" ? "This Listing" : t("yourRoom")}</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-primary">{apartment.listingType === "entire_place" ? t("thisListing") : t("yourRoom")}</span>
               <div className="flex-1 h-px bg-primary/20" />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -589,8 +596,8 @@ export default function ApartmentDetail() {
                         Clean: {rm.cleanliness}/5
                       </span>
                       {rm.pets && (
-                        <span className="bg-secondary text-secondary-foreground text-xs px-2 py-0.5 rounded-full">
-                          🐾 Pets
+                        <span className="inline-flex items-center gap-1 bg-secondary text-secondary-foreground text-xs px-2 py-0.5 rounded-full">
+                          <PawPrint className="w-3 h-3" /> {t("petsChip")}
                         </span>
                       )}
                     </div>

@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
   Percent,
   ChevronDown,
+  Vote, Home, CigaretteOff, PawPrint,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useMySquads, useMyInvites, useDiscoverSquads } from "@/hooks/useSquad";
@@ -306,12 +307,14 @@ export default function MySquads() {
                   <h3 className="font-extrabold text-foreground text-base mb-3">What's a Squad?</h3>
                   <div className="space-y-2.5">
                     {[
-                      { emoji: "👥", text: "Invite 2–4 friends who are also apartment hunting" },
-                      { emoji: "🗳️", text: "Browse listings together and vote on your favorites" },
-                      { emoji: "🏠", text: "Move in as a group — easier search, more negotiating power" },
-                    ].map(({ emoji, text }) => (
-                      <div key={emoji} className="flex items-start gap-3">
-                        <span className="text-lg leading-none mt-0.5">{emoji}</span>
+                      { icon: Users, text: "Invite 2–4 friends who are also apartment hunting" },
+                      { icon: Vote, text: "Browse listings together and vote on your favorites" },
+                      { icon: Home, text: "Move in as a group — easier search, more negotiating power" },
+                    ].map(({ icon: Icon, text }) => (
+                      <div key={text} className="flex items-start gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4 text-primary" />
+                        </div>
                         <p className="text-sm text-foreground">{text}</p>
                       </div>
                     ))}
@@ -577,13 +580,13 @@ export default function MySquads() {
                             </span>
                           )}
                           {squad.no_smoking && (
-                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                              🚭
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary text-muted-foreground" title="No smoking">
+                              <CigaretteOff className="w-3 h-3" />
                             </span>
                           )}
                           {squad.pet_friendly && (
-                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                              🐾
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary text-muted-foreground" title="Pet friendly">
+                              <PawPrint className="w-3 h-3" />
                             </span>
                           )}
                         </div>

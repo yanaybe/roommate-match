@@ -16,6 +16,13 @@ import MatchBadge from "@/components/MatchBadge";
 import { sanitizeText } from "@/lib/security";
 import { toast } from "sonner";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -49,20 +56,20 @@ interface Message {
 function getSharedTraits(a: any, b: any): string[] {
   const traits: string[] = [];
   if (a?.sleep_schedule && a.sleep_schedule === b?.sleep_schedule)
-    traits.push(`🌙 Both ${a.sleep_schedule.toLowerCase()}s`);
+    traits.push(`Both ${a.sleep_schedule.toLowerCase()}s`);
   if (a?.lifestyle_vibe && a.lifestyle_vibe === b?.lifestyle_vibe)
-    traits.push(`🌟 Both "${a.lifestyle_vibe}"`);
+    traits.push(`Both "${a.lifestyle_vibe}"`);
   if (a?.wfh && b?.wfh)
-    traits.push("🏠 Both work from home");
+    traits.push("Both work from home");
   if (a?.city && a.city === b?.city)
-    traits.push(`📍 Both in ${a.city}`);
+    traits.push(`Both in ${a.city}`);
   if (!a?.smoking && !b?.smoking)
-    traits.push("🚭 Both non-smokers");
+    traits.push("Both non-smokers");
   if (!a?.pets && !b?.pets)
-    traits.push("🐾 Neither has pets");
+    traits.push("Neither has pets");
   if (a?.budget && b?.budget) {
     const diff = Math.abs(a.budget - b.budget) / ((a.budget + b.budget) / 2);
-    if (diff <= 0.2) traits.push("💰 Similar budgets");
+    if (diff <= 0.2) traits.push("Similar budgets");
   }
   return traits.slice(0, 3);
 }
@@ -99,7 +106,6 @@ export default function Chats() {
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [otherProfile, setOtherProfile] = useState<any>(null);
@@ -557,12 +563,6 @@ export default function Chats() {
                     </span>
                   )}
                 </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(c.id); }}
-                  className="p-2 text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </motion.div>
             ))}
           </AnimatePresence>
@@ -579,6 +579,7 @@ export default function Chats() {
         <div className="px-4 pt-12 desk:pt-4 pb-3 flex items-center gap-3">
           <button
             onClick={() => { setActiveConv(null); loadConversations(); }}
+            aria-label={t("back")}
             className="desk:hidden p-1 -ml-1 text-foreground"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -594,51 +595,42 @@ export default function Chats() {
             <h2 className="font-bold text-foreground text-sm">{conv?.other_name}</h2>
             <p className="text-muted-foreground text-xs">
               {activeConvData?.created_at
-                ? `Matched ${formatDistanceToNow(new Date(activeConvData.created_at), { addSuffix: true })}`
+                ? t("matchedAgo").replace("{time}", formatDistanceToNow(new Date(activeConvData.created_at), { addSuffix: true }))
                 : otherProfile?.last_seen
-                  ? `Active ${formatDistanceToNow(new Date(otherProfile.last_seen), { addSuffix: true })}`
+                  ? t("activeAgo").replace("{time}", formatDistanceToNow(new Date(otherProfile.last_seen), { addSuffix: true }))
                   : t("online")}
             </p>
           </div>
-          <div className="relative">
-            <button
-              onClick={() => setChatMenuOpen((v) => !v)}
-              className="p-2 rounded-full hover:bg-muted/50 transition-colors"
-            >
-              <MoreVertical className="w-5 h-5 text-muted-foreground" />
-            </button>
-            {chatMenuOpen && (
-              <div className="absolute right-0 top-10 w-48 bg-card rounded-2xl shadow-elevated border border-border/50 overflow-hidden z-50">
-                <button
-                  onClick={() => {
-                    setChatMenuOpen(false);
-                    if (isBlocked) { unblockUser(); }
-                    else { blockUser().then((ok) => { if (ok) { setActiveConv(null); loadConversations(); } }); }
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
-                >
-                  <Ban size={15} className="text-destructive shrink-0" />
-                  <span className="text-foreground">{isBlocked ? t("unblockUser") : t("blockUser")}</span>
-                </button>
-                <div className="border-t border-border/40" />
-                <button
-                  onClick={() => { setChatMenuOpen(false); setReportOpen(true); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
-                >
-                  <Flag size={15} className="text-destructive shrink-0" />
-                  <span className="text-foreground">{t("reportUser")}</span>
-                </button>
-                <div className="border-t border-border/40" />
-                <button
-                  onClick={() => { setChatMenuOpen(false); setDeleteTarget(activeConv); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-sm"
-                >
-                  <Trash2 size={15} className="text-destructive shrink-0" />
-                  <span className="text-foreground">{t("deleteChat")}</span>
-                </button>
-              </div>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button aria-label={t("chatOptions")} className="p-2 rounded-full hover:bg-muted/50 transition-colors">
+                <MoreVertical className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 rounded-2xl">
+              <DropdownMenuItem
+                onClick={() => {
+                  if (isBlocked) { unblockUser(); }
+                  else { blockUser().then((ok) => { if (ok) { setActiveConv(null); loadConversations(); } }); }
+                }}
+              >
+                <Ban className="w-4 h-4 shrink-0" />
+                {isBlocked ? t("unblockUser") : t("blockUser")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setReportOpen(true)}>
+                <Flag className="w-4 h-4 shrink-0" />
+                {t("reportUser")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setDeleteTarget(activeConv)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="w-4 h-4 shrink-0" />
+                {t("deleteChat")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -714,7 +706,7 @@ export default function Chats() {
       {/* Icebreakers */}
       {messages.length === 0 && icebreakers.length > 0 && (
         <div className="px-4 pb-2 shrink-0">
-          <p className="text-xs text-muted-foreground mb-2 font-medium">💬 Tap to start the conversation</p>
+          <p className="text-xs text-muted-foreground mb-2 font-medium">{t("tapToStart")}</p>
           <div className="flex flex-wrap gap-2">
             {icebreakers.map((starter) => (
               <button
@@ -743,7 +735,7 @@ export default function Chats() {
                 />
               ))}
             </div>
-            <span className="text-xs text-muted-foreground">{activeConvData?.other_name} is typing…</span>
+            <span className="text-xs text-muted-foreground">{t("isTyping").replace("{name}", activeConvData?.other_name ?? "")}</span>
           </div>
         </div>
       )}
@@ -769,7 +761,7 @@ export default function Chats() {
             maxLength={2000}
             className="flex-1 bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <button onClick={sendMessage} disabled={!newMessage.trim() || sending} className="gradient-primary p-2.5 rounded-full disabled:opacity-50">
+          <button onClick={sendMessage} disabled={!newMessage.trim() || sending} aria-label={t("sendMessage")} className="gradient-primary p-2.5 rounded-full disabled:opacity-50">
             <Send className="w-4 h-4 text-primary-foreground" />
           </button>
         </div>
@@ -788,8 +780,8 @@ export default function Chats() {
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
           <Send className="w-7 h-7 text-primary" />
         </div>
-        <p className="font-semibold text-foreground">Select a conversation</p>
-        <p className="text-muted-foreground text-sm mt-1">Choose from your messages on the left</p>
+        <p className="font-semibold text-foreground">{t("selectConversation")}</p>
+        <p className="text-muted-foreground text-sm mt-1">{t("chooseFromMessages")}</p>
       </div>
     </div>
   );

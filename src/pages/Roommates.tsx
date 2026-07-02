@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { X, Heart, RotateCcw, ArrowRight, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Heart, RotateCcw, ArrowRight, Lock, ChevronLeft, ChevronRight, Hand, Globe, UserRound } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { isUUID } from "@/lib/profileUtils";
 import { analytics } from "@/lib/analytics";
 
-function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
+function SwipeTutorial({ onDismiss, passLabel, likeLabel }: { onDismiss: () => void; passLabel: string; likeLabel: string }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     timerRef.current = setTimeout(onDismiss, 2500);
@@ -33,18 +33,18 @@ function SwipeTutorial({ onDismiss }: { onDismiss: () => void }) {
     >
       <div className="flex flex-col items-center gap-1 text-white">
         <ChevronLeft className="w-8 h-8 opacity-90" />
-        <span className="text-sm font-bold">Pass</span>
+        <span className="text-sm font-bold">{passLabel}</span>
       </div>
       <motion.div
         animate={{ x: [-12, 12, -12] }}
         transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
-        className="text-3xl select-none"
+        className="select-none"
       >
-        👆
+        <Hand className="w-9 h-9 text-white" />
       </motion.div>
       <div className="flex flex-col items-center gap-1 text-white">
         <ChevronRight className="w-8 h-8 opacity-90" />
-        <span className="text-sm font-bold">Like</span>
+        <span className="text-sm font-bold">{likeLabel}</span>
       </div>
     </motion.div>
   );
@@ -218,9 +218,9 @@ export default function Roommates() {
         const likesAfter = likesUsed + 1;
         const remaining_likes = likesLimit - likesAfter;
         if (subscriptionTier === "free" && remaining_likes > 0 && remaining_likes <= 5) {
-          toast(`${remaining_likes} like${remaining_likes === 1 ? "" : "s"} left today ✨`, {
-            description: "Upgrade to keep swiping — your next match could be out there.",
-            action: { label: "Upgrade", onClick: openPremiumSheet },
+          toast(t("likesLeftToday").replace("{count}", String(remaining_likes)), {
+            description: t("upgradeKeepSwiping"),
+            action: { label: t("upgradeAction"), onClick: openPremiumSheet },
           });
         }
       } else {
@@ -279,16 +279,22 @@ export default function Roommates() {
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">{t("findRoommates")}</h1>
             {myProfile?.city && (
-              <button
-                onClick={() => {
-                  const next = !showAllCities;
-                  setShowAllCities(next);
-                  localStorage.setItem("show_all_cities", String(next));
-                }}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 bg-secondary rounded-lg"
-              >
-                {showAllCities ? `📍 ${myProfile.city} only` : "🌍 All cities"}
-              </button>
+              <div className="flex items-center bg-secondary rounded-xl p-0.5" role="group" aria-label={t("cityScope")}>
+                <button
+                  onClick={() => { setShowAllCities(false); localStorage.setItem("show_all_cities", "false"); }}
+                  aria-pressed={!showAllCities}
+                  className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${!showAllCities ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {myProfile.city}
+                </button>
+                <button
+                  onClick={() => { setShowAllCities(true); localStorage.setItem("show_all_cities", "true"); }}
+                  aria-pressed={showAllCities}
+                  className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${showAllCities ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Globe className="w-3 h-3" /> {t("allCities")}
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -300,7 +306,9 @@ export default function Roommates() {
             onClick={() => navigate("/onboarding")}
             className="w-full flex items-center gap-3 p-3.5 bg-primary/10 border border-primary/20 rounded-2xl text-left"
           >
-            <span className="text-2xl">👤</span>
+            <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <UserRound className="w-5 h-5 text-primary" />
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-primary">{t("completeProfileBanner")}</p>
               <p className="text-xs text-muted-foreground">{t("needProfileToSwipe")}</p>
@@ -345,7 +353,7 @@ export default function Roommates() {
                   {/* One-time swipe tutorial overlay */}
                   <AnimatePresence>
                     {showTutorial && (
-                      <SwipeTutorial onDismiss={() => {
+                      <SwipeTutorial passLabel={t("passLbl")} likeLabel={t("likeLbl")} onDismiss={() => {
                         setShowTutorial(false);
                         localStorage.setItem("swipe_tutorial_seen", "true");
                       }} />
@@ -357,23 +365,50 @@ export default function Roommates() {
                   <div className="w-24 h-24 gradient-primary rounded-full flex items-center justify-center mb-5 shadow-elevated">
                     <Heart className="w-10 h-10 text-primary-foreground" />
                   </div>
-                  <h2 className="text-xl font-extrabold text-foreground mb-2">{t("noMoreProfiles")}</h2>
-                  <p className="text-muted-foreground text-sm mb-6 max-w-xs">{t("checkBackLater")}</p>
-                  <div className="flex flex-col gap-3 w-full max-w-xs">
-                    <button
-                      onClick={() => navigate("/onboarding?edit=true")}
-                      className="w-full py-3 gradient-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-all"
-                    >
-                      {t("adjustPreferences")}
-                    </button>
-                    <button
-                      onClick={handleUndo}
-                      disabled={swiped.length === 0}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-secondary rounded-xl text-sm font-semibold text-foreground hover:bg-secondary/80 disabled:opacity-40 active:scale-[0.98] transition-all"
-                    >
-                      {canUndo ? <RotateCcw className="w-4 h-4" /> : <Lock className="w-4 h-4" />} Undo last swipe
-                    </button>
-                  </div>
+                  {cityFilter && items.length === 0 ? (
+                    /* Cold start: nobody in this city yet — offer the all-cities escape */
+                    <>
+                      <h2 className="text-xl font-extrabold text-foreground mb-2">
+                        {t("noProfilesInCity").replace("{city}", cityFilter)}
+                      </h2>
+                      <p className="text-muted-foreground text-sm mb-6 max-w-xs">{t("beEarlyInCity")}</p>
+                      <div className="flex flex-col gap-3 w-full max-w-xs">
+                        <button
+                          onClick={() => { setShowAllCities(true); localStorage.setItem("show_all_cities", "true"); }}
+                          className="w-full flex items-center justify-center gap-2 py-3 gradient-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-all"
+                        >
+                          <Globe className="w-4 h-4" /> {t("browseAllCities")}
+                        </button>
+                        <button
+                          onClick={() => navigate("/onboarding?edit=true")}
+                          className="w-full py-3 bg-secondary rounded-xl text-sm font-semibold text-foreground hover:bg-secondary/80 active:scale-[0.98] transition-all"
+                        >
+                          {t("adjustPreferences")}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    /* Deck exhausted: user swiped through everyone */
+                    <>
+                      <h2 className="text-xl font-extrabold text-foreground mb-2">{t("noMoreProfiles")}</h2>
+                      <p className="text-muted-foreground text-sm mb-6 max-w-xs">{t("checkBackLater")}</p>
+                      <div className="flex flex-col gap-3 w-full max-w-xs">
+                        <button
+                          onClick={() => navigate("/onboarding?edit=true")}
+                          className="w-full py-3 gradient-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-all"
+                        >
+                          {t("adjustPreferences")}
+                        </button>
+                        <button
+                          onClick={handleUndo}
+                          disabled={swiped.length === 0}
+                          className="w-full flex items-center justify-center gap-2 py-3 bg-secondary rounded-xl text-sm font-semibold text-foreground hover:bg-secondary/80 disabled:opacity-40 active:scale-[0.98] transition-all"
+                        >
+                          {canUndo ? <RotateCcw className="w-4 h-4" /> : <Lock className="w-4 h-4" />} {t("undoLastSwipe")}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -393,12 +428,14 @@ export default function Roommates() {
                   </button>
                   <button
                     onClick={() => handleSwipe("left")}
+                    aria-label={t("passLbl")}
                     className="w-16 h-16 bg-card border-2 border-destructive/30 rounded-full flex items-center justify-center shadow-card hover:border-destructive/60 hover:scale-110 hover:shadow-elevated active:scale-95 transition-all duration-150"
                   >
                     <X className="w-7 h-7 text-destructive" />
                   </button>
                   <button
                     onClick={() => handleSwipe("right")}
+                    aria-label={t("likeLbl")}
                     className="w-16 h-16 gradient-primary rounded-full flex items-center justify-center shadow-card hover:scale-110 hover:shadow-elevated active:scale-95 transition-all duration-150"
                   >
                     <Heart className="w-7 h-7 text-primary-foreground" />

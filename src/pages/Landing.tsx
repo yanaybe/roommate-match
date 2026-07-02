@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useLanguage, languages } from "@/hooks/useLanguage";
 import { PLAN_PRICES } from "@/lib/plans";
+import { Dna } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -91,6 +92,8 @@ export default function Landing() {
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => setLangOpen((o) => !o)}
+                aria-label="Change language"
+                aria-expanded={langOpen}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
                 <Globe className="w-4 h-4" />
@@ -222,7 +225,7 @@ export default function Landing() {
                   {l.match}% match
                 </div>
                 <div className="absolute top-3 right-3 bg-black/50 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm flex items-center gap-1">
-                  <Lock className="w-2.5 h-2.5" />Sign in to view
+                  <Lock className="w-2.5 h-2.5" />{t("signInToView")}
                 </div>
               </div>
               <div className="p-3">
@@ -297,17 +300,17 @@ export default function Landing() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             {
-              icon: "🧬",
+              icon: Dna,
               title: t("whyFactorLabel"),
               desc: t("whyFactorDesc"),
             },
             {
-              icon: "👥",
+              icon: Users,
               title: t("whySquadLabel"),
               desc: t("whySquadDesc"),
             },
             {
-              icon: "🔒",
+              icon: Lock,
               title: t("whyVerifiedLabel"),
               desc: t("whyVerifiedDesc"),
             },
@@ -317,7 +320,9 @@ export default function Landing() {
               variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }} custom={i}
               className="bg-card rounded-2xl p-6 shadow-card flex flex-col gap-3 text-center items-center"
             >
-              <span className="text-4xl mb-1">{item.icon}</span>
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-1">
+                <item.icon className="w-6 h-6 text-primary" />
+              </div>
               <h3 className="font-bold text-foreground text-base">{item.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
             </motion.div>

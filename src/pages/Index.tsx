@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/react";
-import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, UserRound, Sparkles, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import React, { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import ApartmentCard from "@/components/ApartmentCard";
@@ -32,6 +32,7 @@ const CITY_COORDS: Record<string, [number, number]> = {
 
 // Rotating live-activity strip — hides after 5 visits or user dismissal
 function ActivityStrip() {
+  const { t } = useLanguage();
   const [items, setItems] = React.useState<string[]>([]);
   const [idx, setIdx] = React.useState(0);
   const [visible, setVisible] = React.useState(false);
@@ -63,11 +64,12 @@ function ActivityStrip() {
 
   return (
     <div className="mx-4 mb-3 flex items-center gap-2 bg-primary/5 border border-primary/15 rounded-xl px-3 py-2 text-xs">
-      <span className="font-bold text-primary shrink-0">Live</span>
+      <span className="font-bold text-primary shrink-0">{t("liveLabel")}</span>
       <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
       <span className="flex-1 truncate text-foreground">{items[idx]}</span>
       <button
         onClick={() => { setVisible(false); localStorage.setItem("activity_strip_views", "5"); }}
+        aria-label={t("dismiss")}
         className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
       >
         <X className="w-3 h-3" />
@@ -172,6 +174,16 @@ export default function Index() {
     try { localStorage.setItem(SQUAD_BANNER_KEY, String(Date.now())); } catch { /* storage unavailable */ }
     setSquadBannerDismissed(true);
   };
+
+  // One promo banner at a time, priority-ordered — stacked banners pushed
+  // listings below the fold on mobile. Complete-profile wins (blocks matching),
+  // then the squad pitch, then the ambient activity strip.
+  const promoSlot: "profile" | "squad" | "activity" =
+    user && profile && !profile.onboarding_complete
+      ? "profile"
+      : user && profile?.onboarding_complete && !squadsLoading && squads.length === 0 && !squadBannerDismissed
+      ? "squad"
+      : "activity";
 
   // Debounce search input by 300ms so filtering doesn't fire on every keystroke
   useEffect(() => {
@@ -316,11 +328,12 @@ export default function Index() {
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
                 Roo<span className="text-primary">Match</span>
               </h1>
-              <p className="text-muted-foreground text-sm">Find your perfect roommate or apartment</p>
+              <p className="text-muted-foreground text-sm">{t("heroFindPerfectRoommate")}</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setView(view === "list" ? "map" : "list")}
+                aria-label={view === "list" ? t("mapView") : t("listView")}
                 className="bg-secondary p-2.5 rounded-xl hover:bg-secondary/80 active:scale-95 transition-all"
               >
                 {view === "list" ? (
@@ -344,6 +357,7 @@ export default function Index() {
             </div>
             <button
               onClick={() => setFiltersOpen(true)}
+              aria-label={t("filters")}
               className="bg-secondary p-2.5 rounded-xl relative hover:bg-secondary/80 active:scale-95 transition-all"
             >
               <SlidersHorizontal className="w-4 h-4 text-secondary-foreground" />
@@ -367,18 +381,22 @@ export default function Index() {
             className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-2xl text-sm font-bold shadow-elevated active:scale-[0.98] transition-transform"
           >
             <RefreshCw className="w-4 h-4" />
-            {newApartments.length} new listing{newApartments.length !== 1 ? "s" : ""} — tap to show
+            {newApartments.length === 1
+              ? t("newListingBanner")
+              : t("newListingsBanner").replace("{count}", String(newApartments.length))}
           </button>
         </div>
       )}
 
-      {user && profile && !profile.onboarding_complete && (
+      {promoSlot === "profile" && (
         <div className="max-w-5xl mx-auto px-4 pt-3">
           <button
             onClick={() => navigate("/onboarding")}
             className="w-full flex items-center gap-3 p-3.5 bg-primary/10 border border-primary/20 rounded-2xl text-left"
           >
-            <span className="text-2xl">👤</span>
+            <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <UserRound className="w-5 h-5 text-primary" />
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-primary">{t("completeProfileBanner")}</p>
               <p className="text-xs text-muted-foreground">{t("unlockMatchBanner")}</p>
@@ -388,10 +406,12 @@ export default function Index() {
         </div>
       )}
 
-      {user && profile?.onboarding_complete && !squadsLoading && squads.length === 0 && !squadBannerDismissed && (
+      {promoSlot === "squad" && (
         <div className="max-w-5xl mx-auto px-4 pt-3">
           <div className="w-full flex items-center gap-3 p-3.5 bg-gradient-to-r from-violet-500/10 to-pink-500/10 border border-primary/20 rounded-2xl">
-            <span className="text-2xl">👥</span>
+            <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-primary" />
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-primary">{t("searchingWithFriends")}</p>
               <p className="text-xs text-muted-foreground">{t("createSquadBanner")}</p>
@@ -400,16 +420,16 @@ export default function Index() {
               onClick={() => navigate("/create-squad")}
               className="shrink-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl"
             >
-              Create
+              {t("createAction")}
             </button>
-            <button onClick={dismissSquadBanner} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={dismissSquadBanner} aria-label={t("dismiss")} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
-      <ActivityStrip />
+      {promoSlot === "activity" && <ActivityStrip />}
 
       <div className="max-w-5xl mx-auto px-4 pt-4">
         {view === "list" ? (
@@ -424,8 +444,8 @@ export default function Index() {
             {recommended.length > 0 ? (
               <div className="mb-5">
                 <div className="flex items-baseline justify-between mb-2">
-                  <h2 className="text-base font-extrabold text-foreground">Picked for you</h2>
-                  <p className="text-xs text-muted-foreground">Based on your budget & location</p>
+                  <h2 className="text-base font-extrabold text-foreground">{t("pickedForYou")}</h2>
+                  <p className="text-xs text-muted-foreground">{t("basedOnBudgetLocation")}</p>
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory">
                   {recommended.map((apt, i) => (
@@ -441,10 +461,12 @@ export default function Index() {
                   onClick={() => navigate("/onboarding?edit=true")}
                   className="w-full flex items-center gap-3 p-3.5 bg-primary/5 border border-primary/20 rounded-2xl text-left hover:bg-primary/10 transition-colors"
                 >
-                  <span className="text-2xl">✨</span>
+                  <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground">Complete your profile to get personalized picks</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Add your budget & city to unlock tailored recommendations</p>
+                    <p className="text-sm font-semibold text-foreground">{t("completePicksTitle")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t("completePicksDesc")}</p>
                   </div>
                   <ArrowRight className="w-4 h-4 text-primary shrink-0" />
                 </button>
@@ -463,8 +485,8 @@ export default function Index() {
                         <Users className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-foreground text-sm">Searching with friends?</p>
-                        <p className="text-xs text-muted-foreground">Create a Squad — browse, vote, and move in together.</p>
+                        <p className="font-bold text-foreground text-sm">{t("searchingWithFriends")}</p>
+                        <p className="text-xs text-muted-foreground">{t("createSquadBanner")}</p>
                       </div>
                       <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                     </div>
@@ -479,7 +501,7 @@ export default function Index() {
                   disabled={loadingMore}
                   className="px-8 py-3 rounded-xl font-bold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98] transition-all disabled:opacity-60"
                 >
-                  {loadingMore ? "Loading…" : "Load More"}
+                  {loadingMore ? t("loadingEllipsis") : t("loadMore")}
                 </button>
               </div>
             )}
@@ -505,7 +527,7 @@ export default function Index() {
                     onClick={() => setSearch("")}
                     className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
                   >
-                    Clear search
+                    {t("clearSearch")}
                   </button>
                 )}
               </div>
@@ -515,18 +537,18 @@ export default function Index() {
                   <Search className="w-9 h-9 text-primary" />
                 </div>
                 <h2 className="text-xl font-extrabold text-foreground mb-2">
-                  {profile?.city ? `No listings in ${profile.city} yet` : t("noResultsFound")}
+                  {profile?.city ? t("noListingsInCity").replace("{city}", profile.city) : t("noResultsFound")}
                 </h2>
                 <p className="text-muted-foreground text-sm mb-6 max-w-xs">
                   {profile?.city
-                    ? `Be the first to post a listing in ${profile.city}!`
+                    ? t("beFirstToPost").replace("{city}", profile.city)
                     : t("tryAdjusting")}
                 </p>
                 <button
                   onClick={() => navigate("/post-apartment")}
                   className="gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
                 >
-                  Post a listing
+                  {t("postAListing")}
                 </button>
               </div>
             )}

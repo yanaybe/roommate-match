@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Zap, Loader2, Gift } from "lucide-react";
+import { Zap, Loader2, Gift , Flame, Crown } from "lucide-react";
 
 const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN as string;
 const PADDLE_ENV = (import.meta.env.VITE_PADDLE_ENV ?? "sandbox") as "sandbox" | "production";
@@ -22,7 +22,7 @@ const BOOST_TIERS = [
     price: "₪39",
     priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_DAY as string,
     desc: "Top placement for 24 hours",
-    emoji: "⚡",
+    icon: Zap,
   },
   {
     key: "week",
@@ -31,7 +31,7 @@ const BOOST_TIERS = [
     price: "₪149",
     priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_WEEK as string,
     desc: "Stay at the top for 7 days",
-    emoji: "🔥",
+    icon: Flame,
     popular: true,
   },
   {
@@ -41,7 +41,7 @@ const BOOST_TIERS = [
     price: "₪399",
     priceId: import.meta.env.VITE_PADDLE_PRICE_BOOST_MONTH as string,
     desc: "Maximum visibility for 30 days",
-    emoji: "👑",
+    icon: Crown,
   },
 ];
 
@@ -195,7 +195,7 @@ export default function BoostListingSheet({ open, onOpenChange, apartmentId, apa
 
         <div className="px-5 py-4 space-y-3">
           <p className="text-sm text-muted-foreground">
-            Featured listings appear at the top of search results with a <strong>🔥 Hot</strong> badge — get up to 5× more views.
+            Featured listings appear at the top of search results with a <strong>Hot</strong> badge — get up to 5× more views.
           </p>
 
           {/* Free boost banner for Gold/Platinum */}
@@ -243,7 +243,7 @@ export default function BoostListingSheet({ open, onOpenChange, apartmentId, apa
                     : "border-border hover:border-muted-foreground/30"
                 }`}
               >
-                <span className="text-2xl">{tier.emoji}</span>
+                <tier.icon className="w-6 h-6 text-primary" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className={`text-sm font-bold ${selected === tier.key ? "text-primary" : "text-foreground"}`}>

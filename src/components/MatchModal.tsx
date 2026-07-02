@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MessageCircle, X } from "lucide-react";
+import { Heart, MessageCircle, X , Sparkles } from "lucide-react";
 import type { UserProfile } from "@/data/mockData";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -113,7 +113,7 @@ export default function MatchModal({ user, matchPercent, onClose, matchBreakdown
 
           {matchBreakdown && matchBreakdown.filter((f) => !f.isConflict).length > 0 && (
             <div className="bg-primary/5 rounded-2xl p-3 mb-4 text-left">
-              <p className="text-xs font-bold text-primary mb-2">Why you matched ✨</p>
+              <p className="flex items-center gap-1 text-xs font-bold text-primary mb-2"><Sparkles className="w-3 h-3" /> Why you matched</p>
               <div className="flex flex-wrap gap-1.5">
                 {matchBreakdown
                   .filter((f) => !f.isConflict)

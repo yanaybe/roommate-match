@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Cigarette, PawPrint } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
 import { useLanguage } from "@/hooks/useLanguage";
 import { analytics } from "@/lib/analytics";
@@ -552,7 +552,7 @@ export default function Onboarding() {
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">
-                When are you looking to move in?
+                {t("moveInLabel")}
               </label>
               <input
                 type="month"
@@ -560,7 +560,7 @@ export default function Onboarding() {
                 onChange={(e) => update("move_in_date", e.target.value)}
                 className="w-full bg-secondary text-secondary-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              <p className="text-xs text-muted-foreground mt-1">Optional — helps match timing</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("moveInOptional")}</p>
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("desiredRoomType")}</label>
@@ -613,9 +613,9 @@ export default function Onboarding() {
       case 2:
         return substep === 0 ? (
           <div className="space-y-5">
-            <p className="text-xs text-muted-foreground -mt-1">Deal-breakers</p>
+            <p className="text-xs text-muted-foreground -mt-1">{t("dealBreakers")}</p>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">🚬 {t("smoking")}</label>
+              <label className="flex items-center gap-1.5 text-sm font-semibold text-foreground mb-1.5"><Cigarette className="w-4 h-4 text-muted-foreground" /> {t("smoking")}</label>
               <div className="flex flex-wrap gap-2">
                 {smokingPrefOptions.map((o) => (
                   <OptionButton key={o} label={to(o)} selected={form.smoking_preference === o} onClick={() => update("smoking_preference", o)} />
@@ -624,7 +624,7 @@ export default function Onboarding() {
               <ErrorMsg msg={errors.smoking_preference as string | undefined} />
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground block mb-1.5">🐾 {t("pets")}</label>
+              <label className="flex items-center gap-1.5 text-sm font-semibold text-foreground mb-1.5"><PawPrint className="w-4 h-4 text-muted-foreground" /> {t("pets")}</label>
               <div className="flex flex-wrap gap-2">
                 {petPrefOptions.map((o) => (
                   <OptionButton key={o} label={to(o)} selected={form.pet_preference === o} onClick={() => update("pet_preference", o)} />
@@ -633,12 +633,12 @@ export default function Onboarding() {
               <ErrorMsg msg={errors.pet_preference as string | undefined} />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Toggle label={`🏠 ${t("workFromHome")}`} value={form.wfh} onChange={(v) => update("wfh", v)} />
+              <Toggle label={t("workFromHome")} value={form.wfh} onChange={(v) => update("wfh", v)} />
             </div>
           </div>
         ) : (
           <div className="space-y-5">
-            <p className="text-xs text-muted-foreground -mt-1">Lifestyle details</p>
+            <p className="text-xs text-muted-foreground -mt-1">{t("lifestyleDetails")}</p>
             <div>
               <label className="text-sm font-semibold text-foreground block mb-1.5">{t("religiousLevel")}</label>
               <div className="flex flex-wrap gap-2">
@@ -766,7 +766,7 @@ export default function Onboarding() {
             />
             {form.photos.length === 0 && (
               <p className="text-xs text-amber-600 dark:text-amber-400 text-center mt-2">
-                Profiles with photos get 4× more matches. You can always add them later from your profile.
+                {t("photosGet4x")}
               </p>
             )}
           </div>
@@ -792,22 +792,18 @@ export default function Onboarding() {
             </p>
             {step < STEPS.length - 1 && (
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                Next: {STEPS[step + 1]}
+                {t("nextPrefix")}: {STEPS[step + 1]}
               </p>
             )}
             {(() => {
-              const fields = [
-                form.name, form.age, form.city, form.occupation, form.budget,
-                form.sleep_schedule, form.cooking_habits, form.smoking_preference,
-                form.pet_preference, form.religious_level, form.lifestyle_vibe,
-                String(form.social_level), String(form.noise_level), form.partying,
-                form.bio, form.photos.length > 0 ? "yes" : "",
-              ];
-              const pct = Math.round((fields.filter(Boolean).length / fields.length) * 100);
-              if (pct <= 10) return null;
+              // Grows with each completed step so progress always feels earned;
+              // photos (step 6) take it to 100 on submit.
+              const STEP_QUALITY = [0, 40, 60, 75, 90, 95];
+              const pct = STEP_QUALITY[step] ?? 0;
+              if (pct === 0) return null;
               return (
                 <p className="text-xs text-primary font-bold mt-0.5">
-                  {pct}% match quality unlocked
+                  {t("matchQualityUnlocked").replace("{pct}", String(pct))}
                 </p>
               );
             })()}
@@ -827,7 +823,7 @@ export default function Onboarding() {
           ))}
         </div>
         <p className="text-xs text-muted-foreground/60 text-center mt-1">
-          {step === 0 ? "Required" : t("optionalSkipAnytime")}
+          {step === 0 ? t("requiredLbl") : t("optionalSkipAnytime")}
         </p>
       </div>
 
@@ -889,7 +885,7 @@ export default function Onboarding() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
-                Saving...
+                {t("savingEllipsis")}
               </span>
             ) : step < STEPS.length - 1 ? (
               <>{t("nextBtn")} <ArrowRight className="w-4 h-4" /></>
@@ -904,7 +900,7 @@ export default function Onboarding() {
             disabled={saving}
             className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
           >
-            Skip remaining steps and finish →
+            {t("skipRemainingFinish")} →
           </button>
         )}
       </div>

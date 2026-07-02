@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Briefcase, MapPin, ChevronLeft, ChevronRight, Phone } from "lucide-react";
+import { Briefcase, MapPin, ChevronLeft, ChevronRight, Phone, Home, PawPrint } from "lucide-react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
@@ -188,10 +188,10 @@ export default function SwipeCard({ user, matchPercent, matchBreakdown, onSwipe,
                 ₪{user.budget.toLocaleString()}/mo
               </span>
               {user.wfh && (
-                <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🏠 WFH</span>
+                <span className="inline-flex items-center gap-1 bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full"><Home className="w-3 h-3" /> WFH</span>
               )}
               {user.pets && (
-                <span className="bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full">🐾 Pets</span>
+                <span className="inline-flex items-center gap-1 bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-full"><PawPrint className="w-3 h-3" /> Pets</span>
               )}
             </div>
           )}

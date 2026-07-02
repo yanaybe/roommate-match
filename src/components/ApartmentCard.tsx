@@ -1,4 +1,4 @@
-import { MessageCircle, Bookmark, MapPin, Bed, Bath, Maximize, Calendar, Loader2 } from "lucide-react";
+import { MessageCircle, Bookmark, MapPin, Bed, Bath, Maximize, Calendar, Loader2, Home, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyLimits } from "@/hooks/useDailyLimits";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const FALLBACK_APARTMENT = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800";
 const avatarFallback = (name: string) =>
@@ -28,6 +29,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const { user } = useAuth();
   const navigate = useNavigate();
   const { canSave, savesLimit, recordSave, openPremiumSheet } = useDailyLimits();
+  const { t } = useLanguage();
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(apartment.id);
 
@@ -160,26 +162,29 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             <button
               key={i}
               onClick={(e) => { e.stopPropagation(); setImgIndex(i); }}
-              className={`h-1.5 rounded-full transition-all ${i === imgIndex ? "bg-primary-foreground w-4" : "bg-primary-foreground/50 w-1.5"}`}
+              aria-label={`${t("photo")} ${i + 1}`}
+              className={`h-1.5 rounded-full p-1.5 -m-1 bg-clip-content transition-all ${i === imgIndex ? "bg-primary-foreground w-4" : "bg-primary-foreground/50 w-1.5"}`}
             />
           ))}
         </div>
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           <MatchBadge percent={apartment.matchPercent} size="md" />
           {apartment.listingType === "entire_place" && (
-            <span className="bg-background/90 backdrop-blur text-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
-              🏠 Entire Apt
+            <span className="inline-flex items-center gap-1 bg-background/90 backdrop-blur text-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+              <Home className="w-2.5 h-2.5" /> {t("entireApt")}
             </span>
           )}
         </div>
         {apartment.isBoosted && (
-          <div className="absolute top-3 right-14 gradient-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full">
-            🔥 Hot
+          <div className="absolute top-3 right-14 inline-flex items-center gap-1 gradient-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full">
+            <Flame className="w-3 h-3" /> {t("hotBadge")}
           </div>
         )}
         <div className="absolute top-3 right-3 flex flex-col gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); requireAuth(() => toggleSave()); }}
+            aria-label={saved ? t("unsave") : t("save")}
+            aria-pressed={saved}
             className="bg-card/80 backdrop-blur-sm p-2 rounded-full hover:scale-105 active:scale-95 transition-transform"
           >
             <AnimatePresence mode="wait" initial={false}>
@@ -226,20 +231,19 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             </div>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{apartment.listingType === "entire_place" ? "Apt" : "Room"} / month</div>
+            <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{apartment.listingType === "entire_place" ? t("perMonthApt") : t("perMonthRoom")}</div>
             <span className="text-lg font-extrabold text-primary">₪{apartment.price.toLocaleString()}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-1 text-muted-foreground text-xs">
           <Calendar className="w-3 h-3" />
-          <span>Available {apartment.available}</span>
+          <span>{t("availablePrefix")} {apartment.available}</span>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap text-muted-foreground text-xs border-t border-border/40 pt-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">Apt:</span>
-          <span className="flex items-center gap-1 shrink-0"><Bed className="w-3.5 h-3.5" /> {apartment.rooms} bed</span>
-          <span className="flex items-center gap-1 shrink-0"><Bath className="w-3.5 h-3.5" /> {apartment.bathrooms} bath</span>
+          <span className="flex items-center gap-1 shrink-0"><Bed className="w-3.5 h-3.5" /> {apartment.rooms} {t("bedShort")}</span>
+          <span className="flex items-center gap-1 shrink-0"><Bath className="w-3.5 h-3.5" /> {apartment.bathrooms} {t("bathShort")}</span>
           <span className="flex items-center gap-1 shrink-0"><Maximize className="w-3.5 h-3.5" /> {apartment.size}m²</span>
         </div>
 
@@ -256,13 +260,13 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-70"
           >
             {messaging ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
-            {messaging ? "Opening…" : "Message"}
+            {messaging ? t("openingEllipsis") : t("messageBtn")}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); navigate(`/apartment/${apartment.id}`); }}
             className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98] transition-all"
           >
-            Details
+            {t("detailsBtn")}
           </button>
         </div>
       </div>

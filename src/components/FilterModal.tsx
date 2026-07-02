@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, SlidersHorizontal } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { AMENITY_ICONS } from "@/lib/amenityIcons";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -32,18 +33,7 @@ export const defaultFilters: Filters = {
   furnished: "any",
 };
 
-const allAmenities = [
-  { key: "Balcony", emoji: "🌅" },
-  { key: "AC", emoji: "❄️" },
-  { key: "WiFi", emoji: "📶" },
-  { key: "Parking", emoji: "🅿️" },
-  { key: "Laundry", emoji: "🧺" },
-  { key: "Rooftop", emoji: "🏙️" },
-  { key: "Gym", emoji: "💪" },
-  { key: "Elevator", emoji: "🛗" },
-  { key: "Security", emoji: "🔒" },
-  { key: "Garden", emoji: "🌿" },
-];
+const allAmenities = ["Balcony", "AC", "WiFi", "Parking", "Laundry", "Rooftop", "Gym", "Elevator", "Security", "Garden"];
 
 interface FilterModalProps {
   open: boolean;
@@ -253,7 +243,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                 {activeTab === "Basics" && <>
                   {/* Budget */}
                   <div>
-                    <SectionLabel>💰 {t("budgetMonthly")}</SectionLabel>
+                    <SectionLabel>{t("budgetMonthly")}</SectionLabel>
                     <div className="flex items-center gap-3">
                       <div className="flex-1 flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
                         <span className="text-xs text-muted-foreground shrink-0">₪</span>
@@ -281,7 +271,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
 
                   {/* Rooms */}
                   <div>
-                    <SectionLabel>🛏 {t("numberOfRooms")}</SectionLabel>
+                    <SectionLabel>{t("numberOfRooms")}</SectionLabel>
                     <div className="flex gap-1.5">
                       {[
                         { label: t("optAny"), min: 1, max: 10 },
@@ -312,7 +302,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                   {/* Size + Match */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <SectionLabel>📐 {t("minimumSize")}</SectionLabel>
+                      <SectionLabel>{t("minimumSize")}</SectionLabel>
                       <div className="flex items-center gap-1.5 bg-secondary rounded-xl px-3 py-2.5">
                         <input
                           type="number"
@@ -326,7 +316,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                     </div>
                     <div>
                       <SectionLabel>
-                        ✨ {t("minimumMatchPct")}{" "}
+                        {t("minimumMatchPct")}{" "}
                         <span className="text-primary normal-case tracking-normal font-bold">{local.matchMin}%</span>
                       </SectionLabel>
                       <div className="flex items-center gap-2 pt-1.5">
@@ -345,7 +335,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
 
                   {/* Room type */}
                   <div>
-                    <SectionLabel>🚪 {t("roomType")}</SectionLabel>
+                    <SectionLabel>{t("roomType")}</SectionLabel>
                     <div className="flex gap-2">
                       {(["any", "private", "shared"] as const).map((opt) => (
                         <Chip
@@ -360,7 +350,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
 
                   {/* Furnished */}
                   <div>
-                    <SectionLabel>🛋 {t("furnishedLbl")}</SectionLabel>
+                    <SectionLabel>{t("furnishedLbl")}</SectionLabel>
                     <div className="flex gap-2">
                       {(["any", "yes", "no"] as const).map((opt) => (
                         <Chip
@@ -375,12 +365,12 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
 
                   {/* Listing type */}
                   <div>
-                    <SectionLabel>🏠 Listing Type</SectionLabel>
+                    <SectionLabel>{t("listingTypeLbl")}</SectionLabel>
                     <div className="flex gap-2">
                       {([
                         { value: "any", label: t("optAny") },
-                        { value: "room", label: "🚪 Room" },
-                        { value: "entire_place", label: "🏠 Entire Apt" },
+                        { value: "room", label: t("roomLbl") },
+                        { value: "entire_place", label: t("entireApt") },
                       ] as const).map((opt) => (
                         <Chip
                           key={opt.value}
@@ -397,27 +387,30 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
                 {activeTab === "Amenities" && (
                   <>
                   <div>
-                    <SectionLabel>🏠 {t("amenitiesLabel")}</SectionLabel>
+                    <SectionLabel>{t("amenitiesLabel")}</SectionLabel>
                     <div className="flex flex-wrap gap-2">
-                      {allAmenities.map(({ key, emoji }) => (
-                        <button
-                          key={key}
-                          onClick={() => toggleAmenity(key)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 hover:brightness-95 ${
-                            local.amenities.includes(key)
-                              ? "gradient-primary text-primary-foreground shadow-sm"
-                              : "bg-secondary text-muted-foreground"
-                          }`}
-                        >
-                          <span>{emoji}</span>
-                          {key}
-                        </button>
-                      ))}
+                      {allAmenities.map((key) => {
+                        const Icon = AMENITY_ICONS[key];
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => toggleAmenity(key)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 hover:brightness-95 ${
+                              local.amenities.includes(key)
+                                ? "gradient-primary text-primary-foreground shadow-sm"
+                                : "bg-secondary text-muted-foreground"
+                            }`}
+                          >
+                            {Icon && <Icon className="w-3.5 h-3.5" />}
+                            {key}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   <div>
                     <SectionLabel>
-                      ✨ {t("minimumMatchPct")}{" "}
+                      {t("minimumMatchPct")}{" "}
                       <span className="text-primary normal-case tracking-normal font-bold">{local.matchMin}%</span>
                     </SectionLabel>
                     <div className="flex items-center gap-2 pt-1.5">

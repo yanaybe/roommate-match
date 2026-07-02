@@ -22,13 +22,13 @@ const getMenuItems = (t: (key: string) => string, hasListings: boolean, isPaid: 
     : [{ icon: Crown, label: t("goPremium"), desc: t("unlockAllFeatures"), accent: true, action: "premium" }]
   ),
   ...(isPaid
-    ? [{ icon: CreditCard, label: "Manage Subscription", desc: "View plan, billing history & cancel", accent: false, action: "billing" }]
+    ? [{ icon: CreditCard, label: t("manageSubscription"), desc: t("manageSubDesc"), accent: false, action: "billing" }]
     : []
   ),
   { icon: Heart, label: t("whoLikedMe"), desc: t("whoLikedMeDesc"), accent: false, action: "whoLikedMe" },
   { icon: ShieldCheck, label: t("getVerified"), desc: t("addPhoneBadge"), accent: false, action: "verify" },
   { icon: Bookmark, label: t("myActivity"), desc: t("myActivityDesc"), accent: false, action: "activity" },
-  ...(hasListings ? [{ icon: Building2, label: "My Listings", desc: "View and edit your posted apartments", accent: false, action: "listings" }] : []),
+  ...(hasListings ? [{ icon: Building2, label: t("myListings"), desc: t("myListingsDesc"), accent: false, action: "listings" }] : []),
   { icon: Sparkles, label: t("preferences"), desc: t("preferencesDesc"), accent: false, action: "preferences" },
   { icon: Bell, label: t("notifications"), desc: t("notificationsDesc"), action: "notifications" },
   { icon: Settings, label: t("settings"), desc: t("settingsDesc"), action: "settings" },
@@ -139,17 +139,17 @@ export default function Profile() {
 
   // Profile completion score — each item has a label shown when missing
   const completionItems: { label: string; done: boolean }[] = [
-    { label: "Name",           done: !!profile?.name },
-    { label: "Age",            done: !!profile?.age },
-    { label: "City",           done: !!profile?.city },
-    { label: "Occupation",     done: !!profile?.occupation },
-    { label: "Bio",            done: !!profile?.bio },
-    { label: "Profile photo",  done: !!(profile?.avatar_url || (profile?.photos?.length && profile.photos.length >= 1)) },
-    { label: "Monthly budget", done: !!profile?.budget },
-    { label: "Sleep schedule", done: !!profile?.sleep_schedule },
-    { label: "Lifestyle vibe", done: !!profile?.lifestyle_vibe },
-    { label: "Social level",   done: !!profile?.social_level },
-    { label: "Noise level",    done: !!profile?.noise_level },
+    { label: t("nameLbl"),           done: !!profile?.name },
+    { label: t("ageLbl"),            done: !!profile?.age },
+    { label: t("cityLbl"),           done: !!profile?.city },
+    { label: t("workStudies"),       done: !!profile?.occupation },
+    { label: t("bioLbl"),            done: !!profile?.bio },
+    { label: t("profilePhotoLbl"),   done: !!(profile?.avatar_url || (profile?.photos?.length && profile.photos.length >= 1)) },
+    { label: t("monthlyBudget"),     done: !!profile?.budget },
+    { label: t("sleepScheduleLabel"), done: !!profile?.sleep_schedule },
+    { label: t("lifestyleVibeLbl"),  done: !!profile?.lifestyle_vibe },
+    { label: t("socialLevelLbl"),    done: !!profile?.social_level },
+    { label: t("noiseLevelLbl"),     done: !!profile?.noise_level },
   ];
   const completionScore = Math.round(
     (completionItems.filter((f) => f.done).length / completionItems.length) * 100
@@ -186,7 +186,8 @@ export default function Profile() {
             <button
               onClick={() => navigate("/onboarding?edit=true")}
               className="absolute bottom-0 right-0 w-7 h-7 gradient-primary rounded-full flex items-center justify-center shadow-md ring-2 ring-background"
-              title="Edit profile"
+              title={t("editProfile")}
+              aria-label={t("editProfile")}
             >
               <Pencil className="w-3.5 h-3.5 text-primary-foreground" />
             </button>
@@ -217,13 +218,13 @@ export default function Profile() {
                 <TrendingUp className="w-4 h-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground">Profile {completionScore}% complete</p>
+                <p className="text-sm font-bold text-foreground">{t("profileComplete").replace("{pct}", String(completionScore))}</p>
                 <p className="text-xs text-muted-foreground">
                   {completionScore < 60
-                    ? "Complete your profile to get 3× more matches"
+                    ? t("completeProfile3x")
                     : completionScore < 85
-                    ? "Almost there — a complete profile ranks higher"
-                    : "Almost there — just a few more details"}
+                    ? t("almostThereRanks")
+                    : t("almostThereFew")}
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />

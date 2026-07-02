@@ -117,7 +117,7 @@ export default function CreateSquad() {
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., TLV Dream Team 🏠"
+                  placeholder="e.g., TLV Dream Team"
                   className="text-center text-lg h-14 rounded-2xl border-2 focus:border-primary"
                   maxLength={40}
                 />

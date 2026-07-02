@@ -23,6 +23,10 @@ function mapAuthError(err: { message?: string; code?: string; status?: number } 
   if (code === "invalid_credentials" || msg.includes("invalid login credentials")) {
     return "Incorrect email or password.";
   }
+  // Invalid email format
+  if (code === "email_address_invalid" || code === "validation_failed" || (msg.includes("invalid") && msg.includes("email"))) {
+    return "That email address doesn't look valid.";
+  }
   // Email already taken
   if (code === "user_already_exists" || msg.includes("user already registered") || msg.includes("already been registered")) {
     return "An account with this email already exists.";
@@ -146,7 +150,8 @@ export default function Auth() {
 
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
-      toast.error(emailResult.error.issues[0].message);
+      setAuthError("That email address doesn't look valid.");
+      document.getElementById("auth-email")?.focus();
       setLoading(false);
       return;
     }
@@ -225,19 +230,26 @@ export default function Auth() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            <input
-              type="email"
-              placeholder={t("emailPlaceholder")}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+            <div>
+              <label htmlFor="auth-email" className="text-sm font-semibold text-foreground block mb-1.5">{t("emailPlaceholder")}</label>
+              <input
+                id="auth-email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
             <div className="space-y-1">
+              <label htmlFor="auth-password" className="text-sm font-semibold text-foreground block mb-1.5">{t("passwordPlaceholder")}</label>
               <div className="relative">
                 <input
+                  id="auth-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder={t("passwordPlaceholder")}
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -248,7 +260,6 @@ export default function Auth() {
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary-foreground/10 transition-all"
-                  tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -366,22 +377,28 @@ export default function Auth() {
           <div className="flex-1 h-px bg-border" />
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="email"
-            placeholder={t("emailPlaceholder")}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+          <div>
+            <label htmlFor="auth-email" className="text-sm font-semibold text-foreground block mb-1.5">{t("emailPlaceholder")}</label>
+            <input
+              id="auth-email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              className="w-full bg-secondary text-secondary-foreground placeholder:text-muted-foreground px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
 
           {/* Password + strength meter */}
           <div className="space-y-2">
+            <label htmlFor="signup-password" className="text-sm font-semibold text-foreground block mb-1.5">{t("passwordPlaceholder")}</label>
             <div className="relative">
               <input
+                id="signup-password"
                 type={showPassword ? "text" : "password"}
-                placeholder={t("passwordPlaceholder")}
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -392,7 +409,6 @@ export default function Auth() {
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary-foreground/10 transition-all"
-                tabIndex={-1}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -440,10 +456,13 @@ export default function Auth() {
           </div>
 
           {/* Confirm password */}
+          <div>
+          <label htmlFor="signup-confirm" className="text-sm font-semibold text-foreground block mb-1.5">{t("confirmPasswordPlaceholder")}</label>
           <div className="relative">
             <input
+              id="signup-confirm"
               type={showConfirm ? "text" : "password"}
-              placeholder={t("confirmPasswordPlaceholder")}
+              placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -456,11 +475,11 @@ export default function Auth() {
               type="button"
               onClick={() => setShowConfirm((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary-foreground/10 transition-all"
-              tabIndex={-1}
               aria-label={showConfirm ? "Hide password" : "Show password"}
             >
               {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
+          </div>
           </div>
           {confirmPassword.length > 0 && confirmPassword !== password && (
             <p className="text-destructive text-xs -mt-1 font-medium">{t("passwordsDoNotMatch")}</p>
@@ -482,6 +501,13 @@ export default function Auth() {
             )}
           </button>
         </form>
+
+        <p className="text-center text-muted-foreground text-xs mt-3">
+          {t("consentPrefix")}{" "}
+          <a href="/terms-of-service" className="underline hover:text-foreground">{t("footerTerms")}</a>
+          {" "}&{" "}
+          <a href="/privacy-policy" className="underline hover:text-foreground">{t("footerPrivacy")}</a>
+        </p>
 
         <p className="text-center text-muted-foreground text-sm mt-5">
           {t("alreadyHaveAccount")}{" "}

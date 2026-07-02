@@ -668,7 +668,9 @@ export default function SquadHub() {
       {user && !isMember && !isFull && (
         <div className="max-w-lg mx-auto w-full px-4 pt-3">
           <div className="flex items-center gap-3 p-4 bg-primary/10 border border-primary/20 rounded-2xl">
-            <span className="text-2xl">👥</span>
+            <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-primary" />
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">{t("wantToJoinSquad")}</p>
               <p className="text-xs text-muted-foreground">{members.length}/{squad.target_size} {t("membersTab").toLowerCase()} · {squad.preferred_locations.join(", ") || t("anyLocation")}</p>

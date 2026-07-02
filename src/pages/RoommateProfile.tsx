@@ -502,7 +502,7 @@ export default function RoommateProfile() {
             <div className="space-y-2">
               {matchPercent >= 70 && (
                 <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-3">
-                  ✨ Great match on {breakdown.filter((f: MatchFactor) => f.score >= 75).length} out of {breakdown.length} factors
+                  Great match on {breakdown.filter((f: MatchFactor) => f.score >= 75).length} out of {breakdown.length} factors
                 </p>
               )}
               {[...breakdown].sort((a: MatchFactor, b: MatchFactor) => {
