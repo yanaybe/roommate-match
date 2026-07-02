@@ -786,6 +786,12 @@ const translations: Record<Language, Record<string, string>> = {
     footerTerms: "Terms",
     consentPrefix: "By signing up you agree to our",
     editProfile: "Edit profile",
+    insightsLockedTitle: "Profile views & likes received",
+    insightsLockedDesc: "See who's noticing you — included with Plus",
+    privacySection: "Privacy",
+    hideProfileTitle: "Hide my profile from discovery",
+    hideProfileOnDesc: "Your profile won't appear in roommate search",
+    hideProfileLockedDesc: "Included with Plus and above",
     footerContact: "Contact",
 
     // Help Center
@@ -1753,6 +1759,12 @@ const translations: Record<Language, Record<string, string>> = {
     footerTerms: "תנאים",
     consentPrefix: "בהרשמה אתה מסכים ל",
     editProfile: "עריכת פרופיל",
+    insightsLockedTitle: "צפיות בפרופיל ולייקים שהתקבלו",
+    insightsLockedDesc: "ראו מי שם לב אליכם — כלול בפלוס",
+    privacySection: "פרטיות",
+    hideProfileTitle: "הסתר את הפרופיל שלי מחיפוש",
+    hideProfileOnDesc: "הפרופיל שלך לא יופיע בחיפוש שותפים",
+    hideProfileLockedDesc: "כלול בפלוס ומעלה",
     footerContact: "צור קשר",
 
     // Help Center
@@ -2711,6 +2723,12 @@ const translations: Record<Language, Record<string, string>> = {
     footerTerms: "Conditions",
     consentPrefix: "En vous inscrivant, vous acceptez nos",
     editProfile: "Modifier le profil",
+    insightsLockedTitle: "Vues du profil et likes reçus",
+    insightsLockedDesc: "Voyez qui vous remarque — inclus avec Plus",
+    privacySection: "Confidentialité",
+    hideProfileTitle: "Masquer mon profil de la recherche",
+    hideProfileOnDesc: "Votre profil n'apparaîtra pas dans la recherche",
+    hideProfileLockedDesc: "Inclus avec Plus et au-delà",
     footerContact: "Contact",
 
     // Help Center

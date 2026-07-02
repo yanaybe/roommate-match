@@ -271,7 +271,6 @@ export default function Settings() {
               icon={Crown}
               label={t("manageSubscription")}
               desc={t("manageSubscriptionDesc")}
-              accent
               onClick={() => setPremiumOpen(true)}
             />
             <SettingsItem
@@ -287,75 +286,70 @@ export default function Settings() {
         <section>
           <SectionHeader title={t("activityAndInsights")} />
 
-          <div className="flex gap-3 mb-3">
-            <InsightCard
-              icon={Eye}
-              label={t("profileViews")}
-              value={statsLoading ? "…" : profileViews}
-              locked={currentPlan === "Free"}
-              onUpgrade={() => setPremiumOpen(true)}
-            />
-            <InsightCard
-              icon={Heart}
-              label={t("likesReceived")}
-              value={statsLoading ? "…" : likesReceived}
-              locked={currentPlan === "Free"}
-              onUpgrade={() => setPremiumOpen(true)}
-            />
-            <InsightCard
-              icon={BarChart3}
-              label={t("matchRate")}
-              value="—"
-            />
-          </div>
-
-          {currentPlan === "Free" && (
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+          {currentPlan === "Free" ? (
+            <button
               onClick={() => setPremiumOpen(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-primary/10 hover:bg-primary/15 transition-colors"
+              className="w-full bg-card rounded-2xl shadow-card px-4 py-3.5 flex items-center gap-3 text-left hover:bg-secondary/50 transition-colors"
             >
-              <Lock size={14} className="text-primary" />
-              <span className="text-sm font-semibold text-primary">
-                {t("upgradeFullInsights")}
-              </span>
-            </motion.button>
+              <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                <BarChart3 size={18} className="text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">{t("insightsLockedTitle")}</p>
+                <p className="text-xs text-muted-foreground truncate">{t("insightsLockedDesc")}</p>
+              </div>
+              <Lock size={14} className="text-muted-foreground shrink-0" />
+            </button>
+          ) : (
+            <div className="flex gap-3">
+              <InsightCard
+                icon={Eye}
+                label={t("profileViews")}
+                value={statsLoading ? "…" : profileViews}
+              />
+              <InsightCard
+                icon={Heart}
+                label={t("likesReceived")}
+                value={statsLoading ? "…" : likesReceived}
+              />
+            </div>
           )}
         </section>
 
         {/* 🔒 Privacy (Plus+ only) */}
         <section>
-          <SectionHeader title="Privacy" />
+          <SectionHeader title={t("privacySection")} />
           <div className="bg-card rounded-2xl shadow-card divide-y divide-border/30">
-            <div className="w-full flex items-center gap-3 px-4 py-3.5">
-              <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                <Eye size={18} className="text-muted-foreground" />
-              </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-semibold text-foreground">Hide my profile from discovery</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {["plus", "gold", "platinum"].includes(subscriptionTier)
-                    ? "Your profile won't appear in roommate search"
-                    : "Plus required to hide your profile"}
-                </p>
-              </div>
-              {["plus", "gold", "platinum"].includes(subscriptionTier) ? (
+            {["plus", "gold", "platinum"].includes(subscriptionTier) ? (
+              <div className="w-full flex items-center gap-3 px-4 py-3.5">
+                <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                  <Eye size={18} className="text-muted-foreground" />
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{t("hideProfileTitle")}</p>
+                  <p className="text-xs text-muted-foreground truncate">{t("hideProfileOnDesc")}</p>
+                </div>
                 <Switch
                   checked={profileVisibility === "hidden"}
                   onCheckedChange={handleVisibilityToggle}
                   disabled={visibilityLoading}
                 />
-              ) : (
-                <button
-                  onClick={() => setPremiumOpen(true)}
-                  className="flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full"
-                >
-                  <Lock size={11} />
-                  Upgrade
-                </button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setPremiumOpen(true)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                  <Eye size={18} className="text-muted-foreground" />
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{t("hideProfileTitle")}</p>
+                  <p className="text-xs text-muted-foreground truncate">{t("hideProfileLockedDesc")}</p>
+                </div>
+                <Lock size={14} className="text-muted-foreground shrink-0" />
+              </button>
+            )}
           </div>
         </section>
 
