@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/react";
 import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, UserRound, Sparkles, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import React, { useState, useMemo, lazy, Suspense, useEffect } from "react";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import ApartmentCard from "@/components/ApartmentCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import FilterModal, { defaultFilters, type Filters } from "@/components/FilterModal";
@@ -155,13 +156,6 @@ export default function Index() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>(defaultFilters);
-  const [allLoaded, setAllLoaded] = useState<Apartment[]>([]);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadKey, setLoadKey] = useState(0);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [apartmentsLoading, setApartmentsLoading] = useState(true);
-  const [gridKey, setGridKey] = useState(0);
   const [newApartments, setNewApartments] = useState<Apartment[]>([]);
   const [squadBannerDismissed, setSquadBannerDismissed] = useState(isSquadBannerDismissed);
   const { t } = useLanguage();
@@ -169,6 +163,36 @@ export default function Index() {
   const { profile } = useProfile();
   const { squads, loading: squadsLoading } = useMySquads();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Paginated feed via React Query — cached across navigations, deduped
+  // between components, no refetch storm when filters change (filtering is
+  // client-side over the loaded pages).
+  const {
+    data: apartmentPages,
+    isPending: apartmentsLoading,
+    isFetchingNextPage: loadingMore,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["apartments"],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      const { data, error } = await supabase
+        .from("apartments")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
+      if (error) {
+        Sentry.captureMessage(error.message, "error");
+        toast.error(t("failedToLoadApartments"));
+        throw new Error(error.message);
+      }
+      return (data ?? []).map(dbRowToApartment);
+    },
+    getNextPageParam: (lastPage, pages) => (lastPage.length === PAGE_SIZE ? pages.length : undefined),
+  });
+  const allLoaded = useMemo(() => (apartmentPages?.pages ?? []).flat(), [apartmentPages]);
 
   const dismissSquadBanner = () => {
     try { localStorage.setItem(SQUAD_BANNER_KEY, String(Date.now())); } catch { /* storage unavailable */ }
@@ -191,48 +215,6 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    let cancelled = false;
-    if (page === 0) {
-      setApartmentsLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
-    supabase
-      .from("apartments")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error) { Sentry.captureMessage(error.message, "error"); toast.error(t("failedToLoadApartments")); }
-        const newApts = (data ?? []).map(dbRowToApartment);
-        if (page === 0) {
-          setAllLoaded(newApts);
-          setApartmentsLoading(false);
-          setGridKey((k) => k + 1);
-        } else {
-          setAllLoaded((prev) => [...prev, ...newApts]);
-          setLoadingMore(false);
-        }
-        setHasMore(newApts.length === PAGE_SIZE);
-      });
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, loadKey]);
-
-  // Reset pagination when filters or debounced search change
-  useEffect(() => {
-    setAllLoaded([]);
-    setHasMore(true);
-    if (page === 0) {
-      setLoadKey((k) => k + 1);
-    } else {
-      setPage(0);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, debouncedSearch]);
-
   // Real-time subscription — collect new inserts into a pending banner
   useEffect(() => {
     const channel = supabase
@@ -254,10 +236,16 @@ export default function Index() {
   }, []);
 
   const showNewListings = () => {
-    setAllLoaded((prev) => {
-      const deduped = newApartments.filter((a) => !prev.some((p) => p.id === a.id));
-      return [...deduped, ...prev];
-    });
+    queryClient.setQueryData(
+      ["apartments"],
+      (old: { pages: Apartment[][]; pageParams: number[] } | undefined) => {
+        if (!old?.pages?.length) return old;
+        const existing = new Set(old.pages.flat().map((a) => a.id));
+        const deduped = newApartments.filter((a) => !existing.has(a.id));
+        if (deduped.length === 0) return old;
+        return { ...old, pages: [[...deduped, ...old.pages[0]], ...old.pages.slice(1)] };
+      },
+    );
     setNewApartments([]);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -472,7 +460,7 @@ export default function Index() {
                 </button>
               </div>
             )}
-            <div key={gridKey} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.map((apt, i) => (
                 <React.Fragment key={apt.id}>
                   <ApartmentCard apartment={apt} index={i} />
@@ -494,10 +482,10 @@ export default function Index() {
                 </React.Fragment>
               ))}
             </div>
-            {hasMore && view === "list" && (
+            {hasNextPage && view === "list" && (
               <div className="mt-6 flex justify-center">
                 <button
-                  onClick={() => setPage((p) => p + 1)}
+                  onClick={() => fetchNextPage()}
                   disabled={loadingMore}
                   className="px-8 py-3 rounded-xl font-bold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98] transition-all disabled:opacity-60"
                 >

@@ -82,6 +82,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
     setSaved(newSaved);
     if (!isUuid) {
       localStorage.setItem(getMockSavedApartmentKey(user.id, apartment.id), String(newSaved));
+      if (newSaved) showSavedToast();
       return;
     }
     if (newSaved) {
@@ -90,12 +91,34 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
         apartment_id: apartment.id,
       }, { onConflict: "user_id,apartment_id" });
       recordSave();
+      showSavedToast();
     } else {
       await supabase.from("saved_apartments")
         .delete()
         .eq("user_id", user.id)
         .eq("apartment_id", apartment.id);
     }
+  };
+
+  const showSavedToast = () => {
+    toast.success(t("savedToast"), {
+      action: {
+        label: t("undoAction"),
+        onClick: () => {
+          setSaved(false);
+          if (!user) return;
+          if (!isUuid) {
+            localStorage.setItem(getMockSavedApartmentKey(user.id, apartment.id), "false");
+            return;
+          }
+          supabase.from("saved_apartments")
+            .delete()
+            .eq("user_id", user.id)
+            .eq("apartment_id", apartment.id)
+            .then(() => {});
+        },
+      },
+    });
   };
 
   const handleMessage = async () => {
@@ -253,20 +276,14 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
           ))}
         </div>
 
-        <div className="flex gap-2 pt-2">
+        <div className="pt-2">
           <button
             onClick={(e) => { e.stopPropagation(); requireAuth(() => handleMessage()); }}
             disabled={messaging}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-70"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-70"
           >
             {messaging ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
             {messaging ? t("openingEllipsis") : t("messageBtn")}
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); navigate(`/apartment/${apartment.id}`); }}
-            className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98] transition-all"
-          >
-            {t("detailsBtn")}
           </button>
         </div>
       </div>

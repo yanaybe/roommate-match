@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/react";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -99,12 +100,11 @@ export default function Chats() {
   const { refresh: refreshUnread } = useUnreadCount();
   const { profile: myProfile } = useProfile();
   const { t } = useLanguage();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const queryClient = useQueryClient();
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,45 +115,9 @@ export default function Chats() {
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const readReceiptChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  const activeConvData = conversations.find((c) => c.id === activeConv);
-  const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(activeConvData?.other_user_id);
-
-  // Fetch other user's profile for context card
-  useEffect(() => {
-    if (!activeConvData?.other_user_id) { setOtherProfile(null); return; }
-    let cancelled = false;
-    supabase.from("profiles").select("*").eq("user_id", activeConvData.other_user_id).maybeSingle()
-      .then(({ data }) => { if (!cancelled) setOtherProfile(data); });
-    setContextDismissed(false);
-    return () => { cancelled = true; };
-  }, [activeConvData?.other_user_id]);
-
-  const matchPercent = useMemo(() => {
-    if (!myProfile || !otherProfile) return 0;
-    return calculateUserMatch(myProfile, otherProfile);
-  }, [myProfile, otherProfile]);
-
-  const matchBreakdown = useMemo(() => {
-    if (!myProfile || !otherProfile) return [];
-    return calculateUserMatchBreakdown(myProfile, otherProfile);
-  }, [myProfile, otherProfile]);
-
-  const sharedTraits = useMemo(() => getSharedTraits(myProfile, otherProfile), [myProfile, otherProfile]);
-  const icebreakers = useMemo(
-    () => generateIcebreakers(myProfile, otherProfile, activeConvData?.other_name ?? "there"),
-    [myProfile, otherProfile, activeConvData?.other_name]
-  );
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const lastSentRef = useRef<number>(0);
-
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
-
   // Load conversations — batched to avoid N+1 queries
-  const loadConversations = useCallback(async () => {
-    if (!user) return;
+  const fetchConversations = useCallback(async (): Promise<Conversation[]> => {
+    if (!user) return [];
 
     // 1. Get all conversation IDs for this user
     const { data: participations } = await supabase
@@ -161,11 +125,7 @@ export default function Chats() {
       .select("conversation_id")
       .eq("user_id", user.id);
 
-    if (!participations?.length) {
-      setConversations([]);
-      setLoading(false);
-      return;
-    }
+    if (!participations?.length) return [];
 
     const convIds = participations.map((p) => p.conversation_id);
 
@@ -258,20 +218,69 @@ export default function Chats() {
       const bTime = new Date(b.last_message_at || b.created_at || 0).getTime();
       return bTime - aTime;
     });
-    setConversations(sortedConvs);
-
-    // Deep link: auto-open a specific conversation when ?conv=<id> is present
-    const convParam = new URLSearchParams(window.location.search).get("conv");
-    if (convParam && sortedConvs.some((c) => c.id === convParam)) {
-      setActiveConv(convParam);
-    }
-
-    setLoading(false);
+    return sortedConvs;
   }, [user]);
 
+  const conversationsKey = useMemo(() => ["conversations", user?.id], [user?.id]);
+  const {
+    data: conversations = [],
+    isPending: loading,
+    refetch: refetchConversations,
+  } = useQuery({
+    queryKey: conversationsKey,
+    enabled: !!user,
+    staleTime: 30_000,
+    queryFn: fetchConversations,
+  });
+
+  // Deep link: auto-open ?conv=<id> once after the list first loads —
+  // not on every refetch, so closing a deep-linked chat sticks.
+  const deepLinkHandledRef = useRef(false);
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    if (deepLinkHandledRef.current || conversations.length === 0) return;
+    const convParam = new URLSearchParams(window.location.search).get("conv");
+    if (convParam && conversations.some((c) => c.id === convParam)) {
+      deepLinkHandledRef.current = true;
+      setActiveConv(convParam);
+    }
+  }, [conversations]);
+
+  const activeConvData = conversations.find((c) => c.id === activeConv);
+  const { isBlocked, blockUser, unblockUser, reportUser } = useBlockReport(activeConvData?.other_user_id);
+
+  // Fetch other user's profile for context card
+  useEffect(() => {
+    if (!activeConvData?.other_user_id) { setOtherProfile(null); return; }
+    let cancelled = false;
+    supabase.from("profiles").select("*").eq("user_id", activeConvData.other_user_id).maybeSingle()
+      .then(({ data }) => { if (!cancelled) setOtherProfile(data); });
+    setContextDismissed(false);
+    return () => { cancelled = true; };
+  }, [activeConvData?.other_user_id]);
+
+  const matchPercent = useMemo(() => {
+    if (!myProfile || !otherProfile) return 0;
+    return calculateUserMatch(myProfile, otherProfile);
+  }, [myProfile, otherProfile]);
+
+  const matchBreakdown = useMemo(() => {
+    if (!myProfile || !otherProfile) return [];
+    return calculateUserMatchBreakdown(myProfile, otherProfile);
+  }, [myProfile, otherProfile]);
+
+  const sharedTraits = useMemo(() => getSharedTraits(myProfile, otherProfile), [myProfile, otherProfile]);
+  const icebreakers = useMemo(
+    () => generateIcebreakers(myProfile, otherProfile, activeConvData?.other_name ?? "there"),
+    [myProfile, otherProfile, activeConvData?.other_name]
+  );
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const lastSentRef = useRef<number>(0);
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
 
   // Load messages for active conversation & mark as read
   useEffect(() => {
@@ -316,9 +325,9 @@ export default function Chats() {
         if (markReadError) {
           console.error("Failed to mark messages as read:", markReadError);
         } else {
-          // Update local conversation unread count to 0
-          setConversations((prev) =>
-            prev.map((c) => c.id === activeConv ? { ...c, unread_count: 0 } : c)
+          // Update cached conversation unread count to 0
+          queryClient.setQueryData(conversationsKey, (prev: Conversation[] | undefined) =>
+            prev?.map((c) => (c.id === activeConv ? { ...c, unread_count: 0 } : c))
           );
           refreshUnread();
         }
@@ -409,7 +418,7 @@ export default function Chats() {
       presenceChannelRef.current = null;
       setOtherIsTyping(false);
     };
-  }, [activeConv, user, refreshUnread]);
+  }, [activeConv, user, refreshUnread, conversationsKey, queryClient]);
 
   useEffect(() => {
     scrollToBottom();
@@ -487,7 +496,9 @@ export default function Chats() {
       return;
     }
 
-    setConversations((prev) => prev.filter((c) => c.id !== convId));
+    queryClient.setQueryData(conversationsKey, (prev: Conversation[] | undefined) =>
+      prev?.filter((c) => c.id !== convId)
+    );
     setDeleteTarget(null);
     if (activeConv === convId) setActiveConv(null);
     refreshUnread();
@@ -578,7 +589,7 @@ export default function Chats() {
       <div className="shrink-0 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="px-4 pt-12 desk:pt-4 pb-3 flex items-center gap-3">
           <button
-            onClick={() => { setActiveConv(null); loadConversations(); }}
+            onClick={() => { setActiveConv(null); refetchConversations(); }}
             aria-label={t("back")}
             className="desk:hidden p-1 -ml-1 text-foreground"
           >
@@ -611,7 +622,7 @@ export default function Chats() {
               <DropdownMenuItem
                 onClick={() => {
                   if (isBlocked) { unblockUser(); }
-                  else { blockUser().then((ok) => { if (ok) { setActiveConv(null); loadConversations(); } }); }
+                  else { blockUser().then((ok) => { if (ok) { setActiveConv(null); refetchConversations(); } }); }
                 }}
               >
                 <Ban className="w-4 h-4 shrink-0" />

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { ProfileData } from "@/lib/matching";
@@ -39,57 +40,35 @@ export interface FullProfile extends ProfileData {
 
 export function useProfile() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<FullProfile | null>(null);
-  // user_id the current `profile` state was fetched for. `loading` is derived
-  // from this so a user arriving *after* mount (auth resolving on cold load)
-  // flips loading back to true until their profile lands — previously that
-  // window reported loading=false with profile=null, and route guards
-  // redirected fully-onboarded users into /onboarding.
-  const [fetchedFor, setFetchedFor] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      setFetchedFor(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
+  // Shared cache: every useProfile() instance reads the same query, so a
+  // refetch after onboarding/settings edits updates the whole app at once.
+  // `enabled` gating also fixes the cold-load race for good — a query that
+  // hasn't run for the current user reports isPending until its data lands.
+  const { data, isPending, error, refetch } = useQuery({
+    queryKey: ["profile", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
       const { data, error: fetchError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", user!.id)
         .maybeSingle();
+      if (fetchError) throw new Error(fetchError.message);
+      return data as FullProfile | null;
+    },
+  });
 
-      if (cancelled) return;
-      if (fetchError) {
-        setError(fetchError.message);
-      } else {
-        setProfile(data as FullProfile | null);
-      }
-      setFetchedFor(user.id);
-    };
+  const refetchProfile = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
-    load();
-    return () => { cancelled = true; };
-  }, [user]);
-
-  const loading = !!user && fetchedFor !== user.id;
-
-  const refetch = useCallback(async () => {
-    if (!user) return;
-    const { data, error: fetchError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!fetchError) setProfile(data as FullProfile | null);
-  }, [user]);
-
-  return { profile, loading, error, refetch };
+  return {
+    profile: data ?? null,
+    loading: !!user && isPending,
+    error: error instanceof Error ? error.message : null,
+    refetch: refetchProfile,
+  };
 }
 
 /**

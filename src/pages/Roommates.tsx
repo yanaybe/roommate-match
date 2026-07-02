@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { X, Heart, RotateCcw, ArrowRight, Lock, ChevronLeft, ChevronRight, Hand, Globe, UserRound } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -82,6 +83,7 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subsc
 
 export default function Roommates() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { profile: myProfile } = useProfile();
   const [swiped, setSwiped] = useState<string[]>([]);
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
@@ -116,20 +118,24 @@ export default function Roommates() {
     return () => { cancelled = true; };
   }, [user?.id]);
 
+  // Previously-liked profiles — cached so re-entering the deck doesn't refetch.
+  const { data: dbLikedIds } = useQuery({
+    queryKey: ["liked-profiles", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("liked_profiles")
+        .select("liked_user_id")
+        .eq("user_id", user!.id);
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((r) => r.liked_user_id);
+    },
+  });
+  // Merge (not replace): `swiped` also tracks this session's left-swipes,
+  // which must survive a background refetch of the likes list.
   useEffect(() => {
-    if (!user?.id) return;
-    let cancelled = false;
-    supabase
-      .from("liked_profiles")
-      .select("liked_user_id")
-      .eq("user_id", user.id)
-      .then(({ data }) => {
-        if (cancelled) return;
-        const dbLikedIds = (data ?? []).map((r) => r.liked_user_id);
-        setSwiped(dbLikedIds);
-      });
-    return () => { cancelled = true; };
-  }, [user?.id]);
+    if (dbLikedIds) setSwiped((prev) => [...new Set([...dbLikedIds, ...prev])]);
+  }, [dbLikedIds]);
 
   // Other profiles (not current user), with match percentages + breakdown
   const otherProfiles = useMemo(() => {
@@ -196,6 +202,9 @@ export default function Roommates() {
             { user_id: user.id, liked_user_id: current.user.id },
             { onConflict: "user_id,liked_user_id" },
           );
+          queryClient.setQueryData(["liked-profiles", user.id], (prev: string[] | undefined) =>
+            [...new Set([...(prev ?? []), current.user.id])]
+          );
 
           const { data: mutualLike } = await supabase
             .from("liked_profiles")
@@ -260,9 +269,13 @@ export default function Roommates() {
         setSwiped((prev) => [...prev, undoneId]);
         lastLikedIdRef.current = undoneId;
         toast.error("Could not undo like. Please try again.");
+      } else {
+        queryClient.setQueryData(["liked-profiles", user.id], (prev: string[] | undefined) =>
+          prev?.filter((id) => id !== undoneId)
+        );
       }
     }
-  }, [canUndo, swiped, user, openPremiumSheet]);
+  }, [canUndo, swiped, user, openPremiumSheet, queryClient]);
 
   useEffect(() => {
     if (remaining.length <= 2 && hasMore && !profilesLoading) {

@@ -55,7 +55,17 @@ import { supabase } from "@/integrations/supabase/client";
 
 initAnalytics();
 
-const queryClient = new QueryClient();
+// Cached data stays fresh for a minute — repeat navigations render instantly
+// from cache instead of refetching and flashing loading states.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function AnalyticsSync() {
   const { user } = useAuth();

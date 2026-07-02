@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, type FullProfile } from "@/hooks/useProfile";
@@ -52,48 +53,39 @@ export interface SquadLike {
 
 export function useMySquads() {
   const { user } = useAuth();
-  const [squads, setSquads] = useState<Squad[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const { data, isPending, error, refetch } = useQuery({
+    queryKey: ["my-squads", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data: memberships, error: membErr } = await supabase
+        .from("squad_members")
+        .select("squad_id")
+        .eq("user_id", user!.id)
+        .eq("status", "joined");
+      if (membErr) throw new Error(membErr.message);
+      if (!memberships?.length) return [] as Squad[];
+
+      const squadIds = memberships.map((m) => m.squad_id);
+      const { data: squads, error: squadErr } = await supabase
+        .from("squads")
+        .select("*")
+        .in("id", squadIds);
+      if (squadErr) throw new Error(squadErr.message);
+      return (squads as Squad[]) ?? [];
+    },
+  });
 
   const load = useCallback(async () => {
-    if (!user) { setLoading(false); return; }
+    await refetch();
+  }, [refetch]);
 
-    const { data: memberships, error: membErr } = await supabase
-      .from("squad_members")
-      .select("squad_id")
-      .eq("user_id", user.id)
-      .eq("status", "joined");
-
-    if (membErr) {
-      setError(membErr.message);
-      setLoading(false);
-      return;
-    }
-
-    if (!memberships?.length) {
-      setSquads([]);
-      setLoading(false);
-      return;
-    }
-
-    const squadIds = memberships.map((m) => m.squad_id);
-    const { data, error: squadErr } = await supabase
-      .from("squads")
-      .select("*")
-      .in("id", squadIds);
-
-    if (squadErr) {
-      setError(squadErr.message);
-    } else {
-      setSquads((data as Squad[]) ?? []);
-    }
-    setLoading(false);
-  }, [user]);
-
-  useEffect(() => { load(); }, [load]);
-
-  return { squads, loading, error, refetch: load };
+  return {
+    squads: data ?? [],
+    loading: !!user && isPending,
+    error: error instanceof Error ? error.message : null,
+    refetch: load,
+  };
 }
 
 export function useSquadDetail(squadId: string | null) {

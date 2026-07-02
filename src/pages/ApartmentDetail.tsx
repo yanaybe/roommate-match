@@ -229,13 +229,30 @@ export default function ApartmentDetail() {
     }
 
     setSaved(newSaved);
+    const showSavedToast = () => {
+      toast.success(t("savedToast"), {
+        action: {
+          label: t("undoAction"),
+          onClick: () => {
+            setSaved(false);
+            if (!apartmentIsUuid) {
+              localStorage.setItem(getMockSavedApartmentKey(user.id, id), "false");
+              return;
+            }
+            supabase.from("saved_apartments").delete().eq("user_id", user.id).eq("apartment_id", id).then(() => {});
+          },
+        },
+      });
+    };
     if (!apartmentIsUuid) {
       localStorage.setItem(getMockSavedApartmentKey(user.id, id), String(newSaved));
+      if (newSaved) showSavedToast();
       return;
     }
     if (newSaved) {
       await supabase.from("saved_apartments").upsert({ user_id: user.id, apartment_id: id }, { onConflict: "user_id,apartment_id" });
       recordSave();
+      showSavedToast();
     } else {
       await supabase.from("saved_apartments").delete().eq("user_id", user.id).eq("apartment_id", id);
     }
