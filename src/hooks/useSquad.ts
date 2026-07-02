@@ -290,10 +290,17 @@ export function useDiscoverSquads() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pendingSquadIds = new Set((pendingInvites ?? []).map((i: any) => i.squad_id));
 
+    // The creator is part of the squad even if their squad_members row is
+    // missing (legacy/seed squads predate the auto-insert on creation).
+    const effectiveCount = (s: Squad) => {
+      const members = membersBySquad.get(s.id) ?? [];
+      return members.some((m) => m.user_id === s.creator_id) ? members.length : members.length + 1;
+    };
+
     const discoverable = (allSquads as Squad[]).filter((s) => {
       const members = membersBySquad.get(s.id) ?? [];
       const isMember = members.some((m) => m.user_id === user.id);
-      const isFull = members.length >= s.target_size;
+      const isFull = effectiveCount(s) >= s.target_size;
       const hasPending = pendingSquadIds.has(s.id);
       return !isMember && !isFull && !hasPending;
     });
@@ -324,7 +331,7 @@ export function useDiscoverSquads() {
       return {
         ...s,
         members,
-        member_count: members.length,
+        member_count: effectiveCount(s),
         creator_profile: profileMap.get(s.creator_id),
         matchPercent,
       };

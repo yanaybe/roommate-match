@@ -481,9 +481,11 @@ export default function SquadsTabContent() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-card-foreground text-sm truncate">{squad.name}</h3>
-                      <p className="text-muted-foreground text-xs mt-0.5">
-                        {t("createdBy")} {squad.creator_profile?.name ?? "Unknown"}
-                      </p>
+                      {squad.creator_profile?.name && (
+                        <p className="text-muted-foreground text-xs mt-0.5">
+                          {t("createdBy")} {squad.creator_profile.name}
+                        </p>
+                      )}
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
                           <Users className="w-3 h-3" />
@@ -516,7 +518,7 @@ export default function SquadsTabContent() {
                   <button
                     onClick={() => handleRequestJoin(squad.id, squad.creator_id)}
                     disabled={requesting === squad.id}
-                    className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm transition-colors disabled:opacity-50"
+                    className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl gradient-primary text-primary-foreground font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
                   >
                     {requesting === squad.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
