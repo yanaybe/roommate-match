@@ -471,7 +471,7 @@ export default function ApartmentDetail() {
 
         {/* Thumbnail strip */}
         {apartment.images.length > 1 && (
-          <div className="flex gap-2 p-3 bg-card">
+          <div className="hidden sm:flex gap-2 p-3 bg-card">
             {apartment.images.map((img, i) => (
               <button
                 key={i}
@@ -578,6 +578,11 @@ export default function ApartmentDetail() {
           <h2 className="text-sm font-bold text-foreground mb-3">
             {t("currentRoommates")} ({apartment.roommates.length})
           </h2>
+          {apartment.roommates.length === 0 && (
+            <div className="bg-secondary/50 border border-dashed border-border rounded-2xl p-4 text-center">
+              <p className="text-sm text-muted-foreground">{t("noRoommatesYet")}</p>
+            </div>
+          )}
           <div className="space-y-2">
             {apartment.roommates.map((rm) => {
               return (
@@ -628,7 +633,7 @@ export default function ApartmentDetail() {
       </div>
 
       {/* Bottom action bar */}
-      <div className="fixed bottom-0 ltr:left-0 ltr:md:left-64 rtl:right-0 rtl:md:right-64 ltr:right-0 rtl:left-0 bg-card/95 backdrop-blur-xl border-t border-border z-40">
+      <div className="fixed bottom-16 desk:bottom-0 safe-bottom ltr:left-0 ltr:desk:left-64 rtl:right-0 rtl:desk:right-64 ltr:right-0 rtl:left-0 bg-card/95 backdrop-blur-xl border-t border-border z-40">
         <div className="max-w-3xl mx-auto px-4 py-3 flex gap-3">
           <button
             onClick={() => requireAuth(async () => {
@@ -670,7 +675,16 @@ export default function ApartmentDetail() {
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm gradient-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-70"
           >
             {messaging ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
-            {messaging ? "Opening…" : t("messageOwner")}
+            {messaging ? t("openingEllipsis") : t("messageOwner")}
+          </button>
+          <button
+            onClick={() => requireAuth(() => toggleSave())}
+            aria-label={saved ? t("unsave") : t("save")}
+            aria-pressed={saved}
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98] transition-all"
+          >
+            <Bookmark className={`w-4 h-4 ${saved ? "fill-primary text-primary" : ""}`} />
+            <span className="hidden sm:inline">{saved ? t("savedLbl") : t("save")}</span>
           </button>
         </div>
       </div>

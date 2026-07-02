@@ -148,7 +148,8 @@ export default function Landing() {
         <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: "var(--gradient-primary)" }} />
         <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full opacity-10 blur-3xl bg-accent" />
 
-        <div className="relative max-w-2xl mx-auto text-center">
+        <div className="relative max-w-2xl lg:max-w-6xl mx-auto text-center lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center lg:text-left">
+        <div>
           <motion.div
             variants={fadeUp} initial="hidden" animate="show" custom={0}
             className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 rounded-full mb-5"
@@ -166,14 +167,14 @@ export default function Landing() {
 
           <motion.p
             variants={fadeUp} initial="hidden" animate="show" custom={2}
-            className="text-muted-foreground text-base sm:text-lg mb-8 max-w-xl mx-auto"
+            className="text-muted-foreground text-base sm:text-lg mb-8 max-w-xl mx-auto lg:mx-0"
           >
             {t("landingSubtitle")}
           </motion.p>
 
           <motion.div
             variants={fadeUp} initial="hidden" animate="show" custom={3}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3"
+            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
           >
             <button
               onClick={() => navigate("/auth")}
@@ -192,7 +193,7 @@ export default function Landing() {
 
           <motion.div
             variants={fadeUp} initial="hidden" animate="show" custom={4}
-            className="flex items-center justify-center gap-8 mt-10"
+            className="flex items-center justify-center lg:justify-start gap-8 mt-10"
           >
             {STATS.map((s) => (
               <div key={s.label} className="text-center">
@@ -201,6 +202,55 @@ export default function Landing() {
               </div>
             ))}
           </motion.div>
+        </div>
+
+        {/* Product visual — desktop only: a composed listing card with match/chat chips */}
+        <motion.div
+          variants={fadeUp} initial="hidden" animate="show" custom={2}
+          className="hidden lg:block relative"
+          aria-hidden="true"
+        >
+          <div className="relative max-w-sm mx-auto">
+            <div className="bg-card rounded-3xl shadow-elevated overflow-hidden rotate-1">
+              <div className="relative h-64 overflow-hidden">
+                <img src={PREVIEW_LISTINGS[0].img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <span className="absolute top-4 left-4 match-badge-high text-xs font-bold px-2.5 py-1 rounded-full">
+                  {PREVIEW_LISTINGS[0].match}% match
+                </span>
+              </div>
+              <div className="p-4">
+                <p className="font-bold text-foreground">{PREVIEW_LISTINGS[0].title}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin className="w-3 h-3" />{PREVIEW_LISTINGS[0].city}
+                  </span>
+                  <span className="text-base font-extrabold text-primary">{PREVIEW_LISTINGS[0].price}/mo</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating chips */}
+            <div className="absolute -left-10 top-10 bg-card rounded-2xl shadow-elevated px-4 py-3 -rotate-3 flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center">
+                <Heart className="w-4 h-4 text-primary-foreground fill-primary-foreground" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-foreground">{t("visualMatchTitle")}</p>
+                <p className="text-[10px] text-muted-foreground">{t("visualMatchSub")}</p>
+              </div>
+            </div>
+            <div className="absolute -right-8 bottom-14 bg-card rounded-2xl shadow-elevated px-4 py-3 rotate-2 flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center">
+                <MessageCircle className="w-4 h-4 text-accent-foreground" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-foreground">{t("visualChatTitle")}</p>
+                <p className="text-[10px] text-muted-foreground">{t("visualChatSub")}</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
         </div>
       </section>
 

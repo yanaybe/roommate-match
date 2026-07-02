@@ -1,10 +1,11 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { X, Heart, RotateCcw, ArrowRight, Lock, ChevronLeft, ChevronRight, Hand, Globe, UserRound } from "lucide-react";
+import { X, Heart, RotateCcw, ArrowRight, Lock, ChevronLeft, ChevronRight, Hand, Globe, UserRound, Eye, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
 import MatchModal from "@/components/MatchModal";
+import MatchBadge from "@/components/MatchBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type UserProfile } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
@@ -284,6 +285,7 @@ export default function Roommates() {
   }, [remaining.length, hasMore, profilesLoading, loadMore]);
 
   const visibleCards = remaining.slice(0, 2);
+  const upNext = remaining.slice(2, 5);
 
   return (
     <div className="min-h-screen bg-background pb-28 desk:pb-8 flex flex-col">
@@ -331,7 +333,8 @@ export default function Roommates() {
         </div>
       )}
 
-      <div className="flex-1 max-w-lg mx-auto w-full px-4">
+      <div className="flex-1 max-w-lg desk:max-w-4xl mx-auto w-full px-4 desk:flex desk:items-start desk:gap-8">
+        <div className="w-full desk:max-w-lg">
         <>
           <div className="pt-4">
               {profilesLoading ? (
@@ -457,6 +460,57 @@ export default function Roommates() {
               )}
           </div>
         </>
+        </div>
+
+        {/* Desktop side panel: up-next teaser + who-liked-you */}
+        <aside className="hidden desk:block w-72 shrink-0 pt-4 space-y-4">
+          <div className="bg-card rounded-2xl shadow-card p-4">
+            <h3 className="text-sm font-extrabold text-foreground mb-3">{t("upNext")}</h3>
+            {upNext.length > 0 ? (
+              <div className="space-y-2.5">
+                {upNext.map((item) => (
+                  <div key={item.user.id} className="flex items-center gap-3">
+                    <img
+                      src={item.user.avatar}
+                      alt=""
+                      aria-hidden="true"
+                      className="w-11 h-11 rounded-full object-cover blur-sm"
+                      loading="lazy"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="w-24 h-3 bg-secondary rounded-full" />
+                    </div>
+                    <MatchBadge percent={item.matchPercent} size="sm" />
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground pt-1">
+                  {t("moreProfilesWaiting").replace("{count}", String(Math.max(remaining.length - 2, 0)))}
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t("deckAlmostDone")}</p>
+            )}
+          </div>
+
+          <button
+            onClick={() => {
+              if (subscriptionTier === "free") openPremiumSheet();
+              else navigate("/profile");
+            }}
+            className="w-full bg-card rounded-2xl shadow-card p-4 text-left hover:shadow-elevated transition-shadow"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0">
+                <Eye className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground">{t("whoLikedMe")}</p>
+                <p className="text-xs text-muted-foreground">{t("whoLikedMeDesc")}</p>
+              </div>
+              <Sparkles className="w-4 h-4 text-primary shrink-0" />
+            </div>
+          </button>
+        </aside>
       </div>
 
       {matchedUser && (
