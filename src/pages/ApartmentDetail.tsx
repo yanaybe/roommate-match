@@ -26,6 +26,8 @@ import { type UserProfile, type Apartment } from "@/data/mockData";
 import MatchBadge from "@/components/MatchBadge";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { calculateRoomMatch } from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { isUUID, getMockSavedApartmentKey } from "@/lib/profileUtils";
 import { useBlockReport } from "@/hooks/useBlockReport";
@@ -190,6 +192,7 @@ export default function ApartmentDetail() {
   const [saved, setSaved] = useState(false);
   const [selectedRoommate, setSelectedRoommate] = useState<UserProfile | null>(null);
   const [dbApartment, setDbApartment] = useState<(Apartment & { ownerId: string }) | null>(null);
+  const { profile: myProfile } = useProfile();
 
   useEffect(() => {
     if (!apartmentIsUuid || !id) return;
@@ -272,6 +275,9 @@ export default function ApartmentDetail() {
 
   const apartment: (Apartment & { ownerId?: string }) | undefined = dbApartment ?? undefined;
   const isOwner = user && apartment?.ownerId === user.id;
+  // Budget-fit score against the viewer's profile; MatchBadge hides when 0.
+  const viewerMatchPercent =
+    apartment && myProfile?.budget ? calculateRoomMatch(myProfile, apartment.price, []) : 0;
 
   if (!apartment) {
     return (
@@ -428,7 +434,7 @@ export default function ApartmentDetail() {
 
           {/* Match badge */}
           <div className="absolute bottom-4 right-4">
-            <MatchBadge percent={apartment.matchPercent} size="lg" />
+            <MatchBadge percent={viewerMatchPercent} size="lg" />
           </div>
 
           {/* Hot listing badge */}
@@ -550,8 +556,6 @@ export default function ApartmentDetail() {
           </h2>
           <div className="space-y-2">
             {apartment.roommates.map((rm) => {
-              // Calculate a simple mock match percent based on roommate traits
-              const matchPercent = Math.round(60 + Math.random() * 35);
               return (
                 <motion.button
                   key={rm.id}
@@ -575,7 +579,6 @@ export default function ApartmentDetail() {
                       <span className="font-bold text-foreground text-sm">
                         {rm.name}, {rm.age}
                       </span>
-                      <MatchBadge percent={matchPercent} size="sm" />
                     </div>
                     <p className="text-muted-foreground text-xs">{rm.occupation}</p>
                     <div className="flex gap-1.5 mt-1">

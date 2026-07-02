@@ -40,13 +40,18 @@ export interface FullProfile extends ProfileData {
 export function useProfile() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<FullProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  // user_id the current `profile` state was fetched for. `loading` is derived
+  // from this so a user arriving *after* mount (auth resolving on cold load)
+  // flips loading back to true until their profile lands — previously that
+  // window reported loading=false with profile=null, and route guards
+  // redirected fully-onboarded users into /onboarding.
+  const [fetchedFor, setFetchedFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
       setProfile(null);
-      setLoading(false);
+      setFetchedFor(null);
       return;
     }
 
@@ -65,12 +70,14 @@ export function useProfile() {
       } else {
         setProfile(data as FullProfile | null);
       }
-      setLoading(false);
+      setFetchedFor(user.id);
     };
 
     load();
     return () => { cancelled = true; };
   }, [user]);
+
+  const loading = !!user && fetchedFor !== user.id;
 
   const refetch = useCallback(async () => {
     if (!user) return;

@@ -33,14 +33,13 @@ const ANNUAL_PRICE_IDS: Record<string, string> = {
   platinum: import.meta.env.VITE_PADDLE_PRICE_PLATINUM_ANNUAL as string,
 };
 
-// Annual prices in ₪ — ~2 months free relative to monthly × 12
-const ANNUAL_PRICES: Record<string, number> = { plus: 129, gold: 199, platinum: 279 };
+import { PLAN_PRICES, ANNUAL_PRICES } from "@/lib/plans";
 
 const plans = [
   {
     id: "plus",
     name: "Plus",
-    price: 19,
+    price: PLAN_PRICES.plus.monthly,
     tagline: "Remove limits",
     popular: false,
     icon: Zap,
@@ -59,7 +58,7 @@ const plans = [
   {
     id: "gold",
     name: "Gold",
-    price: 29,
+    price: PLAN_PRICES.gold.monthly,
     tagline: "Most popular",
     popular: true,
     icon: Crown,
@@ -80,7 +79,7 @@ const plans = [
   {
     id: "platinum",
     name: "Platinum",
-    price: 39,
+    price: PLAN_PRICES.platinum.monthly,
     tagline: "For serious searchers",
     popular: false,
     icon: Gem,

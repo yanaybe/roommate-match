@@ -6,6 +6,7 @@ import {
   ChevronRight, Heart, MapPin, Check, Sparkles, Globe, Lock
 } from "lucide-react";
 import { useLanguage, languages } from "@/hooks/useLanguage";
+import { PLAN_PRICES } from "@/lib/plans";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -67,9 +68,10 @@ export default function Landing() {
   ];
 
   const PLANS = [
-    { name: t("planFree"), price: "₪0", features: [t("planBrowseListings"), t("plan8Likes"), t("planMatchChat")] },
-    { name: t("planGold"), price: "₪29", features: [t("planUnlimitedLikes"), t("planSeeWhoLiked"), t("planWeeklyBoost")], highlight: true },
-    { name: t("planPlatinum"), price: "₪39", features: [t("planMessageBefore"), t("planPriorityPlacement"), t("plan3Boosts")] },
+    { name: t("planFree"), price: "₪0", features: [t("planBrowseListings"), t("planDailyLikes"), t("planMatchChat")] },
+    { name: t("planPlus"), price: `₪${PLAN_PRICES.plus.monthly}`, features: [t("planUnlimitedLikes"), t("planRewind")] },
+    { name: t("planGold"), price: `₪${PLAN_PRICES.gold.monthly}`, features: [t("planSeeWhoLiked"), t("planWeeklyBoost")], highlight: true },
+    { name: t("planPlatinum"), price: `₪${PLAN_PRICES.platinum.monthly}`, features: [t("planMessageBefore"), t("planPriorityPlacement"), t("plan3Boosts")] },
   ];
 
   return (
@@ -418,7 +420,7 @@ export default function Landing() {
           <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("pricingTitle")}</h2>
           <p className="text-muted-foreground mt-2">{t("pricingSub")}</p>
         </motion.div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PLANS.map((plan, i) => (
             <motion.div
               key={plan.name}

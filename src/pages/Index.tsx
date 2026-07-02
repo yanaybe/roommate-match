@@ -12,6 +12,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useMySquads } from "@/hooks/useSquad";
+import { calculateRoomMatch } from "@/lib/matching";
 
 const ApartmentMap = lazy(() => import("@/components/ApartmentMap"));
 
@@ -249,19 +250,30 @@ export default function Index() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Score each listing against the viewer's profile (budget fit for now —
+  // roommate compatibility folds in once roommate profiles load per listing).
+  // MatchBadge hides itself when the score is 0/unknown.
+  const scored = useMemo(() => {
+    if (!profile?.budget) return allLoaded;
+    return allLoaded.map((apt) => ({
+      ...apt,
+      matchPercent: calculateRoomMatch(profile, apt.price, []),
+    }));
+  }, [allLoaded, profile]);
+
   const recommended = useMemo(() => {
     if (!profile?.budget || !profile?.city) return [];
-    return allLoaded
+    return scored
       .filter((apt) => {
         const withinBudget = apt.price <= profile.budget * 1.15;
         const cityMatch = apt.location.toLowerCase().includes(profile.city.toLowerCase());
         return withinBudget && cityMatch;
       })
       .slice(0, 3);
-  }, [allLoaded, profile]);
+  }, [scored, profile]);
 
   const filtered = useMemo(() => {
-    return allLoaded.filter((apt) => {
+    return scored.filter((apt) => {
       if (debouncedSearch.trim()) {
         const q = debouncedSearch.toLowerCase();
         if (
@@ -281,7 +293,7 @@ export default function Index() {
       if (filters.furnished === "no" && apt.amenities.includes("Furnished")) return false;
       return true;
     });
-  }, [debouncedSearch, filters, allLoaded]);
+  }, [debouncedSearch, filters, scored]);
 
   const activeFilterCount = (() => {
     let c = 0;
@@ -302,7 +314,7 @@ export default function Index() {
           <div className="flex items-center justify-between mb-3">
             <div>
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
-                Room<span className="text-primary">Match</span>
+                Roo<span className="text-primary">Match</span>
               </h1>
               <p className="text-muted-foreground text-sm">Find your perfect roommate or apartment</p>
             </div>

@@ -364,7 +364,7 @@ export default function Roommates() {
                       onClick={() => navigate("/onboarding?edit=true")}
                       className="w-full py-3 gradient-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-all"
                     >
-                      {t("adjustPreferences") ?? "Adjust Preferences"}
+                      {t("adjustPreferences")}
                     </button>
                     <button
                       onClick={handleUndo}
@@ -383,7 +383,7 @@ export default function Roommates() {
                     onClick={handleUndo}
                     disabled={swiped.length === 0}
                     className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center shadow-card disabled:opacity-30 hover:bg-secondary/80 hover:scale-105 active:scale-95 transition-all duration-150"
-                    title={canUndo ? "Undo last swipe" : "Upgrade to Plus+ to undo swipes"}
+                    title={canUndo ? "Undo last swipe" : "Upgrade to Plus to undo swipes"}
                   >
                     {canUndo ? (
                       <RotateCcw className="w-5 h-5 text-muted-foreground" />

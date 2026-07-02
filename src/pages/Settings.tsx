@@ -337,7 +337,7 @@ export default function Settings() {
                 <p className="text-xs text-muted-foreground truncate">
                   {["plus", "gold", "platinum"].includes(subscriptionTier)
                     ? "Your profile won't appear in roommate search"
-                    : "Plus+ required to hide your profile"}
+                    : "Plus required to hide your profile"}
                 </p>
               </div>
               {["plus", "gold", "platinum"].includes(subscriptionTier) ? (

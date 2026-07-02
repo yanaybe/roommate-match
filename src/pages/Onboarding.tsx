@@ -189,6 +189,15 @@ export default function Onboarding() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, navigate]);
 
+  // Guard: users who already completed onboarding shouldn't land here except
+  // in explicit edit mode (?edit=true) — send them home instead.
+  useEffect(() => {
+    if (!isEdit && profile?.onboarding_complete) {
+      navigate("/", { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.onboarding_complete, isEdit]);
+
   useEffect(() => {
     if (profile) {
       setForm({
@@ -314,7 +323,7 @@ export default function Onboarding() {
 
   const canProceed = () => {
     if (step === 0) return !!(form.name.trim() && form.age && form.city.trim() && form.occupation.trim() && form.budget);
-    if (step === 5) return form.photos.length > 0;
+    // Photos are optional — the no-photos confirmation dialog handles the nudge.
     return true;
   };
 

@@ -6,14 +6,14 @@ import {
   Star, Rocket, TrendingUp, BadgeCheck, ArrowLeft, ArrowRight,
 } from "lucide-react";
 
-const ANNUAL_PRICES: Record<string, number> = { plus: 129, gold: 199, platinum: 279 };
+import { PLAN_PRICES, ANNUAL_PRICES } from "@/lib/plans";
 
 const plans = [
   {
     id: "plus",
     name: "Plus",
-    price: 19,
-    annualPrice: 129,
+    price: PLAN_PRICES.plus.monthly,
+    annualPrice: PLAN_PRICES.plus.annual,
     tagline: "Remove limits",
     popular: false,
     icon: Zap,
@@ -30,8 +30,8 @@ const plans = [
   {
     id: "gold",
     name: "Gold",
-    price: 29,
-    annualPrice: 199,
+    price: PLAN_PRICES.gold.monthly,
+    annualPrice: PLAN_PRICES.gold.annual,
     tagline: "Most popular",
     popular: true,
     icon: Crown,
@@ -50,8 +50,8 @@ const plans = [
   {
     id: "platinum",
     name: "Platinum",
-    price: 39,
-    annualPrice: 279,
+    price: PLAN_PRICES.platinum.monthly,
+    annualPrice: PLAN_PRICES.platinum.annual,
     tagline: "For serious searchers",
     popular: false,
     icon: Gem,

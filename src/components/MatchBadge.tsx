@@ -6,6 +6,10 @@ interface MatchBadgeProps {
 }
 
 export default function MatchBadge({ percent, size = "md" }: MatchBadgeProps) {
+  // No score computed (e.g. viewer has no budget/profile yet) — show nothing
+  // rather than a misleading red "0%".
+  if (!percent || percent <= 0) return null;
+
   const sizeClasses = {
     sm: "text-xs px-2 py-0.5",
     md: "text-sm px-2.5 py-1",
@@ -13,7 +17,10 @@ export default function MatchBadge({ percent, size = "md" }: MatchBadgeProps) {
   };
 
   return (
-    <span className={`${getMatchColor(percent)} ${sizeClasses[size]} rounded-full font-semibold inline-flex items-center gap-1`}>
+    <span
+      aria-label={`${percent}% compatibility`}
+      className={`${getMatchColor(percent)} ${sizeClasses[size]} rounded-full font-semibold inline-flex items-center gap-1`}
+    >
       {percent}%
     </span>
   );
