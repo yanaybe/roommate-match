@@ -6,7 +6,6 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import ApartmentCard from "@/components/ApartmentCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import FilterModal, { defaultFilters, type Filters } from "@/components/FilterModal";
-import FilterRail from "@/components/FilterRail";
 import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import type { Apartment } from "@/data/mockData";
@@ -311,7 +310,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background pb-28 desk:pb-8">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-5xl desk:max-w-7xl mx-auto px-4 pt-12 desk:pt-6 pb-3">
+        <div className="max-w-5xl mx-auto px-4 pt-12 desk:pt-6 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div>
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
@@ -347,7 +346,7 @@ export default function Index() {
             <button
               onClick={() => setFiltersOpen(true)}
               aria-label={t("filters")}
-              className="desk:hidden bg-secondary p-2.5 rounded-xl relative hover:bg-secondary/80 active:scale-95 transition-all"
+              className="bg-secondary p-2.5 rounded-xl relative hover:bg-secondary/80 active:scale-95 transition-all"
             >
               <SlidersHorizontal className="w-4 h-4 text-secondary-foreground" />
               {activeFilterCount > 0 && (
@@ -364,7 +363,7 @@ export default function Index() {
       <div className="w-full" style={view === "list" ? { overflowX: "clip" } : undefined}>
 
       {newApartments.length > 0 && (
-        <div className="max-w-5xl desk:max-w-7xl mx-auto px-4 pt-3">
+        <div className="max-w-5xl mx-auto px-4 pt-3">
           <button
             onClick={showNewListings}
             className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-2xl text-sm font-bold shadow-elevated active:scale-[0.98] transition-transform"
@@ -378,7 +377,7 @@ export default function Index() {
       )}
 
       {promoSlot === "profile" && (
-        <div className="max-w-5xl desk:max-w-7xl mx-auto px-4 pt-3">
+        <div className="max-w-5xl mx-auto px-4 pt-3">
           <button
             onClick={() => navigate("/onboarding")}
             className="w-full flex items-center gap-3 p-3.5 bg-primary/10 border border-primary/20 rounded-2xl text-left"
@@ -396,7 +395,7 @@ export default function Index() {
       )}
 
       {promoSlot === "squad" && (
-        <div className="max-w-5xl desk:max-w-7xl mx-auto px-4 pt-3">
+        <div className="max-w-5xl mx-auto px-4 pt-3">
           <div className="w-full flex items-center gap-3 p-3.5 bg-gradient-to-r from-violet-500/10 to-pink-500/10 border border-primary/20 rounded-2xl">
             <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
               <Users className="w-5 h-5 text-primary" />
@@ -420,9 +419,7 @@ export default function Index() {
 
       {promoSlot === "activity" && <ActivityStrip />}
 
-      <div className="max-w-5xl desk:max-w-7xl mx-auto px-4 pt-4 desk:flex desk:items-start desk:gap-6">
-        <FilterRail filters={filters} onChange={setFilters} />
-        <div className="flex-1 min-w-0">
+      <div className="max-w-5xl mx-auto px-4 pt-4">
         {view === "list" ? (
           apartmentsLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -463,7 +460,7 @@ export default function Index() {
                 </button>
               </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.map((apt, i) => (
                 <React.Fragment key={apt.id}>
                   <ApartmentCard apartment={apt} index={i} />
@@ -556,7 +553,6 @@ export default function Index() {
             <ApartmentMap apartments={filtered} />
           </Suspense>
         )}
-        </div>
       </div>
       </div>{/* end overflow-x clip wrapper */}
 
