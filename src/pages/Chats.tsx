@@ -402,7 +402,7 @@ export default function Chats() {
     const presenceChannel = supabase.channel(`typing:${activeConv}`)
       .on("presence", { event: "sync" }, () => {
         const state = presenceChannel.presenceState();
-        const others = Object.values(state).flat() as Array<{ user_id: string; typing: boolean }>;
+        const others = Object.values(state).flat() as unknown as Array<{ user_id: string; typing: boolean }>;
         setOtherIsTyping(others.some((p) => p.user_id !== user.id && p.typing));
       })
       .subscribe();

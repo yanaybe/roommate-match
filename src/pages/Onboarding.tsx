@@ -336,12 +336,13 @@ export default function Onboarding() {
     if (!user) return;
     const payload = {
       user_id: user.id,
-      name: sanitizeText(currentForm.name) || null,
+      // NOT NULL columns use undefined (= leave untouched on upsert) when empty
+      name: sanitizeText(currentForm.name) || undefined,
       age: parseInt(currentForm.age) || null,
-      city: sanitizeText(currentForm.city) || null,
-      neighborhood: sanitizeText(currentForm.neighborhood) || null,
-      occupation: sanitizeText(currentForm.occupation) || null,
-      budget: currentForm.budget?.trim() ? parseInt(currentForm.budget) : null,
+      city: sanitizeText(currentForm.city) || undefined,
+      neighborhood: sanitizeText(currentForm.neighborhood) || undefined,
+      occupation: sanitizeText(currentForm.occupation) || undefined,
+      budget: currentForm.budget?.trim() ? parseInt(currentForm.budget) : undefined,
       move_in_date: currentForm.move_in_date || null,
       desired_room_type: currentForm.desired_room_type,
       sleep_schedule: currentForm.sleep_schedule,
@@ -421,7 +422,7 @@ export default function Onboarding() {
       name: safeName,
       age: ageNum,
       city: safeCity,
-      neighborhood: sanitizeText(form.neighborhood) || null,
+      neighborhood: sanitizeText(form.neighborhood),
       occupation: safeOccupation,
       budget: budgetNum!,
       desired_room_type: form.desired_room_type,

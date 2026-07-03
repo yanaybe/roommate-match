@@ -263,10 +263,12 @@ export default function Index() {
 
   const recommended = useMemo(() => {
     if (!profile?.budget || !profile?.city) return [];
+    const budget = profile.budget;
+    const city = profile.city.toLowerCase();
     return scored
       .filter((apt) => {
-        const withinBudget = apt.price <= profile.budget * 1.15;
-        const cityMatch = apt.location.toLowerCase().includes(profile.city.toLowerCase());
+        const withinBudget = apt.price <= budget * 1.15;
+        const cityMatch = apt.location.toLowerCase().includes(city);
         return withinBudget && cityMatch;
       })
       .slice(0, 3);

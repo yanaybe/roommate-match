@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_id: string | null
+          target_table: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_table?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_table?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       apartment_views: {
         Row: {
           apartment_id: string
@@ -68,11 +131,11 @@ export type Database = {
           images: string[]
           is_featured: boolean
           is_furnished: boolean
+          listing_type: string
           neighborhood: string
           pet_friendly: boolean
           price: number
           room_description: string
-          listing_type: string
           room_type: string
           rooms: number
           size: number
@@ -104,8 +167,8 @@ export type Database = {
           images?: string[]
           is_featured?: boolean
           is_furnished?: boolean
-          neighborhood?: string
           listing_type?: string
+          neighborhood?: string
           pet_friendly?: boolean
           price?: number
           room_description?: string
@@ -140,6 +203,7 @@ export type Database = {
           images?: string[]
           is_featured?: boolean
           is_furnished?: boolean
+          listing_type?: string
           neighborhood?: string
           pet_friendly?: boolean
           price?: number
@@ -150,6 +214,33 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      auth_rate_limits: {
+        Row: {
+          action: string
+          attempts: number
+          id: string
+          identifier: string
+          locked_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          attempts?: number
+          id?: string
+          identifier: string
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          attempts?: number
+          id?: string
+          identifier?: string
+          locked_until?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -546,6 +637,24 @@ export type Database = {
         }
         Relationships: []
       }
+      public_activity: {
+        Row: {
+          created_at: string
+          display_text: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_text: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          display_text?: string
+          id?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string
@@ -607,6 +716,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saved_searches: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          label: string
+          notify_email: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          label: string
+          notify_email?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          label?: string
+          notify_email?: boolean
+          user_id?: string
+        }
+        Relationships: []
       }
       squad_invites: {
         Row: {
@@ -965,6 +1101,7 @@ export type Database = {
     Functions: {
       call_email_function: { Args: { payload: Json }; Returns: undefined }
       call_notify_function: { Args: { payload: Json }; Returns: undefined }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       create_conversation_with_participant: {
         Args: { other_user_id: string }
         Returns: string

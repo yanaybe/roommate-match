@@ -64,7 +64,7 @@ function profileToUser(p: FullProfile): UserProfile & { photos?: string[]; subsc
       p.avatar_url ||
       p.photos?.[0] ||
       `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&size=200`,
-    budget: p.budget,
+    budget: p.budget ?? 0,
     roomType: p.desired_room_type,
     sleepSchedule: p.sleep_schedule,
     cleanliness: p.cleanliness,

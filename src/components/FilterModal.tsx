@@ -151,7 +151,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: FilterM
           await supabase.from("saved_searches").insert({
             user_id: user.id,
             label,
-            filters: local,
+            filters: JSON.parse(JSON.stringify(local)),
             notify_email: true,
           });
         } catch {

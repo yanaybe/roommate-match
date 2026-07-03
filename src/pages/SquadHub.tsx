@@ -35,7 +35,7 @@ function profileToUser(p: FullProfile): UserProfile {
     city: p.city,
     occupation: p.occupation,
     avatar: p.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&size=200`,
-    budget: p.budget,
+    budget: p.budget ?? 0,
     roomType: p.desired_room_type,
     sleepSchedule: p.sleep_schedule,
     cleanliness: p.cleanliness,
@@ -355,7 +355,7 @@ export default function SquadHub() {
       let lifestyleScore = 0.75;
       if (memberProfiles.length > 0) {
         const perMemberBudgetFit = memberProfiles.map(p => {
-          const diff = Math.abs(p.budget - apt.price);
+          const diff = Math.abs((p.budget ?? 0) - apt.price);
           return Math.max(0, 1 - diff / 3000);
         });
         lifestyleScore = perMemberBudgetFit.reduce((a, b) => a + b, 0) / perMemberBudgetFit.length;
