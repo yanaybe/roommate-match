@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import MatchBadge from "./MatchBadge";
 import type { Apartment } from "@/data/mockData";
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +30,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const { user } = useAuth();
   const navigate = useNavigate();
   const { canSave, savesLimit, recordSave, openPremiumSheet } = useDailyLimits();
+  const queryClient = useQueryClient();
   const { t } = useLanguage();
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(apartment.id);
@@ -98,6 +100,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
         .eq("user_id", user.id)
         .eq("apartment_id", apartment.id);
     }
+    queryClient.invalidateQueries({ queryKey: ["saved-apartments"] });
   };
 
   const showSavedToast = () => {
@@ -115,7 +118,9 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
             .delete()
             .eq("user_id", user.id)
             .eq("apartment_id", apartment.id)
-            .then(() => {});
+            .then(() => {
+              queryClient.invalidateQueries({ queryKey: ["saved-apartments"] });
+            });
         },
       },
     });

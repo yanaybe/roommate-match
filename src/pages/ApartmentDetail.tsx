@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -182,6 +183,7 @@ export default function ApartmentDetail() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { canSave, savesLimit, recordSave, openPremiumSheet } = useDailyLimits();
+  const queryClient = useQueryClient();
   const { reportListing } = useBlockReport();
   const [imgIndex, setImgIndex] = useState(0);
   const [messaging, setMessaging] = useState(false);
@@ -239,7 +241,9 @@ export default function ApartmentDetail() {
               localStorage.setItem(getMockSavedApartmentKey(user.id, id), "false");
               return;
             }
-            supabase.from("saved_apartments").delete().eq("user_id", user.id).eq("apartment_id", id).then(() => {});
+            supabase.from("saved_apartments").delete().eq("user_id", user.id).eq("apartment_id", id).then(() => {
+              queryClient.invalidateQueries({ queryKey: ["saved-apartments"] });
+            });
           },
         },
       });
@@ -256,6 +260,7 @@ export default function ApartmentDetail() {
     } else {
       await supabase.from("saved_apartments").delete().eq("user_id", user.id).eq("apartment_id", id);
     }
+    queryClient.invalidateQueries({ queryKey: ["saved-apartments"] });
   };
   const handleDelete = async () => {
     if (!user || !apartment || !id) return;
@@ -322,7 +327,7 @@ export default function ApartmentDetail() {
     setImgIndex((i) => (i - 1 + apartment.images.length) % apartment.images.length);
 
   return (
-    <div className="min-h-screen bg-background pb-28 desk:pb-8">
+    <div className="min-h-screen bg-background pb-28 md:pb-8">
       {/* Image gallery */}
       <div className="relative max-w-3xl mx-auto overflow-hidden">
         <div className="relative aspect-[16/10] overflow-hidden">
@@ -633,7 +638,7 @@ export default function ApartmentDetail() {
       </div>
 
       {/* Bottom action bar */}
-      <div className="fixed bottom-16 desk:bottom-0 safe-bottom ltr:left-0 ltr:desk:left-64 rtl:right-0 rtl:desk:right-64 ltr:right-0 rtl:left-0 bg-card/95 backdrop-blur-xl border-t border-border z-40">
+      <div className="fixed bottom-16 md:bottom-0 safe-bottom ltr:left-0 ltr:md:left-64 rtl:right-0 rtl:md:right-64 ltr:right-0 rtl:left-0 bg-card/95 backdrop-blur-xl border-t border-border z-40">
         <div className="max-w-3xl mx-auto px-4 py-3 flex gap-3">
           <button
             onClick={() => requireAuth(async () => {

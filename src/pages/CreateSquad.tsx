@@ -287,7 +287,7 @@ export default function CreateSquad() {
       </div>
 
       {/* Sticky footer navigation */}
-      <div className="shrink-0 bg-background/95 backdrop-blur-sm border-t border-border pb-16 desk:pb-0">
+      <div className="shrink-0 bg-background/95 backdrop-blur-sm border-t border-border pb-16 md:pb-0">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-3">
           {step < steps.length - 1 ? (
             <button

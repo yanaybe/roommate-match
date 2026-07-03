@@ -100,7 +100,7 @@ export default function RoommateProfile() {
 
   if (profilesLoading && !userData) {
     return (
-      <div className="min-h-screen bg-background pb-28 desk:pb-8">
+      <div className="min-h-screen bg-background pb-28 md:pb-8">
         <Skeleton className="w-full h-[75vh]" />
         <div className="max-w-lg mx-auto px-4 -mt-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -216,7 +216,7 @@ export default function RoommateProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-36 desk:pb-8">
+    <div className="min-h-screen bg-background pb-36 md:pb-8">
 
       {/* ── Photo hero ── */}
       <div className="relative w-full h-[75vh] overflow-hidden">
@@ -564,7 +564,7 @@ export default function RoommateProfile() {
 
       {/* Sticky Like / Pass footer */}
       {authUser && !isOwnProfile && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 desk:ltr:pl-64 desk:rtl:pr-64 safe-bottom">
+        <div className="fixed bottom-0 left-0 right-0 z-40 md:ltr:pl-64 md:rtl:pr-64 safe-bottom">
           <div className="bg-card/95 backdrop-blur-xl border-t border-border px-5 py-3 flex gap-3 max-w-lg mx-auto">
             <button
               onClick={() => navigate(-1)}

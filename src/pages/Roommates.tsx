@@ -288,9 +288,9 @@ export default function Roommates() {
   const upNext = remaining.slice(2, 5);
 
   return (
-    <div className="min-h-screen bg-background pb-28 desk:pb-8 flex flex-col">
+    <div className="min-h-screen bg-background pb-28 md:pb-8 flex flex-col">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-lg mx-auto px-4 pt-12 desk:pt-6 pb-3">
+        <div className="max-w-lg mx-auto px-4 pt-12 md:pt-6 pb-3">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">{t("findRoommates")}</h1>
             {myProfile?.city && (
@@ -333,8 +333,8 @@ export default function Roommates() {
         </div>
       )}
 
-      <div className="flex-1 max-w-lg desk:max-w-4xl mx-auto w-full px-4 desk:flex desk:items-start desk:gap-8">
-        <div className="w-full desk:max-w-lg">
+      <div className="flex-1 max-w-lg md:max-w-4xl mx-auto w-full px-4 md:flex md:items-start md:gap-8">
+        <div className="w-full md:max-w-lg">
         <>
           <div className="pt-4">
               {profilesLoading ? (
@@ -463,7 +463,7 @@ export default function Roommates() {
         </div>
 
         {/* Desktop side panel: up-next teaser + who-liked-you */}
-        <aside className="hidden desk:block w-72 shrink-0 pt-4 space-y-4">
+        <aside className="hidden md:block w-72 shrink-0 pt-4 space-y-4">
           <div className="bg-card rounded-2xl shadow-card p-4">
             <h3 className="text-sm font-extrabold text-foreground mb-3">{t("upNext")}</h3>
             {upNext.length > 0 ? (

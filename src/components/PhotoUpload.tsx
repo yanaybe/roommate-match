@@ -127,7 +127,7 @@ export default function PhotoUpload({ photos, onChange, maxPhotos = 6 }: PhotoUp
             </button>
             {/* Reorder arrows — always visible on mobile, hover on desktop */}
             {photos.length > 1 && (
-              <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1 opacity-100 desk:opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => movePhoto(i, -1)}
                   disabled={i === 0}

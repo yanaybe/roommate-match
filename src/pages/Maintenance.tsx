@@ -10,7 +10,7 @@ export default function Maintenance() {
       <p className="text-muted-foreground max-w-sm">
         RooMatch is undergoing scheduled maintenance. We'll be back shortly — check back in a few minutes.
       </p>
-      <p className="text-xs text-muted-foreground/60 mt-8">© 2026 RooMatch</p>
+      <p className="text-xs text-muted-foreground/60 mt-8">© {new Date().getFullYear()} RooMatch</p>
     </div>
   );
 }

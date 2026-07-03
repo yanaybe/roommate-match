@@ -152,6 +152,12 @@ export default function ActivitySheet({ open, onOpenChange, user, t }: Props) {
                     <Heart className="w-4 h-4 text-destructive fill-destructive" />
                   </motion.div>
                 ))}
+                <button
+                  onClick={() => { onOpenChange(false); navigate("/saved"); }}
+                  className="w-full py-2.5 rounded-xl bg-secondary text-secondary-foreground text-xs font-semibold hover:bg-muted transition-colors"
+                >
+                  {t("seeAllSaved")}
+                </button>
               </div>
             )
           ) : activityTab === "liked" ? (

@@ -506,7 +506,7 @@ export default function Chats() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pb-28 desk:pb-8">
+      <div className="min-h-screen bg-background flex items-center justify-center pb-28 md:pb-8">
         <p className="text-muted-foreground">{t("signInToChat")}</p>
       </div>
     );
@@ -517,7 +517,7 @@ export default function Chats() {
   // ── Conversation list panel (used in both mobile-only and desktop split) ──
   const ConversationList = (
     <div className="flex flex-col h-full">
-      <div className="px-4 pt-12 desk:pt-6 pb-3 border-b border-border">
+      <div className="px-4 pt-12 md:pt-6 pb-3 border-b border-border">
         <h1 className="text-xl font-extrabold text-foreground">{t("messages")}</h1>
       </div>
       <div className="flex-1 overflow-y-auto">
@@ -569,8 +569,8 @@ export default function Chats() {
                     <p className="text-muted-foreground text-sm truncate">{c.last_message ?? t("startChatting")}</p>
                   </div>
                   {c.unread_count > 0 && (
-                    <span className="gradient-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">
-                      {c.unread_count}
+                    <span className="gradient-primary text-primary-foreground text-xs font-bold rounded-full min-w-5 h-5 px-1.5 flex items-center justify-center shrink-0">
+                      {c.unread_count > 9 ? "9+" : c.unread_count}
                     </span>
                   )}
                 </button>
@@ -587,11 +587,11 @@ export default function Chats() {
     <div className="flex flex-col h-full">
       {/* Chat header */}
       <div className="shrink-0 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="px-4 pt-12 desk:pt-4 pb-3 flex items-center gap-3">
+        <div className="px-4 pt-12 md:pt-4 pb-3 flex items-center gap-3">
           <button
             onClick={() => { setActiveConv(null); refetchConversations(); }}
             aria-label={t("back")}
-            className="desk:hidden p-1 -ml-1 text-foreground"
+            className="md:hidden p-1 -ml-1 text-foreground"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -786,7 +786,7 @@ export default function Chats() {
       />
     </div>
   ) : (
-    <div className="hidden desk:flex h-full flex-1 items-center justify-center text-center pt-16 pb-8">
+    <div className="hidden md:flex h-full flex-1 items-center justify-center text-center pt-16 pb-8">
       <div>
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
           <Send className="w-7 h-7 text-primary" />
@@ -800,12 +800,12 @@ export default function Chats() {
   return (
     <>
       {/* Mobile: show list OR chat based on activeConv */}
-      <div className="desk:hidden min-h-[100dvh] bg-background pb-20">
+      <div className="md:hidden min-h-[100dvh] bg-background pb-20">
         {activeConv ? ChatPanel : ConversationList}
       </div>
 
       {/* Desktop: side-by-side split panel */}
-      <div className="hidden desk:flex h-[100dvh] bg-background">
+      <div className="hidden md:flex h-[100dvh] bg-background">
         <div className="w-80 shrink-0 border-r border-border overflow-hidden">
           {ConversationList}
         </div>

@@ -99,9 +99,10 @@ export default function AdminLayout() {
 
       {/* Main content */}
       <div className="flex-1 md:ml-56 flex flex-col min-h-screen">
-        <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
+        {/* div, not <main> — App.tsx owns the main landmark and nesting them is invalid */}
+        <div className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
           <Outlet />
-        </main>
+        </div>
       </div>
 
       {/* Mobile bottom bar */}

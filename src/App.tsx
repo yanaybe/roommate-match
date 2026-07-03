@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, Outlet, useLocation } from "react-router-dom";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/useLanguage";
@@ -33,6 +32,7 @@ const ContactSupport = lazy(() => import("./pages/ContactSupport"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const RoommateProfile = lazy(() => import("./pages/RoommateProfile"));
 const BillingHistory = lazy(() => import("./pages/BillingHistory"));
+const SavedListings = lazy(() => import("./pages/SavedListings"));
 const Landing = lazy(() => import("./pages/Landing"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Pricing = lazy(() => import("./pages/Pricing"));
@@ -155,7 +155,7 @@ function HomeRoute() {
   const { profile, loading: profileLoading } = useProfile();
   const { collapsed } = useSidebar();
   const [showOAuthWelcome, setShowOAuthWelcome] = useState(false);
-  const offsetClass = collapsed ? "desk:ltr:pl-14 desk:rtl:pr-14" : "desk:ltr:pl-64 desk:rtl:pr-64";
+  const offsetClass = collapsed ? "md:ltr:pl-14 md:rtl:pr-14" : "md:ltr:pl-64 md:rtl:pr-64";
 
   useEffect(() => {
     if (!loading && !profileLoading && user && profile && !profile.onboarding_complete) {
@@ -171,14 +171,14 @@ function HomeRoute() {
   if (!user) return <Landing />;
   if (showOAuthWelcome) return <OAuthWelcome onContinue={() => { setShowOAuthWelcome(false); }} />;
   if (!profile?.onboarding_complete) return <Navigate to="/onboarding" replace />;
-  return <div className={`transition-all duration-200 ${offsetClass}`}><div className="desk:max-w-[1400px] desk:mx-auto"><Index /></div></div>;
+  return <div className={`transition-all duration-200 ${offsetClass}`}><div className="md:max-w-[1400px] md:mx-auto"><Index /></div></div>;
 }
 
 function AuthedLayout() {
   const { user, loading } = useAuth();
   const { collapsed } = useSidebar();
   const location = useLocation();
-  const offsetClass = collapsed ? "desk:ltr:pl-14 desk:rtl:pr-14" : "desk:ltr:pl-64 desk:rtl:pr-64";
+  const offsetClass = collapsed ? "md:ltr:pl-14 md:rtl:pr-14" : "md:ltr:pl-64 md:rtl:pr-64";
   if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
 
@@ -190,7 +190,7 @@ function AuthedLayout() {
     return <Navigate to={`/verify-email${emailParam}`} replace />;
   }
 
-  return <div className={`transition-all duration-200 ${offsetClass}`}><div className="desk:max-w-[1400px] desk:mx-auto"><Outlet /></div></div>;
+  return <div className={`transition-all duration-200 ${offsetClass}`}><div className="md:max-w-[1400px] md:mx-auto"><Outlet /></div></div>;
 }
 
 // Routes inside this layout additionally require a completed onboarding profile.
@@ -212,14 +212,21 @@ const App = () => (
         <UnreadCountProvider>
         <NotificationsProvider>
         <DailyLimitsProvider>
-          <Toaster />
           <Sonner position="top-center" />
           <BrowserRouter>
             <ErrorBoundary>
             <ScrollToTop />
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:bg-background focus:text-foreground focus:px-4 focus:py-2 focus:rounded-xl focus:shadow-elevated focus:text-sm focus:font-semibold"
+            >
+              Skip to content
+            </a>
             <EmailVerificationBanner />
             <NotificationToaster />
             <BottomNav />
+            {/* display:contents keeps the landmark out of layout — pages own their own containers */}
+            <main id="main-content" className="contents">
             <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public — no auth, no sidebar */}
@@ -257,6 +264,7 @@ const App = () => (
                 <Route path="/profile" element={<ErrorBoundary><Profile /></ErrorBoundary>} />
                 <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
                 <Route path="/billing-history" element={<ErrorBoundary><BillingHistory /></ErrorBoundary>} />
+                <Route path="/saved" element={<ErrorBoundary><SavedListings /></ErrorBoundary>} />
 
                 {/* Require completed onboarding profile */}
                 <Route element={<OnboardedLayout />}>
@@ -269,6 +277,7 @@ const App = () => (
               </Route>
             </Routes>
             </Suspense>
+            </main>
             </ErrorBoundary>
           </BrowserRouter>
         </DailyLimitsProvider>

@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/react";
-import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, UserRound, Sparkles, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, UserRound, Sparkles, ChevronRight, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import React, { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,22 +14,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useMySquads } from "@/hooks/useSquad";
 import { calculateRoomMatch } from "@/lib/matching";
+import { dbRowToApartment } from "@/lib/apartments";
 
 const ApartmentMap = lazy(() => import("@/components/ApartmentMap"));
-
-// Fallback coordinates when a listing hasn't been geocoded yet
-const CITY_COORDS: Record<string, [number, number]> = {
-  "Tel Aviv": [32.0853, 34.7818],
-  "Jerusalem": [31.7683, 35.2137],
-  "Haifa": [32.7940, 34.9896],
-  "Beer Sheva": [31.2520, 34.7915],
-  "Netanya": [32.3226, 34.8533],
-  "Herzliya": [32.1663, 34.8434],
-  "Ramat Gan": [32.0826, 34.8127],
-  "Rishon LeZion": [31.9730, 34.7925],
-  "Petah Tikva": [32.0842, 34.8841],
-  "Ashdod": [31.8010, 34.6550],
-};
 
 // Rotating live-activity strip — hides after 5 visits or user dismissal
 function ActivityStrip() {
@@ -95,47 +82,6 @@ function ApartmentCardSkeleton() {
       </div>
     </div>
   );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function dbRowToApartment(row: any): Apartment {
-  const amenities: string[] = [];
-  if (row.has_balcony) amenities.push("Balcony");
-  if (row.has_parking) amenities.push("Parking");
-  if (row.has_elevator) amenities.push("Elevator");
-  if (row.has_ac) amenities.push("AC");
-  if (row.has_laundry) amenities.push("Laundry");
-  if (row.has_wifi) amenities.push("WiFi");
-  if (row.has_gym) amenities.push("Gym");
-  if (row.has_security) amenities.push("Security");
-  if (row.has_rooftop) amenities.push("Rooftop");
-  if (row.has_garden) amenities.push("Garden");
-  if (row.pet_friendly) amenities.push("Pet Friendly");
-  if (row.is_furnished) amenities.push("Furnished");
-
-  const coords: [number, number] =
-    Array.isArray(row.coordinates) && row.coordinates.length === 2
-      ? [row.coordinates[0], row.coordinates[1]]
-      : CITY_COORDS[row.city] ?? [32.0853, 34.7818];
-
-  return {
-    id: row.id,
-    title: row.title,
-    price: row.price,
-    location: `${row.neighborhood}, ${row.city}`,
-    coordinates: coords,
-    images: row.images?.length ? row.images : ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800"],
-    rooms: row.rooms,
-    bathrooms: row.bathrooms,
-    size: row.size,
-    roommates: [],
-    matchPercent: 0,
-    amenities,
-    available: row.available_date,
-    isBoosted: (row.is_featured === true && (!row.featured_until || new Date(row.featured_until) > new Date())) ?? false,
-    listingType: (row.listing_type ?? "room") as "room" | "entire_place",
-    ownerId: row.user_id,
-  };
 }
 
 const SQUAD_BANNER_KEY = "squad_banner_dismissed_at";
@@ -310,9 +256,9 @@ export default function Index() {
   })();
 
   return (
-    <div className="min-h-screen bg-background pb-28 desk:pb-8">
+    <div className="min-h-screen bg-background pb-28 md:pb-8">
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 pt-12 desk:pt-6 pb-3">
+        <div className="max-w-5xl mx-auto px-4 pt-12 md:pt-6 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div>
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
@@ -321,6 +267,15 @@ export default function Index() {
               <p className="text-muted-foreground text-sm">{t("heroFindPerfectRoommate")}</p>
             </div>
             <div className="flex items-center gap-2">
+              {user && (
+                <button
+                  onClick={() => navigate("/saved")}
+                  aria-label={t("savedRooms")}
+                  className="bg-secondary p-2.5 rounded-xl hover:bg-secondary/80 active:scale-95 transition-all"
+                >
+                  <Bookmark className="w-4 h-4 text-secondary-foreground" />
+                </button>
+              )}
               <button
                 onClick={() => setView(view === "list" ? "map" : "list")}
                 aria-label={view === "list" ? t("mapView") : t("listView")}

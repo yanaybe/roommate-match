@@ -187,7 +187,7 @@ export default function MySquads() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pb-28 desk:pb-8">
+      <div className="min-h-screen bg-background flex items-center justify-center pb-28 md:pb-8">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">{t("signInToViewSquads")}</p>
           <button
@@ -202,10 +202,10 @@ export default function MySquads() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28 desk:pb-8">
+    <div className="min-h-screen bg-background pb-28 md:pb-8">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 pt-12 desk:pt-6 pb-3 flex items-center gap-3">
+        <div className="max-w-2xl mx-auto px-4 pt-12 md:pt-6 pb-3 flex items-center gap-3">
           <div className="flex-1">
             <h1 className="text-xl font-extrabold text-foreground">{t("squads")}</h1>
           </div>

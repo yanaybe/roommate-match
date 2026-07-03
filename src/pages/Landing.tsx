@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home, Users, MessageCircle, Zap, Star, Shield,
@@ -24,6 +24,18 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t, language, setLanguage, languageInfo } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
+  const previewScrollRef = useRef<HTMLDivElement>(null);
+  const [previewOverflows, setPreviewOverflows] = useState(false);
+
+  useEffect(() => {
+    const el = previewScrollRef.current;
+    if (!el) return;
+    const check = () => setPreviewOverflows(el.scrollWidth > el.clientWidth + 1);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
@@ -127,15 +139,16 @@ export default function Landing() {
               </AnimatePresence>
             </div>
 
+            {/* Hidden on narrow screens — the auth page's login/register toggle covers sign-in */}
             <button
               onClick={() => navigate("/auth?mode=login")}
-              className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+              className="hidden sm:block text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
             >
               {t("signIn")}
             </button>
             <button
               onClick={() => navigate("/auth?mode=register")}
-              className="gradient-primary text-primary-foreground text-sm font-bold px-4 py-2 rounded-xl shadow-md"
+              className="gradient-primary text-primary-foreground text-sm font-bold px-4 py-2 rounded-xl shadow-md whitespace-nowrap"
             >
               {t("getStarted")}
             </button>
@@ -258,6 +271,7 @@ export default function Landing() {
       <section id="preview-listings" className="px-5 pb-16 max-w-5xl mx-auto">
         <div className="relative">
         <motion.div
+          ref={previewScrollRef}
           variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
           className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide"
         >
@@ -302,7 +316,9 @@ export default function Landing() {
             <p className="text-xs text-muted-foreground text-center mt-1">{t("previewSignUpFree")}</p>
           </motion.div>
         </motion.div>
-        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
+        {previewOverflows && (
+          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
+        )}
         </div>
       </section>
 
@@ -583,7 +599,7 @@ export default function Landing() {
               <button onClick={() => navigate("/terms-of-service")} className="hover:text-foreground transition-colors">{t("footerTerms")}</button>
               <button onClick={() => navigate("/contact-support")} className="hover:text-foreground transition-colors">{t("footerContact")}</button>
             </div>
-            <p className="text-xs text-muted-foreground">© 2026 RooMatch · Made in Israel 🇮🇱</p>
+            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} RooMatch · Made in Israel 🇮🇱</p>
           </div>
         </div>
       </footer>

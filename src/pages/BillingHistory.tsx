@@ -149,7 +149,7 @@ export default function BillingHistory() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-28 desk:pb-8">
+    <div className="min-h-screen bg-background pb-28 md:pb-8">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
@@ -261,7 +261,8 @@ export default function BillingHistory() {
             </motion.div>
           )}
 
-          {/* Filters */}
+          {/* Filters — only useful once there's something to filter */}
+          {transactions.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar mb-3">
             {filters.map((f) => (
               <button
@@ -277,6 +278,7 @@ export default function BillingHistory() {
               </button>
             ))}
           </div>
+          )}
 
           {txLoading ? (
             <div className="flex justify-center py-10">

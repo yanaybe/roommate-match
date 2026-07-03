@@ -38,7 +38,7 @@ export default function BottomNav() {
       {/* ── Mobile: bottom bar ── */}
       {/* safe-area-inset-bottom via inline style for iOS home indicator */}
       <nav
-        className="desk:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border"
         style={{ paddingBottom: "env(safe-area-inset-bottom)", transform: "translateZ(0)" }}
       >
         <div className="flex items-center justify-around h-16 w-full px-2">
@@ -75,8 +75,8 @@ export default function BottomNav() {
                     <div className="relative">
                       <Icon className={`w-5 h-5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`} />
                       {badge > 0 && (
-                        <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                          {badge}
+                        <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[10px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center">
+                          {badge > 9 ? "9+" : badge}
                         </span>
                       )}
                     </div>
@@ -93,7 +93,7 @@ export default function BottomNav() {
 
       {/* ── Desktop: left sidebar ── */}
       <aside
-        className={`hidden desk:flex fixed top-0 bottom-0 z-50 bg-card/95 backdrop-blur-xl border-border flex-col ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l transition-all duration-200 overflow-hidden ${
+        className={`hidden md:flex fixed top-0 bottom-0 z-50 bg-card/95 backdrop-blur-xl border-border flex-col ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l transition-all duration-200 overflow-hidden ${
           collapsed ? "w-14" : "w-64"
         }`}
       >
@@ -144,8 +144,8 @@ export default function BottomNav() {
                 <div className="relative shrink-0">
                   <Icon className="w-5 h-5" />
                   {badge > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                      {badge}
+                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[9px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center">
+                      {badge > 9 ? "9+" : badge}
                     </span>
                   )}
                 </div>
@@ -207,7 +207,7 @@ export default function BottomNav() {
 
           {!collapsed && (
             <p className="text-[11px] text-muted-foreground/60 text-center mt-2">
-              © 2026 RooMatch
+              © {new Date().getFullYear()} RooMatch
             </p>
           )}
         </div>
