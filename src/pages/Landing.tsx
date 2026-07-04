@@ -8,6 +8,8 @@ import {
 import { useLanguage, languages } from "@/hooks/useLanguage";
 import { PLAN_PRICES } from "@/lib/plans";
 import { Dna } from "lucide-react";
+import SectionHeader from "@/components/landing/SectionHeader";
+import ScrollStepsPath from "@/components/landing/ScrollStepsPath";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -325,32 +327,8 @@ export default function Landing() {
       {/* ── How it works ── */}
       <section className="px-5 py-16 bg-secondary/40">
         <div className="max-w-5xl mx-auto">
-          <motion.div
-            variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
-            className="text-center mb-10"
-          >
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("howItWorksTitle")}</h2>
-            <p className="text-muted-foreground mt-2">{t("howItWorksSub")}</p>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {HOW_IT_WORKS.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <motion.div
-                  key={step.step}
-                  variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }} custom={i}
-                  className="bg-card rounded-2xl p-6 shadow-card relative"
-                >
-                  <span className="absolute top-4 right-4 text-xs font-extrabold text-muted-foreground/30">{step.step}</span>
-                  <div className="w-11 h-11 rounded-2xl gradient-primary flex items-center justify-center mb-4">
-                    <Icon className="w-5 h-5 text-primary-foreground" />
-                  </div>
-                  <h3 className="font-bold text-foreground mb-1">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
-                </motion.div>
-              );
-            })}
-          </div>
+          <SectionHeader title={t("howItWorksTitle")} subtitle={t("howItWorksSub")} />
+          <ScrollStepsPath steps={HOW_IT_WORKS} rtl={languageInfo.dir === "rtl"} />
         </div>
       </section>
 
