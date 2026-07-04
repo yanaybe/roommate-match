@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import {
   Home, Users, MessageCircle, Zap, Star, Shield,
   ChevronRight, Heart, MapPin, Check, Sparkles, Globe, Lock
@@ -8,6 +8,8 @@ import {
 import { useLanguage, languages } from "@/hooks/useLanguage";
 import { PLAN_PRICES } from "@/lib/plans";
 import { Dna } from "lucide-react";
+import SectionHeader from "@/components/landing/SectionHeader";
+import ScrollStepsPath from "@/components/landing/ScrollStepsPath";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -36,6 +38,13 @@ export default function Landing() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  const reduceMotion = useReducedMotion() ?? false;
+  const { scrollY } = useScroll();
+  const blob1Y = useTransform(scrollY, [0, 600], [0, 80]);
+  const blob2Y = useTransform(scrollY, [0, 600], [0, -60]);
+  const chipMatchY = useTransform(scrollY, [0, 600], [0, -36]);
+  const chipChatY = useTransform(scrollY, [0, 600], [0, -20]);
 
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
@@ -158,8 +167,14 @@ export default function Landing() {
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden pt-16 pb-20 px-5">
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: "var(--gradient-primary)" }} />
-        <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full opacity-10 blur-3xl bg-accent" />
+        <motion.div
+          style={{ background: "var(--gradient-primary)", y: reduceMotion ? 0 : blob1Y }}
+          className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-10 blur-3xl"
+        />
+        <motion.div
+          style={{ y: reduceMotion ? 0 : blob2Y }}
+          className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full opacity-10 blur-3xl bg-accent"
+        />
 
         <div className="relative max-w-2xl lg:max-w-6xl mx-auto text-center lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center lg:text-left">
         <div>
@@ -244,7 +259,10 @@ export default function Landing() {
             </div>
 
             {/* Floating chips */}
-            <div className="absolute -left-10 top-10 bg-card rounded-2xl shadow-elevated px-4 py-3 -rotate-3 flex items-center gap-2.5">
+            <motion.div
+              style={{ y: reduceMotion ? 0 : chipMatchY, rotate: -3 }}
+              className="absolute -left-10 top-10 bg-card rounded-2xl shadow-elevated px-4 py-3 flex items-center gap-2.5"
+            >
               <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center">
                 <Heart className="w-4 h-4 text-primary-foreground fill-primary-foreground" />
               </div>
@@ -252,8 +270,11 @@ export default function Landing() {
                 <p className="text-xs font-extrabold text-foreground">{t("visualMatchTitle")}</p>
                 <p className="text-[10px] text-muted-foreground">{t("visualMatchSub")}</p>
               </div>
-            </div>
-            <div className="absolute -right-8 bottom-14 bg-card rounded-2xl shadow-elevated px-4 py-3 rotate-2 flex items-center gap-2.5">
+            </motion.div>
+            <motion.div
+              style={{ y: reduceMotion ? 0 : chipChatY, rotate: 2 }}
+              className="absolute -right-8 bottom-14 bg-card rounded-2xl shadow-elevated px-4 py-3 flex items-center gap-2.5"
+            >
               <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center">
                 <MessageCircle className="w-4 h-4 text-accent-foreground" />
               </div>
@@ -261,7 +282,7 @@ export default function Landing() {
                 <p className="text-xs font-extrabold text-foreground">{t("visualChatTitle")}</p>
                 <p className="text-[10px] text-muted-foreground">{t("visualChatSub")}</p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
         </div>
@@ -325,44 +346,14 @@ export default function Landing() {
       {/* ── How it works ── */}
       <section className="px-5 py-16 bg-secondary/40">
         <div className="max-w-5xl mx-auto">
-          <motion.div
-            variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
-            className="text-center mb-10"
-          >
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("howItWorksTitle")}</h2>
-            <p className="text-muted-foreground mt-2">{t("howItWorksSub")}</p>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {HOW_IT_WORKS.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <motion.div
-                  key={step.step}
-                  variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }} custom={i}
-                  className="bg-card rounded-2xl p-6 shadow-card relative"
-                >
-                  <span className="absolute top-4 right-4 text-xs font-extrabold text-muted-foreground/30">{step.step}</span>
-                  <div className="w-11 h-11 rounded-2xl gradient-primary flex items-center justify-center mb-4">
-                    <Icon className="w-5 h-5 text-primary-foreground" />
-                  </div>
-                  <h3 className="font-bold text-foreground mb-1">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
-                </motion.div>
-              );
-            })}
-          </div>
+          <SectionHeader title={t("howItWorksTitle")} subtitle={t("howItWorksSub")} />
+          <ScrollStepsPath steps={HOW_IT_WORKS} rtl={languageInfo.dir === "rtl"} />
         </div>
       </section>
 
       {/* ── Why RooMatch? ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
-        <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
-          className="text-center mb-10"
-        >
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("whyRoomatchTitle")}</h2>
-          <p className="text-muted-foreground mt-2">{t("whyRoomatchSub")}</p>
-        </motion.div>
+        <SectionHeader title={t("whyRoomatchTitle")} subtitle={t("whyRoomatchSub")} />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             {
@@ -398,13 +389,7 @@ export default function Landing() {
 
       {/* ── Features ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
-        <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
-          className="text-center mb-10"
-        >
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("featuresTitle")}</h2>
-          <p className="text-muted-foreground mt-2">{t("featuresSub")}</p>
-        </motion.div>
+        <SectionHeader title={t("featuresTitle")} subtitle={t("featuresSub")} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {FEATURES.map((f, i) => {
             const Icon = f.icon;
@@ -446,20 +431,45 @@ export default function Landing() {
                 <Zap className="w-3.5 h-3.5" />
                 {t("onlyOnRoomMatch")}
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3">
+              <motion.h2
+                initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5 }}
+                className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3"
+              >
                 {t("squadSectionTitle")}
-              </h2>
-              <p className="text-muted-foreground mb-6 max-w-lg">
+              </motion.h2>
+              <motion.p
+                initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="text-muted-foreground mb-6 max-w-lg"
+              >
                 {t("squadSectionDesc")}
-              </p>
+              </motion.p>
               {/* Squad 3-step explainer */}
-              <div className="flex items-center gap-2 mb-5">
+              <motion.div
+                className="flex items-center gap-2 mb-5"
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, amount: 0.6 }}
+                variants={{ hidden: {}, show: { transition: { staggerChildren: reduceMotion ? 0 : 0.35 } } }}
+              >
                 {[
                   { step: "1", label: t("squadInlineStep1") },
                   { step: "2", label: t("squadInlineStep2") },
                   { step: "3", label: t("squadStep4") },
                 ].map(({ step, label }, i) => (
-                  <div key={step} className="flex items-center gap-1.5">
+                  <motion.div
+                    key={step}
+                    variants={{
+                      hidden: { opacity: reduceMotion ? 1 : 0.2 },
+                      show: { opacity: 1, transition: { duration: 0.4 } },
+                    }}
+                    className="flex items-center gap-1.5"
+                  >
                     {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
                     <div className="flex flex-col items-center text-center">
                       <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center mb-1 shrink-0">
@@ -467,16 +477,19 @@ export default function Landing() {
                       </div>
                       <span className="text-[10px] text-foreground font-medium leading-tight max-w-[56px]">{label}</span>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
-              <button
+              </motion.div>
+              <motion.button
                 onClick={() => navigate("/auth")}
+                whileInView={reduceMotion ? undefined : { scale: [1, 1.04, 1] }}
+                viewport={{ once: true, amount: 0.8 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
                 className="gradient-primary text-primary-foreground font-bold px-6 py-3 rounded-xl text-sm flex items-center gap-2 w-fit"
               >
                 <Users className="w-4 h-4" />
                 {t("startASquad")}
-              </button>
+              </motion.button>
             </div>
           </motion.div>
         </div>
@@ -484,13 +497,7 @@ export default function Landing() {
 
       {/* ── Pricing ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
-        <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
-          className="text-center mb-10"
-        >
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("pricingTitle")}</h2>
-          <p className="text-muted-foreground mt-2">{t("pricingSub")}</p>
-        </motion.div>
+        <SectionHeader title={t("pricingTitle")} subtitle={t("pricingSub")} />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PLANS.map((plan, i) => (
             <motion.div
@@ -542,12 +549,24 @@ export default function Landing() {
           variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
           className="max-w-2xl mx-auto text-center"
         >
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3">
+          <motion.h2
+            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5 }}
+            className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3"
+          >
             {t("ctaTitle")}
-          </h2>
-          <p className="text-muted-foreground mb-7">
+          </motion.h2>
+          <motion.p
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="text-muted-foreground mb-7"
+          >
             {t("ctaDesc")}
-          </p>
+          </motion.p>
           <button
             onClick={() => navigate("/auth")}
             className="gradient-primary text-primary-foreground font-bold px-10 py-4 rounded-2xl text-base shadow-elevated inline-flex items-center gap-2"
