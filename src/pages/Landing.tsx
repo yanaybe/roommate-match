@@ -353,13 +353,7 @@ export default function Landing() {
 
       {/* ── Why RooMatch? ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
-        <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
-          className="text-center mb-10"
-        >
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("whyRoomatchTitle")}</h2>
-          <p className="text-muted-foreground mt-2">{t("whyRoomatchSub")}</p>
-        </motion.div>
+        <SectionHeader title={t("whyRoomatchTitle")} subtitle={t("whyRoomatchSub")} />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             {
@@ -395,13 +389,7 @@ export default function Landing() {
 
       {/* ── Features ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
-        <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
-          className="text-center mb-10"
-        >
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("featuresTitle")}</h2>
-          <p className="text-muted-foreground mt-2">{t("featuresSub")}</p>
-        </motion.div>
+        <SectionHeader title={t("featuresTitle")} subtitle={t("featuresSub")} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {FEATURES.map((f, i) => {
             const Icon = f.icon;
@@ -443,12 +431,24 @@ export default function Landing() {
                 <Zap className="w-3.5 h-3.5" />
                 {t("onlyOnRoomMatch")}
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3">
+              <motion.h2
+                initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5 }}
+                className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3"
+              >
                 {t("squadSectionTitle")}
-              </h2>
-              <p className="text-muted-foreground mb-6 max-w-lg">
+              </motion.h2>
+              <motion.p
+                initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="text-muted-foreground mb-6 max-w-lg"
+              >
                 {t("squadSectionDesc")}
-              </p>
+              </motion.p>
               {/* Squad 3-step explainer */}
               <div className="flex items-center gap-2 mb-5">
                 {[
@@ -481,13 +481,7 @@ export default function Landing() {
 
       {/* ── Pricing ── */}
       <section className="px-5 py-16 max-w-5xl mx-auto">
-        <motion.div
-          variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
-          className="text-center mb-10"
-        >
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{t("pricingTitle")}</h2>
-          <p className="text-muted-foreground mt-2">{t("pricingSub")}</p>
-        </motion.div>
+        <SectionHeader title={t("pricingTitle")} subtitle={t("pricingSub")} />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PLANS.map((plan, i) => (
             <motion.div
@@ -539,12 +533,24 @@ export default function Landing() {
           variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.01 }}
           className="max-w-2xl mx-auto text-center"
         >
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3">
+          <motion.h2
+            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5 }}
+            className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3"
+          >
             {t("ctaTitle")}
-          </h2>
-          <p className="text-muted-foreground mb-7">
+          </motion.h2>
+          <motion.p
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="text-muted-foreground mb-7"
+          >
             {t("ctaDesc")}
-          </p>
+          </motion.p>
           <button
             onClick={() => navigate("/auth")}
             className="gradient-primary text-primary-foreground font-bold px-10 py-4 rounded-2xl text-base shadow-elevated inline-flex items-center gap-2"
