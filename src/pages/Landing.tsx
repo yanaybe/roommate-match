@@ -450,13 +450,26 @@ export default function Landing() {
                 {t("squadSectionDesc")}
               </motion.p>
               {/* Squad 3-step explainer */}
-              <div className="flex items-center gap-2 mb-5">
+              <motion.div
+                className="flex items-center gap-2 mb-5"
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, amount: 0.6 }}
+                variants={{ hidden: {}, show: { transition: { staggerChildren: reduceMotion ? 0 : 0.35 } } }}
+              >
                 {[
                   { step: "1", label: t("squadInlineStep1") },
                   { step: "2", label: t("squadInlineStep2") },
                   { step: "3", label: t("squadStep4") },
                 ].map(({ step, label }, i) => (
-                  <div key={step} className="flex items-center gap-1.5">
+                  <motion.div
+                    key={step}
+                    variants={{
+                      hidden: { opacity: reduceMotion ? 1 : 0.2 },
+                      show: { opacity: 1, transition: { duration: 0.4 } },
+                    }}
+                    className="flex items-center gap-1.5"
+                  >
                     {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
                     <div className="flex flex-col items-center text-center">
                       <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center mb-1 shrink-0">
@@ -464,16 +477,19 @@ export default function Landing() {
                       </div>
                       <span className="text-[10px] text-foreground font-medium leading-tight max-w-[56px]">{label}</span>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
-              <button
+              </motion.div>
+              <motion.button
                 onClick={() => navigate("/auth")}
+                whileInView={reduceMotion ? undefined : { scale: [1, 1.04, 1] }}
+                viewport={{ once: true, amount: 0.8 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
                 className="gradient-primary text-primary-foreground font-bold px-6 py-3 rounded-xl text-sm flex items-center gap-2 w-fit"
               >
                 <Users className="w-4 h-4" />
                 {t("startASquad")}
-              </button>
+              </motion.button>
             </div>
           </motion.div>
         </div>
