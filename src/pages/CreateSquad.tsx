@@ -77,12 +77,15 @@ export default function CreateSquad() {
     navigate(`/squad/${squad.id}`);
   };
 
+  // Back to wherever the user came from; /create only when deep-linked with no in-app history
+  const goBack = () => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate("/create"));
+
   return (
     <div className="h-dvh flex flex-col bg-background">
       {/* Sticky header + progress */}
       <div className="shrink-0 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-3 pb-2 flex items-center gap-3">
-          <button onClick={() => step > 0 ? setStep(step - 1) : navigate("/create")} className="p-1 -ml-1">
+          <button onClick={() => step > 0 ? setStep(step - 1) : goBack()} className="p-1 -ml-1">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <div className="flex-1 min-w-0">

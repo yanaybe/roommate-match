@@ -393,13 +393,16 @@ export default function PostApartment() {
   // First image to show in the review preview
   const previewCoverUrl = keptImages[0] ?? imagePreviews[0] ?? null;
 
+  // Back to wherever the user came from; /create only when deep-linked with no in-app history
+  const goBack = () => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate("/create"));
+
   return (
     <div className="h-dvh flex flex-col bg-background">
       {/* Sticky header + progress */}
       <div className="shrink-0 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-lg mx-auto px-4 pt-3 pb-2 flex items-center gap-3">
           <button
-            onClick={() => step > 0 ? setStep(step - 1) : (isEditMode ? navigate(-1) : navigate("/create"))}
+            onClick={() => step > 0 ? setStep(step - 1) : goBack()}
             className="p-2 rounded-xl hover:bg-muted transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
