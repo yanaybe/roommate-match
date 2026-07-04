@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/react";
-import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, UserRound, Sparkles, ChevronRight, Bookmark } from "lucide-react";
+import { Search, SlidersHorizontal, Map, List, ArrowRight, X, RefreshCw, Users, UserRound, Sparkles, ChevronRight, Bookmark, Plus } from "lucide-react";
 import { toast } from "sonner";
 import React, { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
@@ -287,6 +287,15 @@ export default function Index() {
                   <List className="w-4 h-4 text-secondary-foreground" />
                 )}
               </button>
+              {user && (
+                <button
+                  onClick={() => navigate("/post-apartment")}
+                  aria-label={t("postAListing")}
+                  className="gradient-primary p-2.5 rounded-xl shadow-md hover:opacity-90 active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4 text-primary-foreground" />
+                </button>
+              )}
             </div>
           </div>
           <div className="flex gap-2">
