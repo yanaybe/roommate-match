@@ -34,6 +34,7 @@ import { isUUID, getMockSavedApartmentKey } from "@/lib/profileUtils";
 import { useBlockReport } from "@/hooks/useBlockReport";
 import ReportSheet from "@/components/ReportSheet";
 import { useLanguage } from "@/hooks/useLanguage";
+import { formatAvailableDate } from "@/lib/listingValidation";
 import BoostListingSheet from "@/components/BoostListingSheet";
 import { Zap, Flame, Home, PawPrint } from "lucide-react";
 
@@ -181,7 +182,7 @@ export default function ApartmentDetail() {
   const navigate = useNavigate();
   const { requireAuth } = useRequireAuth();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { canSave, savesLimit, recordSave, openPremiumSheet } = useDailyLimits();
   const queryClient = useQueryClient();
   const { reportListing } = useBlockReport();
@@ -532,7 +533,7 @@ export default function ApartmentDetail() {
               </div>
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center">
                 <Calendar className="w-4 h-4 mx-auto text-primary mb-1" />
-                <span className="text-foreground text-xs font-bold block leading-tight">{apartment.available}</span>
+                <span className="text-foreground text-xs font-bold block leading-tight">{formatAvailableDate(apartment.available, language)}</span>
                 <span className="text-muted-foreground text-xs">{t("available")}</span>
               </div>
             </div>

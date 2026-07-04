@@ -16,6 +16,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { AMENITY_ICONS } from "@/lib/amenityIcons";
 import { analytics } from "@/lib/analytics";
 import { validateImageMagicBytes, sanitizeText } from "@/lib/security";
+import { validateListingField, validateStep, formatAvailableDate, CITY_PRICE_HINTS, type ListingField } from "@/lib/listingValidation";
 
 const DRAFT_KEY = "post_apartment_draft";
 
@@ -37,7 +38,7 @@ export default function PostApartment() {
   const isEditMode = Boolean(editId);
 
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const submittingRef = useRef(false);
   const [step, setStep] = useState(0);
@@ -126,8 +127,22 @@ export default function PostApartment() {
     return () => clearTimeout(timer);
   }, [form, step]);
 
+  const [errors, setErrors] = useState<Partial<Record<ListingField, string>>>({});
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const update = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
+  const update = (key: string, value: any) => {
+    setForm(prev => ({ ...prev, [key]: value }));
+    // Live-revalidate fields that already show an error so it clears as the user types
+    if (errors[key as ListingField] && typeof value === "string") {
+      setErrors(prev => ({ ...prev, [key]: validateListingField(key as ListingField, value) ?? undefined }));
+    }
+  };
+
+  const validateOnBlur = (field: ListingField) =>
+    setErrors(prev => ({ ...prev, [field]: validateListingField(field, String(form[field] ?? "")) ?? undefined }));
+
+  const fieldError = (field: ListingField) =>
+    errors[field] ? <p className="text-xs text-destructive mt-1">{t(errors[field] as string)}</p> : null;
 
   // Pre-fill form when editing an existing listing
   useEffect(() => {
@@ -232,15 +247,26 @@ export default function PostApartment() {
 
   const canProceed = () => {
     switch (currentStepKey) {
-      case "listing-type": return true;
       case "photos": return totalImageCount > 0;
-      case "location": return !!(form.address && form.city && form.neighborhood);
-      case "details": return !!(form.title && form.price && form.size);
       case "room-type": return !!form.roomType;
-      case "amenities": return true;
-      case "review": return true;
+      // location/details validate on Next click so the user sees inline errors
       default: return true;
     }
+  };
+
+  const todayIso = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const isCustomAvailableDate = /^\d{4}-\d{2}-\d{2}$/.test(form.availableDate);
+
+  const handleNext = () => {
+    const stepErrors = validateStep(currentStepKey, form);
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(prev => ({ ...prev, ...stepErrors }));
+      return;
+    }
+    setStep(step + 1);
   };
 
   const geocodeAddress = async (address: string, neighborhood: string, city: string): Promise<[number, number] | null> => {
@@ -259,6 +285,15 @@ export default function PostApartment() {
   const handleSubmit = async () => {
     if (submittingRef.current) return;
     if (!user) { toast.error(t("pleaseSignIn")); return; }
+    // Final guard — drafts and edit mode can carry values that skipped step gates
+    const allErrors = { ...validateStep("location", form), ...validateStep("details", form) };
+    if (Object.keys(allErrors).length > 0) {
+      setErrors(allErrors);
+      const locationBad = ["address", "neighborhood", "city"].some(f => f in allErrors);
+      setStep(activeStepKeys.indexOf(locationBad ? "location" : "details"));
+      toast.error(t(Object.values(allErrors)[0] as string));
+      return;
+    }
     submittingRef.current = true;
     setSubmitting(true);
     const uploadedPaths: string[] = [];
@@ -286,11 +321,11 @@ export default function PostApartment() {
         address: form.address,
         neighborhood: form.neighborhood,
         city: form.city,
-        price: parseInt(form.price) || 0,
-        rooms: parseInt(form.rooms) || 1,
-        bathrooms: parseInt(form.bathrooms) || 1,
-        size: parseInt(form.size) || 0,
-        floor: form.floor ? parseInt(form.floor) : null,
+        price: parseInt(form.price, 10),
+        rooms: parseInt(form.rooms, 10) || 1,
+        bathrooms: parseInt(form.bathrooms, 10) || 1,
+        size: parseInt(form.size, 10),
+        floor: form.floor.trim() ? parseInt(form.floor, 10) : null,
         available_date: form.availableDate,
         listing_type: listingType,
         room_type: form.roomType,
@@ -557,15 +592,17 @@ export default function PostApartment() {
 
                   <div className="space-y-2">
                     <Label className="text-foreground">{t("neighborhood")}</Label>
-                    <Input placeholder={t("neighborhoodPlaceholder")} value={form.neighborhood} onChange={e => update("neighborhood", e.target.value)} className="rounded-xl" />
+                    <Input placeholder={t("neighborhoodPlaceholder")} value={form.neighborhood} onChange={e => update("neighborhood", e.target.value)} onBlur={() => validateOnBlur("neighborhood")} className="rounded-xl" />
+                    {fieldError("neighborhood")}
                   </div>
 
                   <div className="space-y-2">
                     <Label className="text-foreground">{t("streetAddress")}</Label>
                     <div className="relative">
                       <MapPin className="absolute ltr:left-3 rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input placeholder={t("streetNameNumber")} value={form.address} onChange={e => update("address", e.target.value)} className="rounded-xl ltr:pl-10 rtl:pr-10" />
+                      <Input placeholder={t("streetNameNumber")} value={form.address} onChange={e => update("address", e.target.value)} onBlur={() => validateOnBlur("address")} className="rounded-xl ltr:pl-10 rtl:pr-10" />
                     </div>
+                    {fieldError("address")}
                   </div>
                 </div>
               </div>
@@ -582,7 +619,8 @@ export default function PostApartment() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-foreground">{t("aptTitle")}</Label>
-                    <Input placeholder={t("titlePlaceholder")} value={form.title} onChange={e => update("title", e.target.value)} className="rounded-xl" />
+                    <Input placeholder={t("titlePlaceholder")} maxLength={100} value={form.title} onChange={e => update("title", e.target.value)} onBlur={() => validateOnBlur("title")} className="rounded-xl" />
+                    {fieldError("title")}
                   </div>
 
                   <div className="space-y-2">
@@ -593,11 +631,17 @@ export default function PostApartment() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label className="text-foreground">{t("monthlyPrice")}</Label>
-                      <Input type="number" placeholder="3,500" value={form.price} onChange={e => update("price", e.target.value)} className="rounded-xl" />
+                      <Input type="number" placeholder="3,500" value={form.price} onChange={e => update("price", e.target.value)} onBlur={() => validateOnBlur("price")} className="rounded-xl" />
+                      {fieldError("price")}
+                      {CITY_PRICE_HINTS[form.city] && (() => {
+                        const [lo, hi] = CITY_PRICE_HINTS[form.city][listingType === "entire_place" ? "entire" : "room"];
+                        return <p className="text-xs text-muted-foreground mt-1">{t("typicalPrice")} ₪{lo.toLocaleString()}–₪{hi.toLocaleString()}</p>;
+                      })()}
                     </div>
                     <div className="space-y-2">
                       <Label className="text-foreground flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5" /> {t("sizeM2")}</Label>
-                      <Input type="number" placeholder="85" value={form.size} onChange={e => update("size", e.target.value)} className="rounded-xl" />
+                      <Input type="number" placeholder="85" value={form.size} onChange={e => update("size", e.target.value)} onBlur={() => validateOnBlur("size")} className="rounded-xl" />
+                      {fieldError("size")}
                     </div>
                   </div>
 
@@ -622,8 +666,41 @@ export default function PostApartment() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-foreground flex items-center gap-1.5"><Building className="w-3.5 h-3.5" /> {t("floorLbl")}</Label>
-                      <Input type="number" placeholder="3" value={form.floor} onChange={e => update("floor", e.target.value)} className="rounded-xl" />
+                      <Input type="number" placeholder="3" value={form.floor} onChange={e => update("floor", e.target.value)} onBlur={() => validateOnBlur("floor")} className="rounded-xl" />
+                      {fieldError("floor")}
                     </div>
+                  </div>
+
+                  {/* Availability — here (not the room-only step) so entire-place listings set it too */}
+                  <div className="space-y-2">
+                    <Label className="text-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {t("availableFromLbl")}</Label>
+                    <Select
+                      value={isCustomAvailableDate ? "custom" : form.availableDate}
+                      onValueChange={v => update("availableDate", v === "custom" ? todayIso() : v)}
+                    >
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue>{isCustomAvailableDate ? formatAvailableDate(form.availableDate, language) : undefined}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Immediately">{t("immediately")}</SelectItem>
+                        <SelectItem value="Next week">{t("nextWeekLbl")}</SelectItem>
+                        <SelectItem value="Next month">{t("nextMonthLbl")}</SelectItem>
+                        <SelectItem value="In 2 months">{t("in2Months")}</SelectItem>
+                        <SelectItem value="Flexible">{t("optFlexible")}</SelectItem>
+                        <SelectItem value="custom">{t("pickADate")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {isCustomAvailableDate && (
+                      <Input
+                        type="date"
+                        value={form.availableDate}
+                        min={todayIso()}
+                        onChange={e => update("availableDate", e.target.value)}
+                        onBlur={() => validateOnBlur("availableDate")}
+                        className="rounded-xl"
+                      />
+                    )}
+                    {fieldError("availableDate")}
                   </div>
                 </div>
               </div>
@@ -655,19 +732,6 @@ export default function PostApartment() {
                     <Textarea placeholder={t("roomDescPlaceholder")} value={form.roomDescription} onChange={e => update("roomDescription", e.target.value)} className="rounded-xl min-h-[100px]" />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {t("availableFromLbl")}</Label>
-                    <Select value={form.availableDate} onValueChange={v => update("availableDate", v)}>
-                      <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Immediately">{t("immediately")}</SelectItem>
-                        <SelectItem value="Next week">{t("nextWeekLbl")}</SelectItem>
-                        <SelectItem value="Next month">{t("nextMonthLbl")}</SelectItem>
-                        <SelectItem value="In 2 months">{t("in2Months")}</SelectItem>
-                        <SelectItem value="Flexible">{t("optFlexible")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
               </div>
             )}
@@ -744,7 +808,7 @@ export default function PostApartment() {
                         ? <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-primary/10 rounded-full text-primary"><Home className="w-3 h-3" /> {t("entireApartment")}</span>
                         : <span className="text-xs px-2.5 py-1 bg-accent rounded-full text-accent-foreground">{form.roomType} Room</span>
                       }
-                      <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground"><CalendarIcon2 className="w-3 h-3" /> {form.availableDate}</span>
+                      <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground"><CalendarIcon2 className="w-3 h-3" /> {formatAvailableDate(form.availableDate, language)}</span>
                       {totalImageCount > 0 && (
                         <span className="text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground">📷 {totalImageCount} photos</span>
                       )}
@@ -768,7 +832,7 @@ export default function PostApartment() {
             </Button>
           )}
           {step < activeStepKeys.length - 1 ? (
-            <Button onClick={() => setStep(step + 1)} disabled={!canProceed()} className="rounded-xl flex-1 gradient-primary text-primary-foreground">
+            <Button onClick={handleNext} disabled={!canProceed()} className="rounded-xl flex-1 gradient-primary text-primary-foreground">
               {t("continueBtn")} <ArrowRight className="w-4 h-4 ltr:ml-1 rtl:mr-1" />
             </Button>
           ) : (

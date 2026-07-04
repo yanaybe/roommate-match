@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyLimits } from "@/hooks/useDailyLimits";
 import { useLanguage } from "@/hooks/useLanguage";
+import { formatAvailableDate } from "@/lib/listingValidation";
 
 const FALLBACK_APARTMENT = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800";
 const avatarFallback = (name: string) =>
@@ -31,7 +32,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
   const navigate = useNavigate();
   const { canSave, savesLimit, recordSave, openPremiumSheet } = useDailyLimits();
   const queryClient = useQueryClient();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(apartment.id);
 
@@ -266,7 +267,7 @@ export default function ApartmentCard({ apartment, index }: ApartmentCardProps) 
 
         <div className="flex items-center gap-1 text-muted-foreground text-xs">
           <Calendar className="w-3 h-3" />
-          <span>{t("availablePrefix")} {apartment.available}</span>
+          <span>{t("availablePrefix")} {formatAvailableDate(apartment.available, language)}</span>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap text-muted-foreground text-xs border-t border-border/40 pt-2">
