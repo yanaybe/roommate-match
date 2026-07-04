@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import {
   Home, Users, MessageCircle, Zap, Star, Shield,
   ChevronRight, Heart, MapPin, Check, Sparkles, Globe, Lock
@@ -38,6 +38,13 @@ export default function Landing() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  const reduceMotion = useReducedMotion() ?? false;
+  const { scrollY } = useScroll();
+  const blob1Y = useTransform(scrollY, [0, 600], [0, 80]);
+  const blob2Y = useTransform(scrollY, [0, 600], [0, -60]);
+  const chipMatchY = useTransform(scrollY, [0, 600], [0, -36]);
+  const chipChatY = useTransform(scrollY, [0, 600], [0, -20]);
 
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
@@ -160,8 +167,14 @@ export default function Landing() {
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden pt-16 pb-20 px-5">
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: "var(--gradient-primary)" }} />
-        <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full opacity-10 blur-3xl bg-accent" />
+        <motion.div
+          style={{ background: "var(--gradient-primary)", y: reduceMotion ? 0 : blob1Y }}
+          className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-10 blur-3xl"
+        />
+        <motion.div
+          style={{ y: reduceMotion ? 0 : blob2Y }}
+          className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full opacity-10 blur-3xl bg-accent"
+        />
 
         <div className="relative max-w-2xl lg:max-w-6xl mx-auto text-center lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center lg:text-left">
         <div>
@@ -246,7 +259,10 @@ export default function Landing() {
             </div>
 
             {/* Floating chips */}
-            <div className="absolute -left-10 top-10 bg-card rounded-2xl shadow-elevated px-4 py-3 -rotate-3 flex items-center gap-2.5">
+            <motion.div
+              style={{ y: reduceMotion ? 0 : chipMatchY, rotate: -3 }}
+              className="absolute -left-10 top-10 bg-card rounded-2xl shadow-elevated px-4 py-3 flex items-center gap-2.5"
+            >
               <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center">
                 <Heart className="w-4 h-4 text-primary-foreground fill-primary-foreground" />
               </div>
@@ -254,8 +270,11 @@ export default function Landing() {
                 <p className="text-xs font-extrabold text-foreground">{t("visualMatchTitle")}</p>
                 <p className="text-[10px] text-muted-foreground">{t("visualMatchSub")}</p>
               </div>
-            </div>
-            <div className="absolute -right-8 bottom-14 bg-card rounded-2xl shadow-elevated px-4 py-3 rotate-2 flex items-center gap-2.5">
+            </motion.div>
+            <motion.div
+              style={{ y: reduceMotion ? 0 : chipChatY, rotate: 2 }}
+              className="absolute -right-8 bottom-14 bg-card rounded-2xl shadow-elevated px-4 py-3 flex items-center gap-2.5"
+            >
               <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center">
                 <MessageCircle className="w-4 h-4 text-accent-foreground" />
               </div>
@@ -263,7 +282,7 @@ export default function Landing() {
                 <p className="text-xs font-extrabold text-foreground">{t("visualChatTitle")}</p>
                 <p className="text-[10px] text-muted-foreground">{t("visualChatSub")}</p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
         </div>
