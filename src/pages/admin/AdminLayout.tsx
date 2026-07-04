@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
+  ArrowLeft,
   LayoutDashboard,
   Users,
   Home,
@@ -49,6 +50,13 @@ export default function AdminLayout() {
       <aside className="hidden md:flex flex-col w-56 bg-background border-r border-border fixed inset-y-0 left-0 z-30">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 py-5 border-b border-border">
+          <button
+            onClick={() => navigate("/profile")}
+            aria-label="Back to profile"
+            className="p-1 -ml-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
           <Shield className="w-5 h-5 text-primary shrink-0" />
           <div>
             <span className="text-sm font-extrabold text-foreground">RooMatch</span>
@@ -99,6 +107,18 @@ export default function AdminLayout() {
 
       {/* Main content */}
       <div className="flex-1 md:ml-56 flex flex-col min-h-screen">
+        {/* Mobile top bar — back to profile (desktop has it in the sidebar) */}
+        <div className="flex md:hidden items-center gap-2 px-4 pt-3">
+          <button
+            onClick={() => navigate("/profile")}
+            aria-label="Back to profile"
+            className="p-1.5 -ml-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <Shield className="w-4 h-4 text-primary" />
+          <span className="text-sm font-extrabold text-foreground">Admin</span>
+        </div>
         {/* div, not <main> — App.tsx owns the main landmark and nesting them is invalid */}
         <div className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
           <Outlet />
