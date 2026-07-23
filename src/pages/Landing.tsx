@@ -49,7 +49,7 @@ export default function Landing() {
   const STATS = [
     { value: "14", label: t("statsFactorsLabel") },
     { value: "3", label: t("statsLanguagesLabel") },
-    { value: "₪0", label: t("statsFreeToStart") },
+    { value: "Free", label: t("statsFreeToStart") },
   ];
 
   const HOW_IT_WORKS = [

@@ -12,7 +12,7 @@
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; upgrade-insecure-requests; script-src 'self' https://cdn.paddle.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com https://sandbox-api.paddle.com https://api.paddle.com; img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://ui-avatars.com https://*.basemaps.cartocdn.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://buy.paddle.com https://sandbox-buy.paddle.com; worker-src 'self' blob:;"
+          "value": "default-src 'self'; upgrade-insecure-requests; script-src 'self' https://cdn.paddle.com https://*.i.posthog.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com https://sandbox-api.paddle.com https://api.paddle.com https://*.i.posthog.com https://*.posthog.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io; img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://ui-avatars.com https://*.basemaps.cartocdn.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://buy.paddle.com https://sandbox-buy.paddle.com; worker-src 'self' blob:;"
         }
       ]
     }
