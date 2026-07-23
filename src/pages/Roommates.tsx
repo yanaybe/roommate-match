@@ -91,8 +91,11 @@ export default function Roommates() {
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   const [matchedPercent, setMatchedPercent] = useState(0);
   const [matchedBreakdown, setMatchedBreakdown] = useState<import("@/lib/matching").MatchFactor[]>([]);
+  // Default to "All cities" so a new user in a low-density city isn't dropped
+  // onto an empty deck. We only narrow to the user's own city if they've
+  // explicitly chosen it before (stored value === "false").
   const [showAllCities, setShowAllCities] = useState(
-    () => localStorage.getItem("show_all_cities") === "true"
+    () => localStorage.getItem("show_all_cities") !== "false"
   );
   // City filter is applied at the DB level — only fetch profiles from the
   // user's own city unless "All cities" mode is on.
