@@ -1,5 +1,12 @@
-import { describe, it, expect } from "vitest";
-import { calculateUserMatch, calculateRoomMatch, calculateSquadMatch } from "@/lib/matching";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import {
+  calculateUserMatch,
+  calculateRoomMatch,
+  calculateSquadMatch,
+  genderPreferencesCompatible,
+  isSuppressedMatch,
+  MATCH_SUPPRESSION_THRESHOLD,
+} from "@/lib/matching";
 import type { ProfileData } from "@/lib/matching";
 
 const base: ProfileData = {
@@ -374,5 +381,184 @@ describe("calculateSquadMatch", () => {
     const score = calculateSquadMatch(worst, squad, []);
     expect(score).toBeGreaterThanOrEqual(0);
     expect(score).toBeLessThanOrEqual(100);
+  });
+});
+
+// ─── genderPreferencesCompatible (bug 2a) ─────────────────────────────────────
+
+describe("genderPreferencesCompatible", () => {
+  const male = { gender: "Male", gender_preference: "No preference" };
+  const female = { gender: "Female", gender_preference: "No preference" };
+
+  it("allows any pair when both say No preference", () => {
+    expect(genderPreferencesCompatible(male, female)).toBe(true);
+  });
+
+  it("rejects a pair when one side wants Female and the other is Male", () => {
+    const wantsFemale = { gender: "Female", gender_preference: "Female" };
+    expect(genderPreferencesCompatible(wantsFemale, male)).toBe(false);
+  });
+
+  it("allows a pair when the stated preference matches the other's gender", () => {
+    const wantsFemale = { gender: "Female", gender_preference: "Female" };
+    expect(genderPreferencesCompatible(wantsFemale, female)).toBe(true);
+  });
+
+  it("treats Mixed as no preference", () => {
+    const mixed = { gender: "Male", gender_preference: "Mixed" };
+    expect(genderPreferencesCompatible(mixed, female)).toBe(true);
+  });
+
+  it("requires BOTH sides' preferences to be met", () => {
+    const wantsMale = { gender: "Female", gender_preference: "Male" };
+    const maleWantsMale = { gender: "Male", gender_preference: "Male" };
+    // wantsMale is satisfied by a Male, but he only wants Males → incompatible
+    expect(genderPreferencesCompatible(wantsMale, maleWantsMale)).toBe(false);
+  });
+
+  it("treats a missing gender as No preference", () => {
+    const wantsFemale = { gender: "Female", gender_preference: "Female" };
+    expect(genderPreferencesCompatible(wantsFemale, { gender: null, gender_preference: "Female" })).toBe(true);
+  });
+
+  it("treats a missing preference as No preference", () => {
+    expect(genderPreferencesCompatible({ gender: "Male" }, { gender: "Female" })).toBe(true);
+  });
+});
+
+// ─── isSuppressedMatch (bug 2b) ───────────────────────────────────────────────
+
+describe("isSuppressedMatch", () => {
+  it("does not suppress a perfectly compatible pair", () => {
+    expect(isSuppressedMatch(base, base)).toBe(false);
+  });
+
+  it("suppresses a catastrophically incompatible pair", () => {
+    const seeker: ProfileData = {
+      ...base,
+      smoking_preference: "Non-smoker, prefer no smoking",
+      pet_preference: "Prefer no pets",
+      religious_level: "Very religious",
+      sleep_schedule: "Early bird",
+      cleanliness_expectations: 5,
+      cleanliness: 5,
+      budget: 2000,
+    };
+    const worst: ProfileData = {
+      ...base,
+      smoking_preference: "I smoke",
+      pet_preference: "I have pets",
+      religious_level: "Not religious",
+      sleep_schedule: "Night owl",
+      cleanliness: 1,
+      cleanliness_expectations: 1,
+      budget: 9000,
+      social_level: 5,
+      noise_level: 5,
+      lifestyle_vibe: "Party lover",
+    };
+    expect(isSuppressedMatch(seeker, worst)).toBe(true);
+    // the displayed score still has its floor, which is why clamping alone
+    // could never hide these pairs from the deck
+    expect(calculateUserMatch(seeker, worst)).toBe(MATCH_SUPPRESSION_THRESHOLD);
+  });
+});
+
+// ─── score ceiling (bug 2c) ───────────────────────────────────────────────────
+
+describe("calculateUserMatch score ceiling", () => {
+  it("never exceeds 100 for identical profiles sharing a move-in date", () => {
+    const withDate: ProfileData = { ...base, move_in_date: "2026-11-01" };
+    expect(calculateUserMatch(withDate, withDate)).toBe(100);
+  });
+
+  it("never exceeds 100 when the move-in bonus stacks on a strong match", () => {
+    const a: ProfileData = { ...base, move_in_date: "2026-11-01" };
+    const b: ProfileData = { ...base, move_in_date: "2026-11-10" };
+    expect(calculateUserMatch(a, b)).toBeLessThanOrEqual(100);
+  });
+});
+
+// ─── per-field ordinal scales (bug 2d) ────────────────────────────────────────
+
+describe("per-field frequency scales", () => {
+  it("treats adjacent cooking answers as equally far apart", () => {
+    const rarely: ProfileData = { ...base, cooking_habits: "Rarely" };
+    const sometimes: ProfileData = { ...base, cooking_habits: "Sometimes" };
+    const daily: ProfileData = { ...base, cooking_habits: "Daily" };
+    expect(calculateUserMatch(rarely, sometimes)).toBe(calculateUserMatch(sometimes, daily));
+  });
+
+  it("treats every adjacent cooking step as the same distance", () => {
+    const never: ProfileData = { ...base, cooking_habits: "Never" };
+    const rarely: ProfileData = { ...base, cooking_habits: "Rarely" };
+    const sometimes: ProfileData = { ...base, cooking_habits: "Sometimes" };
+    const daily: ProfileData = { ...base, cooking_habits: "Daily" };
+    expect(calculateUserMatch(never, rarely)).toBe(calculateUserMatch(sometimes, daily));
+  });
+
+  it("treats every adjacent guests step as the same distance", () => {
+    const never: ProfileData = { ...base, guests: "Never" };
+    const rarely: ProfileData = { ...base, guests: "Rarely" };
+    const occasionally: ProfileData = { ...base, guests: "Occasionally" };
+    const frequently: ProfileData = { ...base, guests: "Frequently" };
+    expect(calculateUserMatch(never, rarely)).toBe(calculateUserMatch(occasionally, frequently));
+  });
+
+  it("treats every adjacent partying step as the same distance", () => {
+    const never: ProfileData = { ...base, partying: "Never" };
+    const rarely: ProfileData = { ...base, partying: "Rarely" };
+    const occasionally: ProfileData = { ...base, partying: "Occasionally" };
+    const frequently: ProfileData = { ...base, partying: "Frequently" };
+    expect(calculateUserMatch(never, rarely)).toBe(calculateUserMatch(occasionally, frequently));
+  });
+
+  it("scores the widest cooking gap below an adjacent one", () => {
+    const never: ProfileData = { ...base, cooking_habits: "Never" };
+    const daily: ProfileData = { ...base, cooking_habits: "Daily" };
+    const rarely: ProfileData = { ...base, cooking_habits: "Rarely" };
+    expect(calculateUserMatch(never, daily)).toBeLessThan(calculateUserMatch(never, rarely));
+  });
+
+  it("falls back to 0.5 for an unknown answer instead of a perfect or zero score", () => {
+    const unknown: ProfileData = { ...base, cooking_habits: "Who knows" };
+    const daily: ProfileData = { ...base, cooking_habits: "Daily" };
+    const never: ProfileData = { ...base, cooking_habits: "Never" };
+    const score = calculateUserMatch(unknown, daily);
+    expect(score).toBeLessThan(calculateUserMatch(daily, daily));
+    expect(score).toBeGreaterThan(calculateUserMatch(never, daily));
+  });
+});
+
+// ─── swipe analytics context (bug 2e) ─────────────────────────────────────────
+
+describe("swipe analytics", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+    vi.doUnmock("posthog-js");
+  });
+
+  async function loadAnalyticsWithSpy() {
+    vi.stubEnv("VITE_POSTHOG_KEY", "test-key");
+    vi.resetModules();
+    const capture = vi.fn();
+    vi.doMock("posthog-js", () => ({
+      default: { init: vi.fn(), identify: vi.fn(), reset: vi.fn(), capture },
+    }));
+    const { analytics } = await import("@/lib/analytics");
+    return { analytics, capture };
+  }
+
+  it("reports the target and score on a like", async () => {
+    const { analytics, capture } = await loadAnalyticsWithSpy();
+    analytics.swipeLike("user-1", 73);
+    expect(capture).toHaveBeenCalledWith("swipe_like", { target_id: "user-1", match_percent: 73 });
+  });
+
+  it("reports the target and score on a pass, so like-rate by score is measurable", async () => {
+    const { analytics, capture } = await loadAnalyticsWithSpy();
+    analytics.swipeDislike("user-2", 18);
+    expect(capture).toHaveBeenCalledWith("swipe_dislike", { target_id: "user-2", match_percent: 18 });
   });
 });

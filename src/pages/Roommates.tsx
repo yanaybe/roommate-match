@@ -13,7 +13,13 @@ import { useProfile, useAllProfiles, type FullProfile } from "@/hooks/useProfile
 import { fetchBlockedIds } from "@/hooks/useBlockReport";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useDailyLimits } from "@/hooks/useDailyLimits";
-import { calculateUserMatch, calculateUserMatchBreakdown, type MatchFactor } from "@/lib/matching";
+import {
+  calculateUserMatch,
+  calculateUserMatchBreakdown,
+  genderPreferencesCompatible,
+  isSuppressedMatch,
+  type MatchFactor,
+} from "@/lib/matching";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { isUUID } from "@/lib/profileUtils";
@@ -146,6 +152,9 @@ export default function Roommates() {
     if (!myProfile) return [];
     return allProfiles
       .filter((p) => p.user_id !== user?.id)
+      // Both people's gender preferences must be met, and pairs scoring below
+      // the suppression threshold are not worth a swipe for either side.
+      .filter((p) => genderPreferencesCompatible(myProfile, p) && !isSuppressedMatch(myProfile, p))
       .map((p) => ({
         profile: p,
         user: profileToUser(p),
@@ -225,7 +234,7 @@ export default function Roommates() {
           }
         }
 
-        analytics.swipeLike(current.matchPercent);
+        analytics.swipeLike(current.user.id, current.matchPercent);
         recordLike();
 
         const likesAfter = likesUsed + 1;
@@ -237,7 +246,7 @@ export default function Roommates() {
           });
         }
       } else {
-        analytics.swipeDislike();
+        analytics.swipeDislike(current.user.id, current.matchPercent);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
