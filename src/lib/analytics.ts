@@ -37,8 +37,12 @@ export const analytics = {
   signup: () => track("signup"),
   login: (method = "email") => track("login", { method }),
   onboardingComplete: () => track("onboarding_complete"),
-  swipeLike: (matchPercent: number) => track("swipe_like", { match_percent: matchPercent }),
-  swipeDislike: () => track("swipe_dislike"),
+  // Both swipe directions carry the same payload so like-rate can be broken
+  // down by match score. IDs only — never names or profile text.
+  swipeLike: (targetId: string, matchPercent: number) =>
+    track("swipe_like", { target_id: targetId, match_percent: matchPercent }),
+  swipeDislike: (targetId: string, matchPercent: number) =>
+    track("swipe_dislike", { target_id: targetId, match_percent: matchPercent }),
   match: (matchPercent: number) => track("match", { match_percent: matchPercent }),
   upgradeClick: (source: string, tier?: string) => track("upgrade_click", { source, tier }),
   purchase: (tier: string, amount: number) => track("purchase", { tier, amount }),

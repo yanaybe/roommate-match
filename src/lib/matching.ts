@@ -31,6 +31,7 @@ export interface ProfileData {
   lifestyle_vibe: string;
   preferred_age_min: number;
   preferred_age_max: number;
+  gender?: string | null;
   gender_preference: string;
   lifestyle_similarity: string;
   cleanliness_expectations: number;
@@ -56,22 +57,52 @@ function ordinalMatch(a: string, b: string, scale: string[]): number {
   return 1 - Math.abs(ai - bi) / (scale.length - 1);
 }
 
-const frequencyScale = ["Never", "Rarely", "Sometimes", "Occasionally", "Often", "Frequently", "Daily"];
+// One scale per field, matching that field's onboarding options exactly, so a
+// one-step difference costs the same wherever it appears. A single shared
+// 7-step scale made "Rarely vs Sometimes" (1/6) look far closer than
+// "Sometimes vs Daily" (4/6) even though both are one option apart.
+const cookingScale = ["Never", "Rarely", "Sometimes", "Daily"];
+const guestsScale = ["Never", "Rarely", "Occasionally", "Frequently"];
+const partyingScale = guestsScale;
 const religiousScale = ["Not religious", "Somewhat", "Traditional", "Very religious"];
 const alcoholScale = ["Never", "Socially", "Often"];
 const orgScale = ["Relaxed", "Moderate", "Very organized"];
 const sleepScale = ["Early bird", "Flexible", "Night owl"];
 
+/** The gender fields a compatibility check needs, from any profile shape. */
+export interface GenderFields {
+  gender?: string | null;
+  gender_preference?: string | null;
+}
+
 /**
- * Calculate match percentage between two user profiles (0-100).
+ * True when each person's gender preference is satisfied by the other.
  *
- * Architecture: penalty-first.
- *   finalScore = max(5, baseCompatibility - dealBreakerPenalties)
- *
- * Deal-breakers are computed first and can tank the score regardless of how
- * well everything else aligns. Base compatibility covers lifestyle factors.
+ * A preference is met when it is "No preference" or "Mixed", or equals the
+ * other person's gender. A missing gender or preference is treated as
+ * "No preference" — an unanswered question should not hide people.
+ * Both directions must hold: showing a profile that one side filtered out
+ * wastes a swipe for both of them.
  */
-export function calculateUserMatch(a: ProfileData, b: ProfileData): number {
+export function genderPreferencesCompatible(a: GenderFields, b: GenderFields): boolean {
+  const preferenceMet = (preference: string | null | undefined, otherGender: string | null | undefined) => {
+    if (!preference || preference === "No preference" || preference === "Mixed") return true;
+    if (!otherGender) return true;
+    return preference === otherGender;
+  };
+  return (
+    preferenceMet(a.gender_preference, b.gender) &&
+    preferenceMet(b.gender_preference, a.gender)
+  );
+}
+
+/**
+ * Raw compatibility score, capped at 100 but with no lower floor.
+ *
+ * The move-in bonus is applied as a negative penalty, so without the cap a
+ * very compatible pair could score above 100.
+ */
+function rawUserMatchScore(a: ProfileData, b: ProfileData): number {
   // ─── Layer 1: Deal-breaker penalties ──────────────────────────────────────
 
   let penalties = 0;
@@ -162,16 +193,16 @@ export function calculateUserMatch(a: ProfileData, b: ProfileData): number {
   scores.push({ weight: 10, score: exactMatch(a.lifestyle_vibe, b.lifestyle_vibe) });
 
   // Guests frequency (8%)
-  scores.push({ weight: 8, score: ordinalMatch(a.guests, b.guests, frequencyScale) });
+  scores.push({ weight: 8, score: ordinalMatch(a.guests, b.guests, guestsScale) });
 
   // Partying (8%)
-  scores.push({ weight: 8, score: ordinalMatch(a.partying, b.partying, frequencyScale) });
+  scores.push({ weight: 8, score: ordinalMatch(a.partying, b.partying, partyingScale) });
 
   // WFH (7%) — both WFH means shared kitchen/space during the day, relevant
   scores.push({ weight: 7, score: a.wfh === b.wfh ? 1 : 0.6 });
 
   // Cooking habits (6%)
-  scores.push({ weight: 6, score: ordinalMatch(a.cooking_habits, b.cooking_habits, frequencyScale) });
+  scores.push({ weight: 6, score: ordinalMatch(a.cooking_habits, b.cooking_habits, cookingScale) });
 
   // Activity hours (5%) — both Flexible = perfect, one Flexible = good, mismatch = low
   const aFlex = a.activity_hours === "Flexible";
@@ -199,7 +230,32 @@ export function calculateUserMatch(a: ProfileData, b: ProfileData): number {
   const weightedSum = scores.reduce((sum, s) => sum + s.weight * s.score, 0);
   const baseScore = (weightedSum / totalWeight) * 100;
 
-  return Math.max(MATCH_SUPPRESSION_THRESHOLD, Math.round(baseScore - penalties));
+  return Math.min(100, Math.round(baseScore - penalties));
+}
+
+/**
+ * Calculate match percentage between two user profiles (0-100).
+ *
+ * Architecture: penalty-first.
+ *   finalScore = min(100, max(15, baseCompatibility - dealBreakerPenalties))
+ *
+ * Deal-breakers are computed first and can tank the score regardless of how
+ * well everything else aligns. Base compatibility covers lifestyle factors.
+ *
+ * The floor keeps every screen that displays a score away from negative
+ * numbers; use isSuppressedMatch() to decide whether a pair belongs in the
+ * swipe deck at all, since the floor hides how bad a pair really is.
+ */
+export function calculateUserMatch(a: ProfileData, b: ProfileData): number {
+  return Math.max(MATCH_SUPPRESSION_THRESHOLD, rawUserMatchScore(a, b));
+}
+
+/**
+ * True when a pair scores below MATCH_SUPPRESSION_THRESHOLD before the
+ * display floor is applied — these pairs should not consume swipes.
+ */
+export function isSuppressedMatch(a: ProfileData, b: ProfileData): boolean {
+  return rawUserMatchScore(a, b) < MATCH_SUPPRESSION_THRESHOLD;
 }
 
 export interface MatchFactor {
